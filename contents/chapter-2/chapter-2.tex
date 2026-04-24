@@ -1,42 +1,199 @@
 \chapter{Tinjauan Pustaka dan Dasar Teori}
 
-\section{Tinjauan Pustaka}
+\section{Tinjauan Literatur}
 
-Berisi tugas akhir-tugas akhir terdahulu yang terkait dengan judul skripsi yang dilakukan. Hal ini meliputi skripsi, tesis, atau publikasi terdahulu yang terkait dengan judul skripsi yang diusulkan. Lakukan pembahasan secara sistemastis dengan menjelaskan masalah apa yang dilakukan oleh tugas akhir terdahulu, kontribusi yang dilakukan, serta analisis penulis terkait dengan keunggulan dan keterbatasan tugas akhir. 
+Bagian ini membahas penelitian-penelitian sebelumnya yang relevan dengan tiga fokus utama studi ini: analisis keamanan otomatis pada aplikasi PHP, deteksi kerentanan berbasis LLM, dan transformasi kode yang melibatkan LLM. Masing-masing karya dibahas dari sisi masalah yang diatasi, kontribusinya, dan keterbatasannya. Bagian ini ditutup dengan tabel perbandingan yang memperlihatkan posisi penelitian ini di antara karya-karya tersebut.
 
-Setelah membahas berbagai tugas akhir terdahulu, maka alangkah baiknya penulis melakukan rangkuman terutama terkait dengan peluang pengembangan atau tugas akhir yang akan dilakukan.
+\subsection{Perlindungan Otomatis Aplikasi PHP dari Injeksi SQL}
 
+Merlo, Letarte, dan Antoniol \cite{merlo2007automated} pada 2007 sudah menunjukkan bahwa analisis keamanan dan perbaikan kode PHP dapat diotomatisasi. Pendekatan mereka menggabungkan analisis statis, analisis dinamis, dan rekayasa ulang kode untuk melindungi aplikasi PHP lama dari injeksi SQL tanpa mengubah fungsionalitasnya. Caranya adalah dengan mengekstrak penjaga berbasis model dari kasus uji tepercaya, lalu secara otomatis menyisipkannya ke titik-titik akses basis data dalam kode sumber.
+
+Hasilnya cukup kuat: pengujian pada phpBB versi 2.0.0 (37.193 baris kode PHP 4.2.2) berhasil menghentikan semua 176 serangan injeksi yang diuji tanpa satu pun \textit{false positive}. Tapi ada batasnya. Kualitas perlindungan sepenuhnya bergantung pada kelengkapan rangkaian pengujian yang digunakan selama fase analisis dinamis. Titik akses yang tidak tercakup pengujian tidak terlindungi.
+
+Yang relevan dari karya ini untuk penelitian saat ini bukan teknisnya, tapi konfirmasinya: otomatisasi analisis keamanan dan remediasi kode PHP dalam skala besar memang bisa dilakukan. Fakta bahwa studi ini sudah muncul hampir dua dekade lalu, namun solusi komprehensif yang bekerja dengan standar keamanan modern masih belum ada, justru mempertegas kesenjangan yang ingin diisi oleh penelitian ini.
+
+\subsection{Menggunakan LLM untuk Menemukan dan Memantau Kerentanan}
+
+Akuthota dkk. \cite{akuthota2023vulnerability} meneliti kemampuan GPT-3.5-Turbo untuk deteksi dan pemantauan kerentanan perangkat lunak. Pendekatannya murni berbasis \textit{prompt engineering} tanpa pelatihan ulang model sama sekali. Model berhasil menemukan pola kerentanan yang umum, meskipun akurasinya menurun seiring meningkatnya kompleksitas pola yang dicari.
+
+Li et al. \cite{li2025software} mengambil pendekatan yang lebih terstruktur. Mereka menggabungkan analisis \textit{patch} historis dengan analisis statis, lalu menambahkan tabel fitur kerentanan dan templat penganalisis untuk membuat klasifikasi LLM lebih akurat, terutama pada kerentanan yang membutuhkan pemahaman aliran data lintas fungsi. Evaluasi pada \textit{dataset} CVE kernel Linux memperlihatkan hasil yang lebih baik dibandingkan analisis statis saja.
+
+Dua temuan penting bisa ditarik dari kedua studi ini. LLM tujuan umum sudah bisa menemukan pola kerentanan hanya dengan \textit{prompt engineering}, dan penggabungan LLM dengan analisis statis terstruktur memberikan hasil yang lebih akurat untuk kasus yang kompleks. Masalah yang sama muncul di keduanya: model dijalankan via API \textit{cloud}, yang jadi hambatan nyata ketika kode yang dianalisis bersifat rahasia. Penelitian ini menyelesaikan kendala itu dengan menjalankan model secara lokal melalui Ollama, tanpa ada kode sumber yang keluar dari lingkungan organisasi.
+
+\subsection{Transformasi Kode dengan Bantuan LLM}
+
+St\"{u}mpfle dkk. \cite{stumpfle2025llm} mengusulkan pendekatan untuk mengubah varian perangkat lunak yang dikloning menjadi \textit{Software Product Line} (SPL) menggunakan LLM. Metodenya bekerja dalam tiga tahap: penyaringan titik variasi untuk menemukan perbedaan kode yang relevan secara semantik antar varian, rekayasa \textit{prompt} untuk menghasilkan artefak SPL yang benar, dan \textit{loop} umpan balik penyempurnaan diri yang mengirimkan hasil pengujian kembali ke model secara berulang hingga kode lolos kompilasi dan pengujian fungsional. \textit{Loop} umpan balik ini terbukti secara signifikan mengurangi kegagalan akibat halusinasi model, meskipun efektivitasnya tetap bergantung pada kualitas langkah penyaringan awal.
+
+Relevansinya dengan penelitian ini cukup langsung. Keduanya menggunakan LLM untuk transformasi kode yang melampaui substitusi sintaksis, yang butuh pemahaman semantik. \textit{Loop} umpan balik dalam St\"{u}mpfle dkk. memiliki fungsi konseptual yang mirip dengan peran validasi PHPStan dalam \textit{pipeline} penelitian ini: keduanya menggunakan \textit{output} alat analisis statis untuk memverifikasi apakah transformasi berhasil. Perbedaannya terletak pada fokus: St\"{u}mpfle et al. menangani ekstraksi fitur lintas varian untuk rekayasa lini produk, sedangkan penelitian ini berfokus pada migrasi versi dan verifikasi kepatuhan keamanan untuk kode warisan dalam satu bahasa.
+
+\subsection{Pendekatan Neuro-Simbolik untuk Deteksi Kerentanan Keamanan}
+
+Li, Dutta, dan Naik \cite{li2025iris} memperkenalkan IRIS, sistem yang menggabungkan LLM dengan analisis statis untuk deteksi kerentanan pada tingkat seluruh repositori. Masalah yang diangkat cukup spesifik: alat analisis statis tradisional seperti CodeQL sangat bergantung pada spesifikasi \textit{taint} yang dibuat manual, dan spesifikasi ini hampir pasti tidak lengkap karena jumlah API pihak ketiga terus bertambah. LLM juga tidak bisa berjalan sendiri karena tidak mampu melakukan penalaran yang mencakup keseluruhan aliran kode dalam proyek berskala besar.
+
+Solusi IRIS adalah membiarkan LLM menghasilkan spesifikasi \textit{taint} secara otomatis berdasarkan pemahaman kontekstual terhadap API yang relevan, lalu menyerahkan analisis jalur ke alat analisis statis yang sudah ada. Pada \textit{dataset} CWE-Bench-Java yang terdiri dari 120 kerentanan yang divalidasi secara manual, IRIS dengan GPT-4 berhasil mendeteksi 55 kerentanan dibandingkan hanya 27 oleh CodeQL saja, sekaligus menurunkan rata-rata \textit{false positive} sebesar 5,21 poin persentase.
+
+Ini adalah bukti empiris langsung bahwa kombinasi LLM dan analisis statis lebih baik dari masing-masing yang berjalan sendiri, sesuatu yang menjadi dasar desain \textit{pipeline} penelitian ini. Bedanya: IRIS mengandalkan GPT-4 via \textit{cloud} dan hanya diuji pada Java. Penelitian ini mengambil pendekatan konseptual yang serupa tetapi dengan model lokal melalui Ollama dan menargetkan PHP.
+
+\subsection{Dampak Jangka Panjang Transformasi Kode Otomatis}
+
+Strobl dkk. \cite{strobl2020automated} menganalisis tiga kasus transformasi kode otomatis skala besar di sebuah organisasi pemerintah Austria, semuanya melibatkan konversi sistem warisan dari COBOL dan PL/I ke Java dengan ukuran lebih dari satu juta baris kode. Yang membedakan studi ini dari yang lain adalah fokusnya bukan pada keberhasilan transformasi itu sendiri, melainkan pada apa yang terjadi setelahnya.
+
+Hasilnya mengganggu. Transformasi otomatis seringkali menghasilkan kode yang sintaksis valid di bahasa target, tapi mempertahankan karakteristik struktural dari bahasa sumber sehingga sulit dipahami pengembang yang tidak kenal sistem lama. Lebih kritis lagi: kasus yang memiliki \textit{test suite} otomatis sejak awal jauh lebih mudah dirawat pascatransformasi. Kasus tanpa pengujian otomatis menjadi beban jangka panjang.
+
+Temuan ini secara langsung memperkuat keputusan desain dalam penelitian ini untuk menyertakan PHPStan sebagai validasi pasca-konversi dan Semgrep sebagai pemindaian keamanan sebelum dan sesudah transformasi. Masalah yang ditinggalkan oleh konversi otomatis perlu terdeteksi segera, bukan bertahun-tahun kemudian.
+
+\subsection{Transformasi Kode Berbasis Pola untuk Migrasi Aplikasi}
+
+Cai et al. \cite{cai2015pattern} mengusulkan pendekatan transformasi kode berbasis pola untuk migrasi aplikasi ke lingkungan \textit{cloud}. Prosesnya iteratif: pemindaian kode untuk mengidentifikasi blok yang perlu diubah, pencocokan pola menggunakan ekspresi reguler yang diperluas, perancangan templat untuk kode target, lalu eksekusi aturan transformasi. Pendekatan ini diujian pada 19 proyek \textit{open source} Java dengan memigrasikannya ke Amazon Web Services (AWS).
+
+Kontribusinya jelas: transformasi berbasis pola terbukti bisa mengurangi pekerjaan manual berulang pada migrasi skala besar. Tapi ada keterbatasan mendasar yang tidak bisa dihindari. Ekspresi reguler yang diperluas tetap beroperasi pada level teks, bukan pada representasi struktural kode. Ini membuatnya rentan gagal pada konstruksi kode yang kompleks atau tidak mengikuti pola yang telah didefinisikan sebelumnya.
+
+Perbandingan dengan pendekatan yang digunakan dalam penelitian ini cukup informatif. Rector \cite{rector2024} bekerja pada AST, bukan teks, sehingga transformasinya lebih dapat diandalkan untuk kode produksi yang beragam. Selain itu, Cai et al. \cite{cai2015pattern} tidak menyertakan aspek keamanan atau kepatuhan standar sama sekali dalam pendekatan mereka. Perbedaan ini mencerminkan bagaimana kebutuhan dalam transformasi kode otomatis telah berkembang: dari sekadar memindahkan kode ke lingkungan baru, menjadi memastikan kode yang dipindahkan juga aman.
+
+\subsection{Ringkasan Perbandingan}
+
+Tabel \ref{tab:perbandingan-1} dan Tabel \ref{tab:perbandingan-2} merangkum ketujuh studi yang dibahas di atas.
+
+\begin{table}[h]
+\centering
+\caption{Perbandingan Penelitian Terdahulu dan Karakteristik Penelitian}
+\label{tab:perbandingan-1}
+\begin{tabularx}{\textwidth}{|l|X|X|X|}
+\hline
+\textbf{Studi} & \textbf{Bahasa} & \textbf{AI/LLM Digunakan} & \textbf{Tugas Utama} \\
+\hline
+Merlo et al. \cite{merlo2007automated} & PHP & Tidak ada & \textit{Security remediation} \\
+\hline
+Akuthota et al. \cite{akuthota2023vulnerability} & \textit{Multiple} & GPT-3.5-Turbo & \textit{Vulnerability detection} \\
+\hline
+Li et al. \cite{li2025software} & C (Linux kernel) & LLM + analisis statis & \textit{Vulnerability detection} \\
+\hline
+St\"{u}mpfle et al. \cite{stumpfle2025llm} & C/C++ & LLM & \textit{Code transformation} \\
+\hline
+Li, Dutta \& Naik \cite{li2025iris} & Java & GPT-4 & \textit{Vulnerability detection} \\
+\hline
+Strobl et al. \cite{strobl2020automated} & COBOL/PL/I & Tidak ada & \textit{Code transformation} \\
+\hline
+Cai et al. \cite{cai2015pattern} & Java & Tidak ada & \textit{Cloud migration} \\
+\hline
+\textbf{Penelitian ini} & PHP & 5 model LLM lokal & Migrasi versi + \textit{security compliance} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Perbandingan Penelitian Terdahulu dan Aspek Metodologi}
+\label{tab:perbandingan-2}
+\begin{tabularx}{\textwidth}{|l|X|X|X|X|}
+\hline
+\textbf{Studi} & \textbf{\textit{Deployment}} & \textbf{Validasi Pasca-Konversi} & \textbf{Standar Keamanan} & \textbf{\textit{Open Source}} \\
+\hline
+Merlo et al. \cite{merlo2007automated} & N/A & Tidak & Tidak ada & Ya \\
+\hline
+Akuthota et al. \cite{akuthota2023vulnerability} & \textit{Cloud} & Tidak & Tidak ada & Tidak \\
+\hline
+Li et al. \cite{li2025software} & \textit{Cloud} & Tidak & Tidak ada & Tidak \\
+\hline
+St\"{u}mpfle et al. \cite{stumpfle2025llm} & \textit{Cloud} & Ya (\textit{feedback loop}) & Tidak ada & Tidak \\
+\hline
+Li, Dutta \& Naik \cite{li2025iris} & \textit{Cloud} & Tidak & Tidak ada & Ya (IRIS) \\
+\hline
+Strobl et al. \cite{strobl2020automated} & N/A & Tidak & Tidak ada & Tidak \\
+\hline
+Cai et al. \cite{cai2015pattern} & N/A & Tidak & Tidak ada & Tidak \\
+\hline
+\textbf{Penelitian ini} & Lokal (Ollama) & Ya (PHPStan + Semgrep) & ISO/IEC 27001:2022 & Ya \\
+\hline
+\end{tabularx}
+\end{table}
+
+Kesenjangan yang konsisten terlihat dari kedua tabel. Studi yang berfokus pada keamanan tidak menangani migrasi versi. Studi yang berfokus pada transformasi kode tidak menyertakan pemeriksaan keamanan maupun pemetaan ke standar formal. Tidak satu pun dari ketujuh studi yang menggabungkan migrasi versi PHP, analisis keamanan berbasis LLM, validasi pasca-konversi, dan kepatuhan ISO/IEC 27001:2022 dalam satu alur kerja \textit{open source} dengan \textit{deployment} lokal. Itulah yang ingin dicapai penelitian ini.
 
 \section{Dasar Teori}
 
-Berisi teori-teori yang menjadi dasar solusi atau produk hasil skripsi. Dasar teori pada umumnya diperoleh melalui buku referensi, publikasi tugas akhir, dan informasi web yang dapat dipertanggungjawabkan. Hindari penggunaan dasar teori melalui tautan wikipedia, surat kabar, atau portal berita.
+\subsection{PHP dan Perubahan Antar Versi}
 
-\subsection{Pengenalan Aplikasi Permainan}
+PHP (\textit{Hypertext Preprocessor}) menjadi bahasa skrip sisi \textit{server} yang paling banyak digunakan di web sejak akhir 1990-an \cite{phpgroup_history}. W3Techs mencatat bahwa 71,7\% dari seluruh situs web yang memiliki bahasa pemrograman sisi \textit{server} menggunakan PHP \cite{w3techs2024php}.
 
-Proses pembuatan \textit{game} dimulai dari pembuatan \textit{game design document} dimana 
-dokumen ini akan menjadi landasan pengembangan game tersebut serta menginformasikan gambaran keseluruhan game yang akan dibuat \cite{ferdiana2012agile}. \textcolor{red}{\textit{Catatan: apapun yang diambil dari tulisan orang lain harus disitasi seperti dicontohkan \cite{ferdiana2012agile}.}}
+Untuk memahami tantangan migrasi yang dihadapi kode lama, perlu dipahami dulu karakteristik PHP 5.x yang masih banyak ditemukan di sistem yang belum bermigrasi. PHP 5.x, aktif digunakan dari sekitar 2004 hingga awal 2010-an, memiliki karakteristik yang berbeda secara fundamental dari versi modern. Yang paling signifikan adalah ekstensi \texttt{ext/mysql} dengan fungsi-fungsi seperti \texttt{mysql\_connect()}, \texttt{mysql\_query()}, dan \texttt{mysql\_fetch\_array()}. Fungsi-fungsi ini tidak mendukung \textit{prepared statements} secara asli, sehingga rentan terhadap injeksi SQL jika \textit{input} pengguna tidak disanitasi secara manual. Ekstensi ini sudah dinyatakan \textit{deprecated} sejak PHP 5.5 dan dihapus sepenuhnya di PHP 7.0 \cite{phpgroup2022supported}. PHP 5.x juga menggunakan kata kunci \texttt{var} untuk deklarasi properti kelas, sintaks \texttt{array()} yang panjang, dan belum mendukung \textit{type hints} skalar. Rector dapat menangani sebagian besar transformasi sintaksis dari PHP 5.x melalui \textit{ruleset} kumulatifnya \cite{rector2024}, tapi penggantian \texttt{mysql\_*()} tidak bisa dilakukan Rector karena butuh pemahaman semantik tentang konteks penggunaan basis data. Keterbatasan inilah yang secara langsung memotivasi kehadiran AI Engine dalam \textit{pipeline} penelitian ini.
 
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=12cm]{contents/chapter-2/gambar-buatan-sendiri.png}
-	\caption[Contoh gambar]{Contoh gambar \cite{lukito2016}}
-	\label{Fig:gambar-buatan-sendiri}
-\end{figure}
+PHP 7.x membawa peningkatan performa signifikan lewat Zend Engine 3.0, menambahkan deklarasi tipe skalar, petunjuk tipe pengembalian, dan operator penggabungan \textit{null}. PHP 7.4, versi terakhir seri ini, menambahkan properti bertipe dan fungsi panah sebelum dukungan resminya berakhir 28 November 2022 \cite{phpgroup2022supported}.
 
+PHP 8.x membuat sejumlah \textit{breaking changes} yang membuat kode PHP 7.x tidak bisa langsung dijalankan \cite{phpgroup2022supported}. Selain penghapusan fungsi-fungsi yang sudah \textit{deprecated}, sistem tipe menjadi jauh lebih ketat dengan tipe \textit{union} dan tipe campuran. Fitur baru seperti \textit{match expression}, operator \textit{nullsafe} (\texttt{?->}), argumen bernama, dan kompilasi JIT diperkenalkan. Penanganan kesalahan juga berubah: beberapa fungsi yang sebelumnya mengembalikan \texttt{false} kini melempar pengecualian. Untuk basis kode besar, melakukan semua perubahan ini secara manual jelas tidak realistis.
 
+\subsection{ISO/IEC 27001:2022 dan \textit{Secure Coding}}
 
-\textit{Game design document} adalah sebuah bagian penting dalam pembuatan game baik itu elemen-elemen penyusunnya maupun proses pengembangannya. Game design yang telah dibuat, dijabarkan satu persatu mengenai tahapan dalam pembuatan game dan hasilnya disatukan dalam bentuk dokumentasi \textit{game design document} yang digunakan oleh \textit{developer} sebagai buku petunjuk bagaimana membuat \textit{game} \cite{lukito2016}.
+ISO/IEC 27001:2022 adalah standar internasional untuk Sistem Manajemen Keamanan Informasi (ISMS) yang dikembangkan bersama oleh ISO dan IEC \cite{iso27001_2022}. Standar ini menetapkan persyaratan untuk membuat, menerapkan, memelihara, dan terus meningkatkan ISMS dalam suatu organisasi. Annex A memuat 93 kontrol keamanan yang dibagi ke dalam empat domain: Organisasi, Manusia, Fisik, dan Teknologi. Dari 93 kontrol tersebut, penelitian ini hanya memetakan yang langsung relevan dengan pengembangan perangkat lunak:
 
-Dalam buku \textit{Game Design Essentials} disebutkan \textit{game design document} merupakan metode yang menghubungkan elemen-elemen penyusun \textit{game}, baik itu \textit{art, sound, program, 
-gameplay} sehingga semuanya terdokumentasi menjadi satu dan menjadi acuan bagi para \textit{developer} dalam membuat \textit{game} \cite{wibirama2013dual}. 
+\begin{itemize}
+    \item \textbf{A.8.25} (\textit{Secure development lifecycle}) mengharuskan aturan pengembangan yang aman ditetapkan dan diikuti di setiap tahap, termasuk penggunaan pedoman \textit{secure coding} dan alat analisis statis.
+    \item \textbf{A.8.28} (\textit{Secure coding}) mengharuskan aturan pengkodean yang aman diikuti untuk mencegah kerentanan umum seperti injeksi, autentikasi yang rusak, pengungkapan data sensitif, dan kriptografi yang tidak aman.
+    \item \textbf{A.8.29} (Pengujian keamanan dalam pengembangan dan penerimaan) mengharuskan pengujian keamanan menjadi bagian dari proses pengembangan sebelum kode masuk produksi.
+\end{itemize}
 
-\subsection{Dasar Teori Lainnya}
+Ketiga kontrol ini, bersama A.5.17, A.8.24, dan A.8.26 yang turut dipetakan oleh \textit{pipeline}, menjadi acuan resmi untuk mesin pengecekan keamanan dalam penelitian ini \cite{iso27001_2022}. Aturan Semgrep yang digunakan berhubungan langsung dengan A.8.28 dan A.8.29. Struktur \textit{pipeline} secara keseluruhan mencerminkan kebutuhan siklus hidup A.8.25.
 
-\section{Analisis Perbandingan Metode}
+\subsection{OWASP Top 10 dan Kerentanan Aplikasi Web PHP}
 
-Di dalam tinjauan pustaka hasil akhirnya adalah analisis secara kualitatif atau pun secara kuantitatif kelebihan dan kekurangan metode jika dikaitkan dengan masalah, batasan-batasan masalah dan solusi yang dinginkan. Analisis kuantitatif tidak wajib teapi mempunyai nilai tambah di dalam tugas akhir saudara. Bagian ini menjelaskan kenapa metode tersebut dipilih dan uraikan dengan lebih jelas metode pelaksanaan tugas akhir yang ingin Anda lakukan. 
+OWASP Top 10 adalah referensi standar untuk risiko keamanan paling kritis pada aplikasi web yang diterbitkan secara berkala oleh OWASP berdasarkan data dari ratusan organisasi di seluruh dunia \cite{owasp2021}. Versi terbaru, OWASP Top 10:2021, relevan langsung dengan kondisi aplikasi PHP lama.
 
-\section{Pertanyaan Tugas Akhir (Jika Perlu)}
+Injeksi menempati posisi ketiga dan merupakan yang paling umum ditemukan pada kode PHP lama \cite{owasp2021}. Injeksi SQL hampir selalu berasal dari penggunaan \texttt{mysql\_query()} tanpa parameterisasi. XSS masuk dalam kategori injeksi yang sama dan muncul ketika \textit{output} tidak dienkode sebelum ditampilkan ke peramban. Kegagalan kriptografi, yang menempati posisi kedua, kerap hadir dalam bentuk penggunaan \texttt{md5()} atau \texttt{sha1()} untuk menyimpan kata sandi, padahal keduanya sudah lama tidak dianggap aman untuk keperluan itu.
 
-Pertanyaan tugas akhir bersifat opsional dan dapat ditambahkan untuk menekankan hal-hal yang hendak diketahui dari tugas akhir berdasar pada tujuan tugas akhir. Pertanyaan tugas akhir dikenal dengan RQ (\textit{Research Question}) dan harus memiliki keterkaitan dengan RO (\textit{Research Objective}). Satu RO dapat memiliki satu atau lebih dari satu RQ. 
+Dalam penelitian ini, Semgrep dijalankan dengan \textit{ruleset} \texttt{p/php} dan \texttt{p/owasp-top-ten} \cite{semgrep2024}, yang secara langsung dipetakan ke kategori-kategori dalam OWASP Top 10:2021. Temuan Semgrep kemudian dipetakan ke kontrol ISO/IEC 27001:2022 yang relevan melalui \texttt{iso\_mapper.py}.
 
+\subsection{DevSecOps dan Integrasi Keamanan dalam Pipeline Pengembangan}
+
+DevSecOps adalah praktik yang mengintegrasikan keamanan langsung ke dalam setiap tahap siklus hidup pengembangan perangkat lunak \cite{li2025software}. Berbeda dari pendekatan tradisional yang menempatkan pengujian keamanan sebagai langkah terpisah di akhir proses, DevSecOps memperlakukan keamanan sebagai bagian dari setiap keputusan teknis selama pengembangan berlangsung, bukan tanggung jawab tim khusus yang bekerja setelah kode selesai ditulis.
+
+Dalam praktiknya, DevSecOps diwujudkan melalui integrasi alat keamanan otomatis ke dalam \textit{pipeline}: analisis statis kode sumber (SAST), pemindaian dependensi, dan pengujian keamanan dinamis. Kerentanan yang ditemukan lebih awal jauh lebih murah untuk diperbaiki dibandingkan yang baru ditemukan setelah sistem berjalan di produksi.
+
+\textit{Pipeline} dalam penelitian ini menerapkan prinsip DevSecOps secara langsung: Semgrep memindai sebelum dan sesudah konversi, PHPStan memvalidasi kompatibilitas kode, dan AI Engine menangani kasus yang butuh analisis semantik. Keamanan bukan langkah audit terpisah, tapi bagian dari proses migrasi itu sendiri \cite{iso27001_2022}.
+
+\subsection{\textit{Abstract Syntax Trees} dan \textit{Static Analysis}}
+
+Analisis statis adalah teknik pemeriksaan kode sumber tanpa menjalankan program. Dalam konteks keamanan perangkat lunak, ini digunakan untuk mengidentifikasi pola kerentanan, praktik pengkodean tidak aman, dan pelanggaran kebijakan secara otomatis. Analisis statis sudah menjadi bagian standar dari \textit{pipeline} DevSecOps modern karena bisa dijalankan terus-menerus selama pengembangan tanpa beban tambahan yang signifikan \cite{li2025software}.
+
+\textit{Abstract Syntax Trees} (AST) adalah representasi pohon dari kode sumber di mana setiap \textit{node} mewakili konstruksi sintaksis seperti ekspresi, pernyataan, atau deklarasi. Alat yang bekerja dengan AST bisa menganalisis dan mengubah kode secara struktural, berbeda dari pendekatan berbasis teks biasa yang digunakan oleh Cai et al. \cite{cai2015pattern}. Rector menggunakan PHP AST untuk menemukan pola yang perlu diubah dan menghasilkan kode penggantinya. Chen et al. \cite{chen2022ast} mendemonstrasikan bahwa pendekatan berbasis AST bukan sekadar teori; mereka menerapkannya untuk migrasi kode TypeScript di Microsoft pada skala produksi.
+
+\subsection{Rector: Alat Transformasi Kode Berbasis AST}
+
+Rector adalah alat \textit{open source} untuk transformasi kode PHP berbasis AST \cite{rector2024}. Prosesnya: kode sumber PHP diubah menjadi AST, aturan transformasi diterapkan, lalu kode PHP baru dihasilkan dari pohon yang sudah dimodifikasi. Rector dilengkapi aturan bawaan untuk berpindah antar versi PHP, termasuk \texttt{LevelSetList::UP\_TO\_PHP\_80} hingga \texttt{UP\_TO\_PHP\_83}, dan \textit{ruleset}-nya bersifat kumulatif sehingga mencakup semua perubahan dari versi sumber hingga versi target.
+
+Dalam penelitian ini, Rector berperan sebagai mesin transformasi utama. Transformasi sintaksis dan struktural dari PHP 5.x atau 7.x ke PHP 8.x ditangani sepenuhnya oleh Rector. Yang tidak bisa ditangani adalah penggantian \texttt{ext/mysql} karena itu butuh penulisan ulang semantik, bukan sekadar penggantian sintaks. Itulah yang ditangani oleh AI Engine.
+
+\subsection{PHPStan: Alat Analisis Statis untuk PHP}
+
+PHPStan adalah alat analisis statis untuk PHP yang memeriksa kebenaran tipe data, konsistensi pemanggilan fungsi, dan kesalahan logika tanpa menjalankan program \cite{phpstan2024}. Berbeda dari Semgrep yang mencari pola kerentanan keamanan, PHPStan fokus pada integritas kode dari sisi kompatibilitas dan tipe.
+
+PHPStan bekerja dengan sistem level 0--9, di mana level lebih tinggi berarti pemeriksaan lebih ketat. Dalam \textit{pipeline} penelitian ini, PHPStan digunakan pada level 5 sebagai komponen validasi pasca-konversi. Setelah Rector selesai, PHPStan memeriksa apakah kode hasil konversi kompatibel dengan versi PHP target dan bebas dari kesalahan tipe. Peran ini mendukung kontrol A.8.29 ISO/IEC 27001:2022 \cite{iso27001_2022} dengan memastikan kode yang dihasilkan secara otomatis tidak mengandung kesalahan yang bisa memengaruhi keandalan sebelum masuk produksi.
+
+\subsection{Semgrep: Alat Analisis Statis Ringan untuk Keamanan}
+
+Semgrep adalah alat analisis statis ringan yang mendukung lebih dari 30 bahasa pemrograman, termasuk PHP \cite{semgrep2024}. Aturan keamanannya ditulis dalam format YAML dengan sintaks yang mirip dengan kode sumber yang dianalisis, sehingga pengguna bisa membuat aturan sendiri tanpa perlu memahami detail AST bahasa target. Registri aturan publiknya mencakup berbagai kerentanan umum seperti injeksi SQL, XSS, kriptografi lemah, dan deserialisasi tidak aman.
+
+Dalam penelitian ini, Semgrep digunakan dua kali: sebelum konversi untuk menetapkan \textit{baseline} keamanan kode asli, dan sesudah konversi untuk memastikan tidak ada kerentanan baru yang muncul. Kedua pemindaian ini mendukung kontrol A.8.28 dan A.8.29 ISO/IEC 27001:2022 \cite{iso27001_2022}.
+
+\subsection{Model-Model LLM untuk Analisis Kode}
+
+LLM (\textit{Large Language Model}) adalah model bahasa neural berbasis \textit{transformer} yang dilatih pada data teks dan kode dalam jumlah besar. LLM yang dilatih pada kode bisa memahami semantik kode, mengidentifikasi pola kerentanan, menyarankan perbaikan, dan menghasilkan kode baru \cite{akuthota2023vulnerability}. Kemampuan ini berbeda dari analisis berbasis aturan: LLM mempertimbangkan konteks dan tujuan kode, bukan hanya strukturnya.
+
+Penelitian ini mengevaluasi lima model LLM \textit{open source} yang dijalankan secara lokal. Kriteria pemilihan ada dua: model harus bisa dijalankan di GPU dengan VRAM 8 GB menggunakan kuantisasi Q4, dan harus memiliki kemampuan pemahaman kode yang terdokumentasi dalam literatur ilmiah.
+
+\textbf{DeepSeek Coder 6.7b} \cite{deepseek2024coder} memiliki 6,7 miliar parameter dan dilatih pada 2 triliun token dengan komposisi 87\% kode sumber dari lebih dari 80 bahasa pemrograman.
+
+\textbf{Qwen2.5-Coder 7b} \cite{hui2024qwen} adalah model kode dari Alibaba dengan 7 miliar parameter, dilatih pada 5,5 triliun token kode, dan menunjukkan kemampuan yang kuat pada penyelesaian kode dan perbaikan \textit{bug}.
+
+\textbf{CodeLlama 7b} \cite{roziere2024codellama} dikembangkan Meta AI berbasis Llama 2. Model ini mendukung konteks hingga 100 ribu token dan tersedia dalam varian \textit{instruct} yang dioptimalkan untuk mengikuti instruksi.
+
+\textbf{Mistral 7b} \cite{jiang2023mistral} adalah model tujuan umum dari Mistral AI yang menggunakan mekanisme \textit{grouped-query attention} (GQA) dan \textit{sliding window attention} (SWA), membuatnya efisien secara komputasi.
+
+\textbf{Llama 3.1 8b} \cite{dubey2024llama3} adalah model 8 miliar parameter dari Meta AI yang dilatih pada lebih dari 15 triliun token multibahasa dengan peningkatan signifikan dalam kemampuan penalaran dibanding pendahulunya.
+
+Li, Dutta, dan Naik \cite{li2025iris} sudah menunjukkan bahwa kombinasi LLM dan analisis statis menghasilkan deteksi kerentanan yang lebih baik dari masing-masing yang berjalan sendiri. Perbandingan performa kelima model di atas dalam konteks analisis keamanan kode PHP akan dibahas secara empiris di Bab IV.
+
+\subsection{Ollama: Menerapkan LLM Secara Lokal}
+
+Ollama adalah \textit{platform} \textit{open source} untuk menjalankan LLM secara lokal di infrastruktur pengguna \cite{ollama2024}. \textit{Platform} ini mengkuantisasi model secara otomatis agar sesuai sumber daya perangkat keras yang tersedia dan menyediakan API REST yang kompatibel dengan format OpenAI, sehingga mudah diintegrasikan ke aplikasi Python.
+
+Alasan memilih Ollama bukan sekadar teknis. Kode sumber yang dianalisis dalam penelitian ini bersifat rahasia milik institusi. Mengirimkannya ke API \textit{cloud} bukan pilihan yang bisa diterima. Dengan Ollama, semua inferensi terjadi di mesin lokal tanpa data keluar dari lingkungan organisasi \cite{ollama2024}, sejalan dengan prinsip ISO/IEC 27001:2022 \cite{iso27001_2022} dan merupakan persyaratan eksplisit dari DTI UGM.

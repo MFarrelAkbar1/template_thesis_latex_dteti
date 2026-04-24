@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pdflatex:*)",
+      "Bash(where latexmk:*)",
+      "Bash(where pdflatex:*)",
+      "Bash(where xelatex:*)"
+    ]
+  }
+}

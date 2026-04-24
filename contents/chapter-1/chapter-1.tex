@@ -2,372 +2,91 @@
 
 \section{Latar Belakang}
 
-Sub-bab ini berisi uraian tentang latar belakang atau justifikasi ilmiah (dari \textit{paper} dan jurnal) dari permasalahan yang akan diteliti, alasan penelitian dan penelitian yang pernah dilakukan sebelumnya terkait fenomena tersebut.
+PHP bukan bahasa yang didesain untuk menjadi bahasa pemrograman besar. Rasmus Lerdorf memperkenalkannya pada tahun 1995 sebagai kumpulan skrip sederhana untuk mengelola halaman web pribadinya \cite{phpgroup_history}. Tapi dalam waktu beberapa tahun, PHP berkembang jauh melampaui tujuan awalnya, dan pada akhir 1990-an sudah menjadi pilihan dominan untuk pengembangan sisi \textit{server} \cite{phpgroup_history}. Kemudahan penggunaan, dukungan \textit{hosting} yang luas, dan ekosistem pustaka yang terus bertumbuh menjadikannya pilihan yang wajar bagi banyak pengembang web, mulai dari individu hingga tim teknologi di institusi besar \cite{phpgroup_history}.
 
-%HAPUS YANG TIDAK PERLU
-%-------------------------------------------------
-\noindent\textbf{Contoh latar belakang penelitian untuk teknik elektro:} \\
-\noindent\fbox{%
-	\parbox{\textwidth}{%
-				
-		\hspace{1cm} "Peningkatan konsumsi energi listrik yang terus menerus menyebabkan ketersediaan 
-		sumber energi yang semakin terbatas. Sumber energi terbarukan seperti solar dan angin 
-		menjadi solusi yang menjanjikan untuk memenuhi kebutuhan energi. Namun, kapasitas 
-		produksi dan efisiensi dari sumber energi terbarukan masih sangat tergantung pada 
-		kondisi cuaca dan geografis. Oleh karena itu, perlu adanya sistem penyimpanan energi 
-		yang efisien dan dapat memastikan ketersediaan energi listrik secara kontinu. Penelitian 
-		ini akan mengevaluasi kemampuan superkapasitor dalam menyimpan dan mengirimkan 
-		energi secara efisien dan memastikan ketersediaan energi listrik secara kontinu."
-		
-	}%
-}
+Data terbaru menegaskan dominasi ini. Menurut W3Techs per 8 April 2026, sebesar 71,7\% dari seluruh situs web yang memiliki bahasa pemrograman sisi \textit{server} yang diketahui menggunakan PHP \cite{w3techs2024php}. Angka itu menempatkan PHP jauh di atas bahasa-bahasa lainnya. Namun di balik angka yang terlihat impresif tersebut ada kenyataan yang kurang nyaman: hanya 58,1\% dari situs web berbasis PHP yang telah beralih ke versi 8. Sekitar 33,1\% masih menggunakan PHP 7.x, dan 8,7\% masih berjalan di PHP 5.x \cite{w3techs2024php}. Artinya hampir separuh pengguna PHP di seluruh dunia masih menjalankan versi yang sudah tidak mendapatkan pembaruan keamanan resmi.
 
-%-------------------------------------------------	
-\vspace{5mm}
-Latar belakang ini memperkenalkan masalah ketersediaan sumber energi dan 
-peningkatan konsumsi energi listrik yang terus menerus. Ini juga memperkenalkan solusi 
-yang menjanjikan dari sumber energi terbarukan dan menjelaskan mengapa perlu adanya 
-sistem penyimpanan energi yang efisien. Latar belakang ini memberikan dasar yang kuat 
-bagi perumusan masalah dan tujuan penelitian, memastikan bahwa hasil penelitian 
-memiliki relevansi dan signifikansi bagi bidang terkait.
+Ini bukan masalah kecil. Dukungan resmi untuk PHP 7.4, versi terakhir dalam seri 7.x, berakhir pada 28 November 2022 \cite{phpgroup2022supported}. Setelah tanggal itu, tidak ada lagi pembaruan keamanan yang dirilis, termasuk untuk kerentanan baru yang terus ditemukan. Basis Data Kerentanan Nasional (NVD) yang dikelola NIST mencatat bahwa sistem yang berjalan di atas versi \textit{end-of-life} secara efektif membiarkan celah keamanan yang sudah diketahui publik tetap terbuka tanpa kemungkinan ditambal \cite{nist_nvd}. Semakin lama sistem dibiarkan berjalan di versi lama, semakin besar akumulasi risiko yang ditanggung.
 
-%HAPUS YANG TIDAK PERLU
-%-------------------------------------------------
-\noindent\textbf{Contoh latar belakang penelitian untuk teknik biomedis:} \\
-\noindent\fbox{%
-	\parbox{\textwidth}{%
-		
-		\hspace{1cm} "Diagnosis dan pengobatan penyakit memerlukan integrasi informasi medis yang 
-		akurat dan terkini. Alat diagnostik tradisional seperti CT scan dan MRI memiliki resolusi 
-		yang tinggi dan dapat mengidentifikasi masalah pada tingkat sel, tetapi sering 
-		memerlukan banyak waktu dan biaya. Alat deteksi dini seperti tes darah dan urin memiliki 
-		biaya rendah dan mudah digunakan, tetapi sering kurang akurat dan tidak memberikan gambaran yang jelas tentang masalah medis. Oleh karena itu, penting untuk menemukan metode baru yang memadukan keunggulan dari kedua jenis alat tersebut. Penelitian ini akan mengevaluasi kemampuan nanopartikel dalam meningkatkan akurasi dan efisiensi diagnosis medis."
-		
-	}%
-}
+Jenis kerentanan yang paling umum ditemukan pada aplikasi PHP lama sudah terdokumentasi cukup baik. OWASP Top 10:2021 \cite{owasp2021} mencantumkan injeksi sebagai salah satu ancaman paling serius pada aplikasi web. Pada kode PHP lama, injeksi SQL hampir selalu muncul dari penggunaan fungsi \texttt{mysql\_query()} di mana \textit{input} pengguna langsung digabungkan ke dalam pernyataan SQL tanpa parameterisasi. Kerentanan XSS (\textit{cross-site scripting}) juga lazim karena banyak aplikasi PHP lama tidak menerapkan enkode \textit{output} secara konsisten. Selain itu masih ada masalah kriptografi lemah seperti penggunaan \texttt{md5()} untuk menyimpan kata sandi, penanganan sesi yang tidak aman, dan berbagai fungsi yang sudah dihapus dari PHP 8.x karena alasan keamanan \cite{owasp2021}. Bahwa masalah-masalah ini sudah ada sejak lama bukan berarti sudah terselesaikan; Merlo, Letarte, dan Antoniol \cite{merlo2007automated} sudah mengangkat persoalan perlindungan otomatis aplikasi PHP dari injeksi SQL sejak 2007, dan solusi komprehensif masih belum tersedia hingga sekarang.
 
-%-------------------------------------------------	
-\vspace{5mm}
-Latar belakang ini memperkenalkan masalah diagnostik dan pengobatan penyakit dan mempertimbangkan pentingnya integrasi informasi medis yang akurat dan terkini. Ini 
-juga memperkenalkan kelemahan dari alat diagnostik tradisional dan deteksi dini dan menjelaskan mengapa penting untuk menemukan metode baru yang memadukan 
-keunggulan dari kedua jenis alat tersebut. Latar belakang ini memberikan dasar yang kuat bagi perumusan masalah dan tujuan penelitian, memastikan bahwa hasil penelitian 
-memiliki relevansi dan signifikansi bagi bidang terkait.
+Situasi ini bukan hanya dialami oleh organisasi di luar negeri. DTI UGM mengelola sejumlah aplikasi web berbasis PHP yang sebagian di antaranya masih berjalan di atas versi lama, sehingga proses modernisasi menjadi kebutuhan yang mendesak. Kondisi ini merepresentasikan tantangan yang umum dihadapi institusi pendidikan dan pemerintahan yang membangun sistem informasi berbasis PHP pada era sebelum standar pengembangan modern diadopsi secara luas, di mana migrasi sering tertunda karena kompleksitas teknis dan kekhawatiran terhadap gangguan layanan yang sudah berjalan \cite{phpgroup2022supported}.
 
-%HAPUS YANG TIDAK PERLU
-%-------------------------------------------------
-\noindent\textbf{Contoh latar belakang penelitian untuk teknologi informasi:} \\
-\noindent\fbox{%
-	\parbox{\textwidth}{%
-		
-\hspace{1cm} "Dengan perkembangan teknologi informasi yang sangat pesat dalam beberapa tahun terakhir, penyimpanan data menjadi masalah yang semakin penting. Semakin banyak data yang diterima setiap hari, semakin penting bagi organisasi untuk memastikan bahwa data 
-mereka aman dan terlindungi. Pada saat yang sama, organisasi juga membutuhkan akses cepat dan efisien ke data mereka untuk membuat keputusan yang tepat. Teknologi 
-enkripsi kuantum baru-baru ini muncul sebagai solusi potensial untuk memenuhi kebutuhan ini, dengan menawarkan tingkat keamanan yang jauh lebih tinggi dan proses 
-enkripsi yang lebih cepat dibandingkan dengan teknologi enkripsi konvensional. Oleh karena itu, penting untuk mengevaluasi efektivitas dan keamanan teknologi enkripsi 
-kuantum dalam sistem penyimpanan data cloud."
-		
-	}%
-}
+Secara teknis, migrasi dari PHP 7.x ke PHP 8.x bukan perkara sederhana. PHP 8.x membawa sejumlah \textit{breaking changes} yang membuat kode PHP 7.x tidak bisa langsung dijalankan tanpa modifikasi \cite{phpgroup2022supported}. Fungsi-fungsi yang sebelumnya umum digunakan seperti \texttt{create\_function()}, \texttt{each()}, dan seluruh ekstensi \texttt{ext/mysql} dihapus. Sistem tipe menjadi jauh lebih ketat dengan tipe \textit{union} dan tipe campuran, yang bisa memicu kesalahan \textit{runtime} pada kode yang sebelumnya berjalan normal. PHP 8.x juga memperkenalkan fitur baru seperti argumen bernama, \textit{match expression}, operator \textit{nullsafe} (\texttt{?->}), dan kompilasi JIT \cite{phpgroup2022supported}. Penanganan kesalahan pun berubah: sejumlah fungsi yang dulu mengembalikan \texttt{false} ketika gagal kini melempar pengecualian.
 
-%-------------------------------------------------	
-\vspace{5mm}
-Latar belakang ini memperkenalkan masalah penyimpanan data dan mempertimbangkan pentingnya keamanan data. Ini juga memperkenalkan teknologi enkripsi kuantum sebagai solusi potensial dan menjelaskan mengapa evaluasi teknologi ini penting bagi bidang teknologi informasi. Latar belakang ini memberikan dasar yang kuat bagi perumusan masalah dan tujuan penelitian, memastikan bahwa hasil penelitian memiliki relevansi dan signifikansi bagi bidang terkait.
+Melakukan semua perubahan ini secara manual pada ratusan atau ribuan \textit{file} kode adalah pendekatan yang tidak realistis. Beberapa organisasi memilih pendekatan bertahap, beralih ke PHP 7.4 dahulu sebelum pindah ke PHP 8.x \cite{phpgroup2022supported}, yang menjadikan dukungan versi target yang dapat dikonfigurasi sebagai kebutuhan nyata, bukan sekadar fitur tambahan.
+
+Alat otomatis yang tersedia saat ini sudah membantu, tapi masing-masing punya batas. Rector \cite{rector2024} adalah alat transformasi berbasis AST yang terbukti andal untuk perubahan sintaksis skala industri, sebagaimana ditunjukkan oleh Chen et al. \cite{chen2022ast} dalam studi migrasi kode TypeScript di Microsoft. Namun Rector tidak bisa menangani kasus yang membutuhkan pemahaman semantik. Penggantian \texttt{mysql\_*()} dengan PDO atau MySQLi, misalnya, bukan sekadar mengganti nama fungsi; ini penulisan ulang logika akses basis data secara keseluruhan yang hanya bisa dilakukan jika konteks penggunaannya dipahami.
+
+Di sisi keamanan, Semgrep \cite{semgrep2024} bisa mengidentifikasi pola kerentanan secara otomatis, dan PHPStan \cite{phpstan2024} bisa memeriksa kompatibilitas tipe kode dengan versi PHP target. Tapi tidak ada satu pun dari alat-alat ini yang secara inheren menggabungkan deteksi kerentanan, transformasi kode, dan kepatuhan standar keamanan dalam satu alur kerja yang terintegrasi. Akibatnya tim pengembang yang mengerjakan migrasi dan tim keamanan yang melakukan audit bekerja secara terpisah. Strobl et al. \cite{strobl2020automated} menemukan dari tiga kasus transformasi kode skala besar di sektor pemerintahan bahwa ketiadaan mekanisme validasi yang melekat pada proses transformasi menimbulkan risiko yang baru terasa jauh setelah sistem berjalan di produksi.
+
+Tekanan bertambah bagi organisasi yang beroperasi di bawah standar keamanan informasi. ISO/IEC 27001:2022 \cite{iso27001_2022} mensyaratkan praktik \textit{secure coding} yang terdokumentasi dan dapat diaudit melalui tiga kontrol dalam Annex A.8: A.8.25 (\textit{secure development lifecycle}), A.8.28 (\textit{secure coding}), dan A.8.29 (pengujian keamanan dalam pengembangan dan penerimaan). Bagi organisasi yang sedang dalam proses sertifikasi ISO/IEC 27001:2022, bukti bahwa migrasi kode dilakukan dengan memperhatikan standar ini harus tersedia sebagai bagian dari dokumentasi audit. Menghasilkan bukti tersebut saat ini masih memerlukan pekerjaan manual yang terpisah dari proses migrasi.
+
+Kemajuan dalam \textit{Large Language Models} (LLM) membuka kemungkinan baru. LLM sudah terbukti dapat digunakan untuk mendeteksi kerentanan perangkat lunak \cite{akuthota2023vulnerability}\cite{li2025software}. Li, Dutta, dan Naik \cite{li2025iris} menunjukkan bahwa menggabungkan LLM dengan alat analisis statis menghasilkan deteksi kerentanan yang lebih baik dari masing-masing pendekatan yang berjalan sendiri. St\"{u}mpfle et al. \cite{stumpfle2025llm} meneliti penggunaan LLM untuk transformasi kode yang membutuhkan pemahaman semantik dalam konteks migrasi varian perangkat lunak. Dengan kemampuan memahami konteks kode, LLM berpotensi mengisi celah yang tidak bisa ditangani alat berbasis aturan seperti Rector.
+
+Kendala utamanya adalah privasi data. Model LLM berperforma tinggi seperti GPT-4 diakses melalui API \textit{cloud}, yang berarti kode sumber harus dikirimkan ke \textit{server} pihak ketiga. Untuk institusi seperti DTI UGM yang mengelola kode sumber aplikasi internal yang bersifat rahasia, ini bukan pilihan yang bisa diterima. Perkembangan model LLM \textit{open source} berukuran kecil hingga menengah beberapa tahun terakhir mengubah situasi ini. Model-model seperti DeepSeek Coder 6.7b \cite{deepseek2024coder}, Qwen2.5-Coder 7b \cite{hui2024qwen}, CodeLlama 7b \cite{roziere2024codellama}, Mistral 7b \cite{jiang2023mistral}, dan Llama 3.1 8b \cite{dubey2024llama3} kini bisa dijalankan secara lokal pada perangkat keras konsumen ber-VRAM 8 GB melalui Ollama \cite{ollama2024}. Seluruh proses inferensi terjadi di mesin lokal tanpa ada data yang keluar dari lingkungan organisasi.
+
+Dari uraian di atas, ada dua masalah mendasar yang belum terpecahkan sekaligus. Pertama, migrasi kode PHP lama masih memerlukan intervensi manual besar untuk kasus yang butuh pemahaman semantik, dan alat yang ada tidak menyertakan pemeriksaan keamanan sebagai bagian dari alur migrasi. Kedua, organisasi yang harus memenuhi ISO/IEC 27001:2022 masih harus melakukan audit keamanan sebagai langkah terpisah setelah migrasi selesai. Belum ada platform yang menggabungkan keduanya dalam satu alur kerja \textit{open source} yang dapat dijalankan secara lokal, sebagaimana ditunjukkan oleh tinjauan literatur pada Bab II.
+
+Penelitian ini membangun \textit{platform} berbasis AI dan alat \textit{open source} yang dapat secara otomatis mengubah aplikasi web PHP lama ke versi PHP target yang dapat dikonfigurasi, dengan dukungan teknis dari PHP 5.2 hingga PHP 8.x, sekaligus menyertakan pemeriksaan \textit{secure coding} berbasis ISO/IEC 27001:2022. \textit{Platform} ini menggunakan Rector \cite{rector2024} untuk transformasi kode berbasis AST, Semgrep \cite{semgrep2024} untuk pemindaian keamanan, PHPStan \cite{phpstan2024} untuk validasi pasca-konversi, serta lima model LLM \textit{open source} yang dijalankan secara lokal melalui Ollama \cite{ollama2024}. Studi kasus dilakukan pada kode PHP milik DTI UGM.
 
 \section{Rumusan Masalah}
 
-Sub-bab ini berisi poin-poin yang menjelaskan masalah atau isu yang akan diteliti dalam suatu penelitian. Ini mencakup formulasi masalah yang jelas dan spesifik dan 
-mempertimbangkan latar belakang dan deskripsi masalah yang terkait yang tertulis Dalam latar belakang pada sub-bab sebelumnya. Perumusan masalah yang baik akan membantu menentukan fokus penelitian dan memberikan dasar untuk tujuan dan hipotesis penelitian. Dalam penelitian, perumusan masalah memainkan peran penting dalam memastikan bahwa hasil penelitian berguna dan relevan untuk masalah yang diteliti.
-
-Jika rumusan masalah lebih dari 1, maka ditulis dengan format \textit{list}. Contoh sebagai  berikut:
+Berdasarkan latar belakang yang telah diuraikan, penelitian ini merumuskan tiga permasalahan sebagai berikut:
 
 \begin{enumerate}
-	\item Rumusan masalah 1.
-	\item Rumusan masalah 2.
+	\item Bagaimana merancang sistem berbasis AI yang mampu melakukan konversi otomatis aplikasi web PHP lama ke versi PHP tertentu sambil mempertahankan fitur aplikasi?
+	\item Bagaimana mengintegrasikan pemeriksaan \textit{secure coding} yang selaras dengan standar ISO/IEC 27001:2022 ke dalam proses konversi otomatis?
+	\item Bagaimana memvalidasi bahwa hasil konversi memenuhi persyaratan fungsional dan keamanan ISO/IEC 27001:2022?
 \end{enumerate}
-
-%-------------------------------------------------
-\noindent\fbox{%
-	\parbox{\textwidth}{%
-\noindent\textbf{Contoh} perumusan masalah untuk \textbf{Teknik Elektro}: \\		
-
-\hspace{1cm} \textbf{"Bagaimana memperbaiki efisiensi penghematan energi pada sistem pencahayaan rumah tangga melalui implementasi teknologi kontrol otomatis?"} \\
-	
-\hspace{1cm} Perumusan masalah ini jelas dan spesifik dan menentukan fokus penelitian pada perbaikan efisiensi penghematan energi dalam sistem pencahayaan rumah tangga dengan menggunakan teknologi kontrol otomatis. Ini juga mempertimbangkan latar belakang tentang pentingnya penghematan energi dan memberikan solusi praktis melalui implementasi teknologi. Perumusan masalah ini memberikan dasar yang kuat untuk tujuan dan hipotesis penelitian dan memastikan bahwa hasil penelitian akan berguna bagi bidang teknik elektro.
-		
-	}%
-}
-
-%-------------------------------------------------
-\noindent\fbox{%
-	\parbox{\textwidth}{%
-\noindent\textbf{Contoh} perumusan masalah untuk \textbf{Teknik Biomedis}: \\		
-
-\hspace{1cm} \textbf{"Bagaimana memperbaiki akurasi deteksi kanker payudara dengan menggunakan teknologi pemindaian ultrasonografi berbasis AI?"} \\
-
-\hspace{1cm} Perumusan masalah ini jelas dan spesifik dan menentukan fokus penelitian pada 
-perbaikan akurasi deteksi kanker payudara dengan menggunakan teknologi pemindaian ultrasonografi berbasis AI. Ini mempertimbangkan latar belakang tentang pentingnya deteksi dini kanker payudara dan memberikan solusi praktis melalui implementasi teknologi. Perumusan masalah ini memberikan dasar yang kuat untuk tujuan dan hipotesis penelitian dan memastikan bahwa hasil penelitian akan berguna bagi bidang teknik biomedis.
-		
-	}%
-}
-
-%-------------------------------------------------	
-\noindent\fbox{%
-	\parbox{\textwidth}{%
-\noindent\textbf{Contoh} perumusan masalah untuk \textbf{Teknologi Informasi}: \\		
-
-\hspace{1cm} \textbf{"Bagaimana meningkatkan efisiensi dan keamanan sistem penyimpanan data cloud melalui implementasi teknologi enkripsi kuantum?"} \\
-
-\hspace{1cm} Perumusan masalah ini jelas dan spesifik dan menentukan fokus penelitian pada peningkatan efisiensi dan keamanan sistem penyimpanan data cloud dengan menggunakan teknologi enkripsi kuantum. Ini mempertimbangkan latar belakang tentang pentingnya keamanan data dan memberikan solusi praktis melalui implementasi teknologi. Perumusan masalah ini memberikan dasar yang kuat untuk tujuan dan hipotesis penelitian dan memastikan bahwa hasil penelitian akan berguna bagi bidang teknologi informasi.
-		
-	}%
-}
-
-%-------------------------------------------------	
 
 \section{Tujuan Penelitian}
 
-Tujuan penelitian pada skripsi Teknik (TE, TB, TIF) adalah menentukan sasaran atau target yang ingin dicapai melalui proses penelitian. Tujuan penelitian bisa beragam sesuai dengan bidang ilmu yang dipelajari, topik penelitian, dan permasalahan yang akan dicari solusinya.
+Penelitian ini memiliki empat tujuan yang menjawab rumusan masalah di atas:
 
-%Secara umum, tujuan penelitian pada skripsi bidang teknik adalah untuk:
-%
-%\begin{itemize}
-%	\item Mengidentifikasi dan menganalisis masalah atau permasalahan dalam bidang \textit{engineering}.
-%	\item Meningkatkan pemahaman dan wawasan tentang bidang \textit{engineering} melalui penerapan teori dan metodologi yang sesuai.
-%	\item Mengembangkan solusi atau produk baru yang inovatif dan efektif dalam 
-%	bidang \textit{engineering}.
-%	\item Menunjukkan penerapan prinsip-prinsip keteknikan dalam solusi atau produk yang dikembangkan.
-%	\item Menjelaskan implikasi dan rekomendasi dari hasil penelitian bagi bidang \textit{engineering} dan masyarakat.
-%\end{itemize}
-%
-%
-%\noindent Catatan: Tujuan penelitian dalam skripsi bidang teknik harus jelas, spesifik, terukur, dan dapat dicapai dalam jangka waktu yang ditentukan.
-
-
-\textcolor{red}{Tujuan perlu disinkronkan dengan rumusan masalah. Setiap rumusan masalah boleh memiliki lebih dari 1 tujuan. Berikut ini adalah contoh tujuan dari rumusan masalah "Bagaimanakan memperbaiki efisiensi penghematan energi pada sistem pencahayaan rumah tangga melalui implementasi teknologi kontrol otomatis?"
 \begin{enumerate}
-	\item Memodelkan sistem pencahayaan rumah tangga;
-	\item Mendesain sistem kontrol otomatis untuk sistem pencahayaan rumah tangga.
+	\item Mengembangkan \textit{platform} berbasis AI yang menggunakan alat \textit{open source} untuk secara otomatis mengubah aplikasi web PHP lama ke versi PHP target yang dapat dikonfigurasi tanpa kehilangan fungsionalitasnya.
+	\item Mengimplementasikan mekanisme pemeriksaan \textit{secure coding} yang terhubung dengan kontrol dalam ISO/IEC 27001:2022 Annex A.8 \cite{iso27001_2022}, yang akan menjaga keamanan kode yang dikonversi.
+	\item Membangun sistem \textit{quality assurance} yang memeriksa hasil konversi terhadap kebenaran fungsional dan standar kepatuhan keamanan yang ditetapkan oleh ISO/IEC 27001:2022 \cite{iso27001_2022}.
+	\item Menghasilkan dokumentasi otomatis berupa laporan konversi dan pemetaan kepatuhan terhadap ISO/IEC 27001:2022 \cite{iso27001_2022}, untuk membantu audit keamanan informasi.
 \end{enumerate}
-}
-
-\noindent Catatan: Tujuan penelitian dalam skripsi bidang teknik harus jelas, spesifik, terukur, dan dapat dicapai dalam jangka waktu yang ditentukan.
-
-Berikut ini adalah contoh detail tujuan untuk masing-masing prodi di DTETI:
-
-\newpage
-\vspace{5mm}
-\textbf{Contoh Tujuan Penelitian Skripsi Teknik Elektro:}
-
-\begin{minipage}{0.92\textwidth}
-Berikut adalah beberapa contoh tujuan penelitian yang sesuai dengan rumusan masalah 
-“perbaikan efisiensi penghematan energi pada sistem pencahayaan rumah tangga 
-melalui implementasi teknologi kontrol otomatis”:
-\end{minipage}
-
-
-
-%-------------------------------------------------	
-\noindent\fbox{%
-	\parbox{\textwidth}{%
-\begin{enumerate}
-\item Menganalisis tingkat efisiensi energi pada sistem pencahayaan rumah tangga 
-sebelum dan setelah implementasi teknologi kontrol otomatis.
-\item Mengukur pengurangan biaya listrik setelah implementasi teknologi kontrol 
-otomatis pada sistem pencahayaan rumah tangga.
-\item Menunjukkan bagaimana teknologi kontrol otomatis dapat memperbaiki 
-efisiensi penghematan energi pada sistem pencahayaan rumah tangga.
-\item Meningkatkan kenyamanan dan keamanan pengguna rumah tangga melalui 
-penggunaan teknologi kontrol otomatis pada sistem pencahayaan.
-\item Menjelaskan bagaimana implementasi teknologi kontrol otomatis 
-mempengaruhi kualitas cahaya dan faktor-faktor lain dalam sistem pencahayaan 
-rumah tangga.
-\item Membandingkan efisiensi energi dan biaya pada sistem pencahayaan rumah 
-tangga dengan teknologi kontrol otomatis dan sistem manual.
-\item Menunjukkan implikasi dan rekomendasi dari hasil penelitian bagi rumah tangga 
-dan lingkungan.
-\end{enumerate}
-		
-	}%
-}
-
-%-------------------------------------------------	
-
-\newpage
-\vspace{5mm}
-\textbf{Contoh Tujuan Penelitian Skripsi Teknik Biomedis:}
-
-\begin{minipage}{0.92\textwidth}
-Berikut adalah beberapa contoh tujuan penelitian untuk penelitian dengan tema "Bagaimana memperbaiki akurasi deteksi kanker payudara dengan menggunakan 
-teknologi pemindaian ultrasonografi berbasis AI":
-\end{minipage}
-
-%-------------------------------------------------	
-\noindent\fbox{%
-	\parbox{\textwidth}{%
-\begin{enumerate}
-\item Mengidentifikasi faktor-faktor yang mempengaruhi akurasi deteksi kanker 
-payudara dengan menggunakan teknologi pemindaian ultrasonografi berbasis 
-AI.
-\item Menilai efektivitas teknologi pemindaian ultrasonografi berbasis AI dalam 
-meningkatkan akurasi deteksi kanker payudara.
-\item Menentukan metode pemindaian ultrasonografi berbasis AI yang paling efektif dalam meningkatkan akurasi deteksi kanker payudara.
-\item Menilai keamanan dan tolerabilitas teknologi pemindaian ultrasonografi berbasis AI dalam deteksi kanker payudara.
-\item Membandingkan akurasi deteksi kanker payudara dengan teknologi pemindaian 
-ultrasonografi berbasis AI dengan metode deteksi lainnya.
-\item Menyediakan bukti ilmiah untuk menunjukkan bahwa teknologi pemindaian 
-ultrasonografi berbasis AI dapat digunakan sebagai metode deteksi kanker 
-payudara yang lebih efektif dan akurat.
-\item Meningkatkan akurasi deteksi kanker payudara dengan menggunakan teknologi 
-pemindaian ultrasonografi berbasis AI.
-\end{enumerate}
-		
-	}%
-}
-
-%-------------------------------------------------	
-
-\newpage
-\vspace{5mm}
-\textbf{Contoh Tujuan Penelitian Skripsi Teknologi Informasi:}
-
-\begin{minipage}{0.92\textwidth}
-Berikut adalah beberapa contoh tujuan penelitian untuk penelitian dengan tema 
-"Bagaimana meningkatkan efisiensi dan keamanan sistem penyimpanan data cloud 
-melalui implementasi teknologi enkripsi kuantum?":
-\end{minipage}
-
-%-------------------------------------------------	
-\noindent\fbox{%
-	\parbox{\textwidth}{%
-\begin{enumerate}
-\item Menilai efektivitas implementasi teknologi enkripsi kuantum dalam 
-meningkatkan keamanan data pada sistem penyimpanan cloud.
-\item Menentukan metode enkripsi kuantum yang paling efektif dalam meningkatkan 
-keamanan data pada sistem penyimpanan cloud.
-\item Membandingkan efisiensi enkripsi kuantum dengan metode enkripsi lainnya 
-dalam meningkatkan keamanan data pada sistem penyimpanan cloud.
-\item Menilai keamanan dan stabilitas sistem penyimpanan data cloud setelah 
-implementasi teknologi enkripsi kuantum.
-\item Menyediakan bukti ilmiah untuk menunjukkan bahwa implementasi teknologi 
-enkripsi kuantum dapat meningkatkan efisiensi dan keamanan sistem 
-penyimpanan data cloud.
-\item Mengidentifikasi potensi masalah dan hambatan dalam implementasi teknologi 
-enkripsi kuantum pada sistem penyimpanan data cloud.
-\end{enumerate}
-		
-	}%
-}
-
-%-------------------------------------------------	
-
 
 \section{Batasan Penelitian}
 
-Batasan penelitian teknik adalah pembatasan atau definisi yang menentukan lingkup dan ruang lingkup suatu penelitian dalam bidang teknik. Ini membantu membatasi masalah dan isu yang akan diteliti, menentukan metode dan teknik penelitian, membatasi populasi dan sampel, dan membatasi variabel dan hipotesis yang akan diuji. Batasan penelitian juga mencakup keterbatasan dan hambatan yang mungkin timbul selama proses penelitian. Tujuan utama dari batasan penelitian teknik adalah membuat penelitian terfokus dan terarah, serta memastikan hasil yang diperoleh dapat digunakan untuk menjawab pertanyaan dan masalah teknik secara efektif dan akurat.
-
-Batasan penelitian dapat ditulis dengan format \textit{list}. Contohnya adalah sebagai berikut:
+Penelitian ini memiliki batasan-batasan sebagai berikut:
 
 \begin{enumerate}
-	\item Batasan 1.
-	\item Batasan 2.
+	\item \textbf{Ruang lingkup konversi:} Secara teknis, \textit{pipeline} yang dibangun mendukung konversi dari PHP 5.2 ke atas, karena Rector menggunakan rantai \textit{ruleset} kumulatif yang mencakup semua perubahan dari PHP 5.2 hingga versi target yang dipilih \cite{rector2024}. Namun studi kasus dalam penelitian ini menggunakan kode sumber PHP 7.x milik DTI UGM sebagai representasi kondisi yang paling umum ditemukan saat ini \cite{w3techs2024php}. Versi target yang dapat dikonfigurasi mencakup PHP 7.4 hingga PHP 8.3, yang merupakan rentang versi paling relevan untuk kebutuhan modernisasi institusi saat ini \cite{phpgroup2022supported}.
+	\item \textbf{Studi kasus:} Fokus utama studi kasus ini adalah aplikasi web PHP milik Direktorat Teknologi Informasi (DTI) di Universitas Gadjah Mada, yang dibangun di atas \textit{framework} CodeIgniter 3.x. \textit{Pipeline} yang dikembangkan bekerja pada level \textit{file} PHP individual dan tidak bergantung pada \textit{framework} yang digunakan, sehingga secara teknis dapat diterapkan pada aplikasi berbasis \textit{framework} lain seperti Laravel atau Symfony maupun pada aplikasi PHP tanpa \textit{framework}. Pengujian terhadap \textit{framework} selain CodeIgniter 3.x bukan bagian dari ruang lingkup penelitian ini.
+	\item \textbf{Kontrol keamanan:} Pemeriksaan keamanan hanya dilakukan pada kontrol ISO/IEC 27001:2022 Annex A yang relevan dengan \textit{secure coding}: A.8.25, A.8.28, dan A.8.29, serta A.5.17 dan A.8.24 dan A.8.26 yang turut dipetakan oleh \textit{pipeline} \cite{iso27001_2022}.
+	\item \textbf{Model AI:} Penelitian ini mengevaluasi dan membandingkan lima model LLM \textit{open source} yang dijalankan secara lokal melalui Ollama \cite{ollama2024} dalam eksperimen komparasi \textit{zero-shot}: DeepSeek Coder 6.7b \cite{deepseek2024coder}, Qwen2.5-Coder 7b \cite{hui2024qwen}, CodeLlama 7b \cite{roziere2024codellama}, Mistral 7b \cite{jiang2023mistral}, dan Llama 3.1 8b \cite{dubey2024llama3}. Semua model digunakan tanpa \textit{fine-tuning}.
+	\item \textbf{Lingkungan validasi:} Pengujian dilakukan dalam pengaturan lokal menggunakan kode sumber dari lingkungan institusional. Pengujian dalam lingkungan produksi skala besar bukan bagian dari ruang lingkup penelitian ini.
+	\item \textbf{Bahasa pemrograman:} Penelitian ini terbatas pada aplikasi PHP. Bahasa lain tidak dicakup.
+	\item \textbf{Kompleksitas aplikasi:} Aplikasi uji memiliki kompleksitas tingkat menengah, dengan maksimum 10.000 baris kode.
 \end{enumerate}
-
-
-%\noindent \textbf{Contoh penulisan batasan skripsi Teknik Elektro:}
-%
-%%-------------------------------------------------	
-%\noindent\fbox{%
-%	\parbox{\textwidth}{%
-%\begin{enumerate}
-%\item Objek penelitian: Studi efisiensi dan kinerja sistem pemantauan suhu dan arus pada sistem pembangkit tenaga listrik.
-%\item Metode penelitian: Penelitian eksperimental menggunakan analisis simulasi dan pengujian sistem pada skala laboratorium.
-%\item Waktu dan tempat penelitian: Waktu penelitian adalah Maret-Agustus 2022 di 
-%FasLab TTL.
-%\item Populasi dan sampel: Populasi adalah sistem pembangkit tenaga listrik, dan sampel diambil sebanyak 3 sistem yang berbeda.
-%\item Variabel: Variabel bebas adalah metode pemantauan suhu dan arus, dan variabel terikat adalah efisiensi dan kinerja
-%\item Hipotesis: bahwa metode pemantauan suhu dan arus berpengaruh terhadap efisiensi dan kinerja sistem pembangkit tenaga listrik.
-%\item Keterbatasan Penelitian: Keterbatasan penelitian adalah hanya melibatkan 
-%pengujian sistem pada skala laboratorium dan membatasi analisis pada variabel 
-%bebas dan terikat.
-%\end{enumerate}
-%		
-%	}%
-%}
-%
-%%-------------------------------------------------	
-%\newpage
-%
-%\noindent \textbf{Contoh penulisan batasan skripsi Teknik Biomedis:}
-%
-%%-------------------------------------------------	
-%\noindent\fbox{%
-%	\parbox{\textwidth}{%
-%\begin{enumerate}
-%\item Objek Penelitian: Studi efektivitas dan keamanan alat elektromedik seperti pacu jantung.
-%\item Metode Penelitian: Penelitian deskriptif dan observasional menggunakan survei dan analisis data.
-%\item Waktu dan Tempat Penelitian: Waktu penelitian adalah Januari-Juni 2022 di 
-%Rumah Sakit Sarjito. 
-%\item Populasi dan Sampel: Populasi adalah pasien yang menggunakan pacu jantung, dan sampel diambil dengan metode random sampling sebanyak 100 pasien. 
-%\item Variabel: Variabel bebas nya adalah jenis alat pacu jantung, dan variabel terikatnya adalah efektivitas dan keamanan. 
-%\item Hipotesis: bahwa jenis alat pacu jantung berpengaruh terhadap efektivitas dan keamanan. 
-%\item Keterbatasan Penelitian: Keterbatasan penelitian adalah hanya melibatkan satu rumah sakit sebagai lokasi penelitian dan membatasi dalam analisis data hanya pada variabel bebas dan terikat.
-%\end{enumerate}
-%		
-%	}%
-%}
-%
-%%-------------------------------------------------	
-%
-%\newpage
-%\noindent \textbf{Contoh penulisan batasan skripsi Teknologi Informasi:}
-%
-%%-------------------------------------------------	
-%\noindent\fbox{%
-%	\parbox{\textwidth}{%
-%\begin{enumerate}
-%\item Objek Penelitian: Analisis perbandingan efektivitas dan efisiensi antara sistem manajemen proyek tradisional dan sistem manajemen proyek berbasis teknologi informasi. 
-%\item Metode Penelitian: Penelitian kualitatif dengan menggunakan wawancara dan 
-%survei terhadap para pelaku proyek di berbagai perusahaan. 
-%\item Waktu dan Tempat Penelitian: Waktu penelitian adalah Januari-Juni 2022 di 
-%perusahaan-perusahaan di wilayah Bantul. 
-%\item Populasi dan Sampel: Populasi nya adalah perusahaan yang melakukan proyek, dan sampel diambil sebanyak 10 perusahaan yang menerapkan sistem manajemen 
-%proyek tradisional dan 10 perusahaan yang menggunakan sistem manajemen 
-%proyek berbasis teknologi informasi. 
-%\item Variabel: Variabel bebasnya adalah sistem manajemen proyek, dan variabel 
-%terikatnya adalah efektivitas dan efisiensi. 
-%\item Hipotesis: bahwa sistem manajemen proyek berbasis teknologi informasi lebih efektif dan efisien dibandingkan dengan sistem manajemen proyek tradisional.
-%\item Keterbatasan Penelitian: Keterbatasan penelitian adalah penelitian hanya dilakukan pada perusahaan di wilayah Bantul dan hanya melibatkan wawancara dan survei sebagai metode pengumpulan data.
-%\end{enumerate}
-%		
-%	}%
-%}
 
 \section{Manfaat Penelitian}
 
-Manfaat penelitian didefinisikan sebagai manfaat yang diperoleh apabila 
-skripsi telah selesai dilakukan. Manfaat skripsi pada umumnya berbentuk daftar. 
-Manfaat penelitian dapat berupa manfaat bagi dunia akademik dan atau masyarakat.
+\subsection{Manfaat Akademis}
 
-\begin{enumerate}
-	\item Enum 1
-	\begin{itemize}
-		\item Coba 1
-		\item Coba 2
-	\end{itemize}
-	\item Enum 2
-\end{enumerate}
+Penelitian ini memberikan contoh nyata tentang cara mengintegrasikan kontrol \textit{secure coding} ISO/IEC 27001:2022 ke dalam alur kerja transformasi kode otomatis \cite{iso27001_2022}, sesuatu yang belum dilakukan oleh penelitian-penelitian sebelumnya di bidang ini \cite{merlo2007automated}\cite{akuthota2023vulnerability}\cite{stumpfle2025llm}. Selain itu, penelitian ini menghasilkan data empiris tentang performa model-model LLM \textit{open source} lokal berukuran kecil hingga menengah dalam tugas analisis keamanan kode, yang relevan bagi institusi dengan sumber daya komputasi terbatas.
 
+Desain modular \textit{platform} memungkinkan pengembangan lebih lanjut oleh peneliti lain, misalnya dengan mengganti alat transformasi untuk mendukung bahasa pemrograman lain, menggunakan model AI yang lebih baru, atau memperluas pemetaan ke standar keamanan lain selain ISO/IEC 27001:2022.
 
+\subsection{Manfaat Praktis}
+
+\textit{Platform} yang dibangun memudahkan pemindahan aplikasi PHP lama, khususnya bagi organisasi yang tidak memiliki banyak sumber daya pengembangan. Pemeriksaan kepatuhan keamanan disertakan langsung dalam proses migrasi \cite{iso27001_2022}, sehingga kerentanan dapat ditemukan bersamaan dengan konversi dan laporan kepatuhan dihasilkan secara otomatis. Dukungan versi target dari PHP 5.2 hingga PHP 8.x mengakomodasi berbagai strategi migrasi, baik yang bertahap maupun yang langsung. Seluruh \textit{platform} bersifat \textit{open source} dan dapat digunakan secara gratis.
 
 \section{Sistematika Penulisan}
 
-Sistematika penulisan berisi pembahasan apa yang akan ditulis di setiap bab. 
-Sistematika pada umumnya berupa paragraf yang setiap paragraf mencerminkan 
-bahasan setiap Bab. Contoh:
+Skripsi ini terdiri dari lima bab.
 
-\noindent Bab I membahas tentang pendahuluan yang berisi latar belakang, perumusan masalah 
-dan tujuan penelitian. 
+\noindent \textbf{Bab I: Pendahuluan} memaparkan latar belakang masalah, rumusan masalah, tujuan penelitian, batasan penelitian, manfaat penelitian, dan sistematika penulisan.
 
-\noindent Bab II berisi tentang metodologi penelitian yang terdiri dari desain penelitian, sumber data, Teknik pengumpulan data dan Teknik analisis data.
+\noindent \textbf{Bab II: Tinjauan Pustaka dan Landasan Teoritis} membahas penelitian-penelitian sebelumnya yang relevan dan kerangka teoritis, mencakup perubahan versi PHP, standar ISO/IEC 27001:2022, metodologi \textit{secure coding}, analisis kode berbasis LLM, serta alat-alat yang digunakan: Rector, Semgrep, PHPStan, dan Ollama.
 
-\noindent Dan seterusnya.
+\noindent \textbf{Bab III: Metodologi Penelitian} menjelaskan arsitektur sistem, tahapan penelitian, desain \textit{prompt} LLM, pemetaan kontrol ISO/IEC 27001:2022, rancangan eksperimen komparasi model, serta metode pengujian dan evaluasi.
 
+\noindent \textbf{Bab IV: Hasil dan Diskusi} menyajikan hasil implementasi pada studi kasus DTI UGM, mencakup tingkat keberhasilan konversi, perbandingan temuan keamanan sebelum dan sesudah konversi, hasil komparasi lima model LLM, dan diskusi mengenai kekuatan dan keterbatasan sistem.
+
+\noindent \textbf{Bab V: Kesimpulan dan Rekomendasi} merangkum temuan berdasarkan tujuan yang ditetapkan dan memberikan saran untuk penelitian berikutnya.
