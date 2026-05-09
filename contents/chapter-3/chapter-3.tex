@@ -38,8 +38,30 @@ Alasan penggunaan spesifikasi ini bukan sekadar ketersediaan. Model LLM yang dij
 
     \item \textbf{PHPStan} \cite{phpstan2024}: Alat analisis statis untuk validasi tipe dan kompatibilitas kode PHP, dijalankan pada level 5.
 
-    \item \textbf{Ollama} \cite{ollama2024}: \textit{Platform} untuk menjalankan LLM secara lokal, diakses via API REST di \texttt{localhost:11434}.
-
+\item \textbf{Ollama} \cite{ollama2024}: \textit{Platform} untuk 
+menjalankan LLM secara lokal, diakses via API REST di 
+\texttt{localhost:11434}. Ollama dipilih dibandingkan alternatif 
+lain seperti LM Studio dan llama.cpp karena tiga alasan. Pertama, 
+Ollama menyediakan API REST yang kompatibel dengan format OpenAI 
+sehingga mudah diintegrasikan ke skrip Python tanpa pustaka 
+tambahan. Kedua, manajemen model dilakukan melalui satu perintah 
+\texttt{ollama pull} tanpa konfigurasi manual, sehingga 
+eksperimen dapat direproduksi dengan mudah. Ketiga, Ollama 
+mendukung kuantisasi Q4\_0 secara otomatis yang memungkinkan 
+kelima model berjalan dalam VRAM 8 GB tanpa pengaturan tambahan. 
+LM Studio menyediakan antarmuka grafis yang tidak diperlukan 
+untuk otomatisasi berbasis skrip, sementara llama.cpp memerlukan 
+kompilasi manual dan tidak memiliki API REST bawaan.
+Secara teknis, Ollama memuat bobot model dalam format GGUF ke 
+dalam VRAM GPU menggunakan \textit{backend} llama.cpp. Proses 
+inferensi berjalan sepenuhnya di GPU: setiap token keluaran 
+dihasilkan melalui operasi perkalian matriks pada bobot model 
+yang sudah dikuantisasi tanpa melibatkan server eksternal. 
+Pada RTX 4060 dengan VRAM 8 GB, kelima model yang diuji 
+menghasilkan rata-rata 20--40 token per detik pada kuantisasi 
+Q4\_0. Ollama menyimpan model yang sudah dimuat di VRAM selama 
+sesi aktif sehingga latensi \textit{cold start} (waktu muat model pertama kali ke VRAM) 
+hanya terjadi sekali per sesi eksperimen
     \item \textbf{PHP 8.5.1}: Interpreter PHP untuk validasi sintaks menggunakan \texttt{php -l}.
 
     \item \textbf{Composer}: Manajer dependensi PHP untuk instalasi Rector dan PHPStan.
@@ -84,8 +106,15 @@ ilmiah \cite{deepseek2024coder}\cite{hui2024qwen}
 
     \item \textbf{Dokumen ISO/IEC 27001:2022} \cite{iso27001_2022}: Acuan utama untuk pemetaan kontrol keamanan.
 
-    \item \textbf{Kode sumber PHP dari FT UGM}: Kumpulan \textit{file} PHP dari aplikasi web internal berbasis CodeIgniter 3.x. Bersifat rahasia dan hanya digunakan untuk analisis statis tanpa akses ke basis data produksi.
+    \item \textbf{Kode sumber PHP dari FT UGM}: Kumpulan \textit{file} PHP 
+dari aplikasi \textit{Dashboard} TCK berbasis CodeIgniter 3.x dengan 
+PHP 7.4.9. Bersifat rahasia dan hanya digunakan untuk analisis statis 
+tanpa akses ke basis data produksi.
 
+\item \textbf{Kode sumber PHP dari DTI UGM}: Kumpulan \textit{file} PHP 
+dari aplikasi \textit{Computer-Based Test} (CBT) berbasis CodeIgniter 3.x 
+dengan persyaratan PHP $\geq$ 7.0. Bersifat rahasia dengan perlakuan 
+privasi data yang sama dengan dataset FT UGM.
     \item \textbf{Dokumentasi resmi PHP} \cite{phpgroup2022supported}: Referensi untuk memverifikasi kebenaran konversi Rector.
 
     \item \textbf{Registri aturan Semgrep} \cite{semgrep2024}: Aturan publik \texttt{p/php} dan \texttt{p/owasp-top-ten} untuk pemindaian keamanan.
@@ -95,7 +124,7 @@ ilmiah \cite{deepseek2024coder}\cite{hui2024qwen}
 \section{Metode Penelitian}
 
 Penelitian ini menggunakan metodologi Penelitian dan Pengembangan (\textit{Research and Development}, R\&D) dengan model prototipe. Pilihan ini didasarkan pada fakta bahwa penelitian menghasilkan produk perangkat lunak nyata, bukan hanya analisis teoritis. Model prototipe dipilih karena dalam praktiknya banyak keputusan desain baru bisa dibuat setelah melihat perilaku nyata sistem, bukan dari perencanaan di atas kertas saja. Ini terutama berlaku untuk format \textit{prompt} AI dan cara menangani kode yang tidak bisa diotomatisasi sepenuhnya.
-
+\newpage
 Gambar \ref{fig:alur-penelitian} menunjukkan alur penelitian yang terdiri dari tujuh tahapan.
 
 \begin{figure}[htbp]
@@ -112,9 +141,9 @@ Gambar \ref{fig:alur-penelitian} menunjukkan alur penelitian yang terdiri dari t
 
 \begin{enumerate}
 
-    \item \begin{sloppypar}\textbf{Tinjauan pustaka}: Mempelajari permasalahan migrasi PHP lama, persyaratan ISO/IEC 27001:2022 \cite{iso27001_2022}, kemampuan model LLM \textit{open source}, dan alat analisis statis yang relevan. Koordinasi awal dengan FT UGM dilakukan pada tahap ini.\end{sloppypar}
+    \item \begin{sloppypar}\textbf{Tinjauan pustaka}: Mempelajari permasalahan migrasi PHP lama, persyaratan ISO/IEC 27001:2022 \cite{iso27001_2022}, kemampuan model LLM \textit{open source}, dan alat analisis statis yang relevan. Koordinasi awal dengan FT UGM dan DTI UGM dilakukan pada tahap ini.\end{sloppypar}
 
-    \item \textbf{Analisis persyaratan}: Mendefinisikan persyaratan fungsional dan non-fungsional berdasarkan hasil tinjauan pustaka dan koordinasi dengan FT UGM, termasuk menentukan kontrol ISO yang dicakup dan persyaratan privasi data.
+    \item \textbf{Analisis persyaratan}: Mendefinisikan persyaratan fungsional dan non-fungsional berdasarkan hasil tinjauan pustaka dan koordinasi dengan FT UGM dan DTI UGM, termasuk menentukan kontrol ISO yang dicakup dan persyaratan privasi data.
 
     \item \textbf{Desain sistem}: Merancang arsitektur \textit{pipeline} secara modular dan menentukan tanggung jawab setiap modul.
 
@@ -122,7 +151,7 @@ Gambar \ref{fig:alur-penelitian} menunjukkan alur penelitian yang terdiri dari t
 
     \item \textbf{Pengujian}: Menguji prototipe dengan \textit{file} PHP sampel. Jika ditemukan masalah, proses kembali ke tahap implementasi (iterasi).
 
-    \item \textbf{Validasi studi kasus}: Pengujian akhir menggunakan kode sumber asli FT UGM setelah prototipe stabil.
+    \item \textbf{Validasi studi kasus}: Pengujian akhir menggunakan kode sumber asli FT UGM dan DTI UGM setelah prototipe stabil.
 
     \item \textbf{Evaluasi dan dokumentasi}: Menganalisis hasil dan menyusun laporan penelitian.
 
@@ -220,10 +249,19 @@ Modul ini menerima semua hasil dari Scanner, Analyzer, dan AI Engine sebagai obj
 
 \subsection{Main (main.py)}
 
-File main adalah orkestrator yang mengontrol seluruh \textit{pipeline}. Menerima direktori \textit{input} dan versi PHP target sebagai argumen CLI, menjalankan kelima modul secara berurutan, dan menghasilkan laporan JSON di direktori \texttt{reports/}. Ringkasan hasil ditampilkan di konsol menggunakan pustaka Rich.
+File main adalah orkestrator yang mengontrol seluruh \textit{pipeline}. Menerima direktori \textit{input} dan versi PHP target sebagai argumen CLI, menjalanka keenam modul secara berurutan, dan menghasilkan laporan JSON di direktori \texttt{reports/}. Ringkasan hasil ditampilkan di konsol menggunakan pustaka Rich.
 
+\subsection{Composer Analyzer (composer\_analyzer.py)}
+
+Modul ini membaca berkas \texttt{composer.json} pada direktori 
+\textit{root} repositori dan memeriksa kompatibilitas setiap dependensi 
+terhadap PHP 8.x menggunakan data dari Packagist. Jika berkas 
+\texttt{composer.json} tidak ditemukan, modul dilewati secara otomatis 
+tanpa menghentikan \textit{pipeline}. Setiap dependensi diklasifikasikan 
+sebagai \texttt{SAFE} (versi yang dikonfigurasi mendukung PHP 8.x secara 
+deklaratif) atau \texttt{MANUAL REVIEW} (kompatibilitas tidak dapat 
+diverifikasi secara otomatis).
 \newpage
-
 \section{Alur Data Pipeline}
 
 Gambar \ref{fig:alur-pipeline} menunjukkan alur data lengkap dari masukan hingga laporan akhir.
@@ -232,7 +270,7 @@ Gambar \ref{fig:alur-pipeline} menunjukkan alur data lengkap dari masukan hingga
 
     \centering
 
-    \includegraphics[width=0.8\textwidth]{contents/chapter-3/alur-data-pipeline.png}
+    \includegraphics[width=0.7\textwidth]{contents/chapter-3/alur-data-pipeline.png}
 
     \caption{Alur data \textit{pipeline} dari \textit{input} hingga laporan akhir}
 
@@ -240,7 +278,9 @@ Gambar \ref{fig:alur-pipeline} menunjukkan alur data lengkap dari masukan hingga
 
 \end{figure}
 
-Alurnya cukup linear. \textit{File} PHP ditempatkan di \texttt{input/}. Scanner memindai dengan Semgrep untuk menetapkan \textit{baseline}. Converter menyalin semua \textit{file} ke \texttt{output/} lalu menjalankan Rector dengan versi target yang ditentukan; \texttt{input/} tidak tersentuh. Analyzer menjalankan PHPStan level 5 pada \texttt{output/}. AI Engine mengambil temuan Semgrep prioritas 1--3 dan mengirimkannya ke model LLM. ISO Mapper mengumpulkan semua temuan dan memetakannya ke kontrol ISO. \texttt{main.py} menggabungkan semuanya menjadi laporan JSON dan menampilkan ringkasan di konsol.
+Alurnya cukup linear. \textit{File} PHP ditempatkan di \texttt{input/}. Scanner memindai dengan Semgrep untuk menetapkan \textit{baseline}. Converter menyalin semua \textit{file} ke \texttt{output/} lalu menjalankan Rector dengan versi target yang ditentukan; \texttt{input/} tidak tersentuh. 
+Composer Analyzer memeriksa kompatibilitas dependensi \texttt{composer.json} terhadap PHP 8.x secara paralel, atau dilewati otomatis jika berkas tidak ditemukan.Analyzer menjalankan PHPStan level 5 pada \texttt{output/}. AI Engine mengambil temuan Semgrep prioritas 1--3 dan mengirimkannya ke model LLM. ISO Mapper mengumpulkan semua temuan dan memetakannya ke kontrol ISO. \texttt{main.py} menggabungkan semuanya menjadi laporan JSON dan menampilkan ringkasan di konsol.
+
 
 \section{Desain Prompt LLM}
 
@@ -256,10 +296,10 @@ Desain \textit{prompt} adalah salah satu keputusan metodologis yang paling berpe
 
 \begin{verbatim}
 
-You are a PHP security expert and migration specialist. You analyze
-PHP code for security vulnerabilities and provide secure PHP 8.x
-replacements. Always follow output format instructions exactly as
-given.
+You are a PHP security expert and migration specialist. 
+You analyze PHP code for security vulnerabilities and provide 
+secure PHP 8.x replacements. 
+Always follow output format instructions exactly as given.
 
 \end{verbatim}
 
@@ -443,12 +483,17 @@ dalam Subbab \ref{sec:data-privacy}.
 
 \section{Dataset Studi Kasus}
 
-Studi kasus menggunakan 245 \textit{file} PHP dari satu aplikasi web internal berbasis CodeIgniter 3.x yang dikelola oleh FT UGM. Struktur direktorinya mengikuti konvensi standar CodeIgniter 3.x: \texttt{application/} untuk kode aplikasi (kontroler, model, \textit{view}, \textit{helper}, konfigurasi, layanan) dan \texttt{system/} untuk kode \textit{framework}. Kode diperoleh melalui koordinasi langsung dengan FT UGM dan hanya digunakan untuk analisis statis dalam lingkungan lokal, tanpa akses ke basis data produksi dan tanpa eksekusi kode.
+Studi kasus pertama menggunakan 245 \textit{file} PHP dari satu aplikasi web internal berbasis CodeIgniter 3.x yang dikelola oleh FT UGM. Struktur direktorinya mengikuti konvensi standar CodeIgniter 3.x: \texttt{application/} untuk kode aplikasi (kontroler, model, \textit{view}, \textit{helper}, konfigurasi, layanan) dan \texttt{system/} untuk kode \textit{framework}. Kode diperoleh melalui koordinasi langsung dengan FT UGM dan hanya digunakan untuk analisis statis dalam lingkungan lokal, tanpa akses ke basis data produksi dan tanpa eksekusi kode.
 
 Hanya \textit{file} \texttt{.php} yang diproses; \textit{file} lain seperti \texttt{.html}, \texttt{.js}, dan \texttt{.css} tidak disalin ke \texttt{output/} dan tidak dianalisis. Dataset mencerminkan karakteristik kode warisan yang umum: pencampuran logika bisnis, akses basis data, dan presentasi dalam \textit{file} yang sama, serta beberapa pola kode PHP 5.x yang masih ada meski aplikasi secara keseluruhan berjalan di atas PHP 7.x.
 
 Untuk eksperimen komparasi LLM, digunakan 11 temuan dari Semgrep \textit{pre-scan}: 1 SQL Injection dan 10 SSRF (\textit{Server-Side Request Forgery}). Ini adalah seluruh populasi temuan \textit{pre-scan}, bukan subset yang dipilih secara subjektif.
-
+Studi kasus kedua menggunakan 183 \textit{file} PHP kustom dari aplikasi 
+CBT milik DTI UGM, dengan mengeksklusi direktori \texttt{libraries/}, 
+\texttt{third\_party/}, dan \texttt{tcpdf/}. Target konversi adalah 
+PHP 8.3. Karena tidak ada berkas \texttt{composer.json} pada tingkat 
+aplikasi, langkah analisis dependensi dilewati secara otomatis untuk 
+studi kasus ini.
 \section{Rancangan Eksperimen Komparasi Model LLM}
 
 Eksperimen komparasi dirancang dengan kondisi yang sepenuhnya terkontrol dan dilakukan terpisah dari pengujian \textit{pipeline} utama menggunakan skrip evaluasi khusus.
@@ -557,7 +602,7 @@ dibahas di Bab IV.
 \section{Keamanan dan Privasi Data}
 \label{sec:data-privacy}
 
-Kode PHP dari FT UGM adalah aset institusi yang tidak boleh dikirimkan ke layanan eksternal. Kendala inilah yang menentukan arsitektur AI dalam penelitian ini. Daripada menggunakan API LLM berbasis \textit{cloud}, penelitian ini menggunakan Ollama \cite{ollama2024} sebagai \textit{runtime} lokal sehingga seluruh inferensi terjadi di mesin pengembangan.
+Kode PHP dari FT UGM dan DTI UGM adalah aset institusi yang tidak boleh dikirimkan ke layanan eksternal. Kendala inilah yang menentukan arsitektur AI dalam penelitian ini. Daripada menggunakan API LLM berbasis \textit{cloud}, penelitian ini menggunakan Ollama \cite{ollama2024} sebagai \textit{runtime} lokal sehingga seluruh inferensi terjadi di mesin pengembangan.
 
 Tidak ada data yang dikirimkan ke \textit{server} eksternal. Seluruh proses analisis berlangsung secara statis: tidak ada koneksi ke basis data produksi FT UGM, tidak ada eksekusi kode PHP. Keputusan ini sejalan dengan ISO/IEC 27001:2022 \cite{iso27001_2022} yang mensyaratkan pemisahan lingkungan pengembangan dan pengendalian akses terhadap aset informasi sensitif.
 
@@ -579,4 +624,4 @@ Pengujian dilakukan dengan pendekatan \textit{black-box}, fokus pada \textit{out
 
 \end{enumerate}
 
-Untuk hasil PHPStan, jumlah kesalahan yang tinggi tidak langsung diinterpretasikan sebagai kegagalan \textit{pipeline}. Kesalahan PHPStan pada kode warisan yang baru dimigrasi sebagian besar mencerminkan \textit{technical debt} yang sudah ada sebelum migrasi, bukan akibat dari proses konversi. Pembedaan ini dibahas lebih rinci di Bab IV.
+Untuk hasil PHPStan, jumlah kesalahan yang tinggi tidak secara langsung diinterpretasikan sebagai kegagalan \textit{pipeline}. Kesalahan PHPStan pada kode warisan yang baru dimigrasi sebagian besar mencerminkan \textit{technical debt} yang sudah ada sebelum migrasi, bukan akibat dari proses konversi. Pembedaan ini dibahas lebih rinci di Bab IV.

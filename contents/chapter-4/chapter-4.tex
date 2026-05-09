@@ -1,13 +1,16 @@
 \chapter{Hasil dan Diskusi}
 
-Bab ini menyajikan hasil implementasi \textit{pipeline} pada studi kasus kode PHP milik FT UGM beserta analisis dan diskusinya. 
-Pembahasan dibagi menjadi delapan bagian utama: hasil konversi 
-Rector, hasil pemindaian keamanan Semgrep sebelum dan sesudah 
-konversi, hasil validasi PHPStan, status kepatuhan ISO/IEC 
-27001:2022, hasil komparasi lima model LLM dengan \textit{prompt} 
-identik (Kondisi A), hasil komparasi dengan \textit{prompt} yang 
-dioptimasi per model (Kondisi B), optimasi parameter Qwen2.5-Coder 
-(Kondisi C), serta diskusi dan keterbatasan penelitian.
+Bab ini menyajikan hasil implementasi \textit{pipeline} pada dua studi kasus: 
+kode PHP milik FT UGM (Dashboard TCK) dan kode PHP milik DTI UGM (Sistem CBT), 
+beserta analisis perbandingan keduanya. Pembahasan studi kasus pertama mencakup: hasil konversi Rector, 
+hasil pemindaian keamanan Semgrep sebelum dan sesudah konversi, 
+hasil validasi PHPStan, status kepatuhan ISO/IEC 27001:2022, 
+analisis dependensi \textit{composer}, hasil komparasi lima model 
+LLM dengan \textit{prompt} identik (Kondisi A), hasil komparasi 
+dengan \textit{prompt} yang dioptimasi per model (Kondisi B), 
+optimasi parameter Qwen2.5-Coder (Kondisi C), serta diskusi dan 
+keterbatasan penelitian. Bagian penutup menyajikan perbandingan hasil kedua 
+studi kasus secara menyeluruh.
 
 % ============================================================
 \section{Hasil Konversi Rector}
@@ -17,7 +20,7 @@ Rector dijalankan terhadap 245 \textit{file} PHP dari dataset FT UGM dengan targ
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.98\textwidth]{contents/chapter-4/pipeline_chart_20260425_182849_3_rector_conversion.png}
+    \includegraphics[width=0.8\textwidth]{contents/chapter-4/pipeline_chart_20260425_182849_3_rector_conversion.png}
     \caption{Ringkasan hasil konversi Rector terhadap 245 \textit{file} PHP dataset FT UGM}
     \label{fig:rector-conversion}
 \end{figure}
@@ -73,7 +76,7 @@ $atts[$key] = $attributes[$key] ?? $val;
 
 \textbf{Transformasi 3: Fungsi \texttt{str\_contains()} (\texttt{StrContainsRector})}
 
-Pada \texttt{system/helpers/url\_helper.php}, pola pencarian substring dengan \texttt{strpos()} diubah ke fungsi \texttt{str\_contains()} yang diperkenalkan di PHP 8.0. Rector juga menambahkan \textit{cast} \texttt{(string)} karena \texttt{\$\_SERVER['SERVER\_SOFTWARE']} bertipe \texttt{mixed} di PHP 8.x:
+Pada \texttt{system/helpers/url\_helper.php}, pola pencarian substring dengan \texttt{strpos()} diubah ke fungsi \texttt{str\_contains()} yang diperkenalkan di PHP 8.0. Rector juga menambahkan \textit{cast} \texttt{(string)} karena hasil dari \texttt{\$\_SERVER['SERVER\_SOFTWARE']} bertipe \texttt{mixed} di PHP 8.x:
 
 \begin{small}
 \begin{verbatim}
@@ -100,7 +103,11 @@ Kedua \textit{file} yang gagal dikonversi mengalami \textit{internal error} yang
 
 \textit{File} pertama, yaitu \texttt{\detokenize{captcha_helper.php}}, memiliki pola percabangan yang mengembalikan tipe data berbeda, 
 yaitu \texttt{GdImage} dan \texttt{resource}, bergantung pada hasil evaluasi 
-\texttt{\detokenize{function_exists()}}. Dalam kondisi ini, PHPStan \textit{Fiber} yang 
+\texttt{\detokenize{function_exists()}}. Rector menggunakan \textit{Fiber} mekanisme 
+konkurensi ringan yang diperkenalkan di PHP 8.1 
+sebagai unit eksekusi untuk menganalisis setiap 
+\textit{node} AST secara terpisah selama proses 
+transformasi \cite{phpgroup2022supported}. Dalam kondisi ini, PHPStan \textit{Fiber} yang 
 digunakan oleh Rector kehilangan referensi terhadap 
 \textit{node} AST ketika menganalisis percabangan 
 dengan perbedaan tipe tersebut.
@@ -125,7 +132,7 @@ Seluruh temuan tersebut terlokalisasi pada satu \textit{file}, yaitu
 
 Kerentanan SQL Injection teridentifikasi pada baris 768, di mana data dari variabel 
 \texttt{\detokenize{$_SERVER['QUERY_STRING']}} digunakan secara langsung dalam konstruksi 
-\textit{cache path} tanpa melalui proses sanitasi yang memadai. Selain itu, terdapat 
+\textit{cache path} tanpa melalui proses sanitasi yang sesuai. Selain itu, terdapat 
 10 temuan SSRF yang muncul pada beberapa bagian dalam \texttt{\detokenize{Output.php}}. 
 Temuan ini disebabkan oleh penggunaan nama \textit{file} yang berasal dari 
 \textit{input} pengguna dalam operasi \textit{file system}, sehingga membuka peluang 
@@ -159,7 +166,9 @@ PHPStan level 5 dijalankan terhadap kode hasil konversi di direktori \texttt{out
 
 Sebagian besar \textit{error} yang ditemukan PHPStan berasal dari tiga kategori utama. Pertama, kelas dari \textit{library} pihak ketiga yang tidak ditemukan, seperti \texttt{PhpOffice\textbackslash\allowbreak PhpSpreadsheet} dan \texttt{Dotenv\textbackslash\allowbreak Dotenv}: PHPStan tidak dapat menemukan kelas-kelas ini karena hanya kode sumber yang dianalisis, bukan dependensi lengkap aplikasi. Kedua, penggunaan nilai kembalian fungsi \texttt{void} sebagai nilai, misalnya \texttt{Result of method sendResponse() (void) is used}, yang merupakan pola umum pada kode warisan yang ditulis tanpa deklarasi tipe eksplisit. Ketiga, ketidakkonsistenan tipe seperti \texttt{Cannot access property \$role on array}, yang mencerminkan penggunaan \textit{array} sebagai pengganti objek bertipe tanpa definisi yang jelas.
 
-Semua ini adalah manifestasi \textit{technical debt} yang sudah ada sebelum migrasi, bukan kesalahan yang diperkenalkan oleh proses konversi. PHP 8.3 memiliki sistem tipe yang jauh lebih ketat dibandingkan PHP 7.x, sehingga masalah yang sebelumnya tidak terdeteksi karena PHP 7.x lebih permisif kini menjadi terlihat oleh PHPStan. Gambar \ref{fig:phpstan-iso} menunjukkan distribusi temuan PHPStan berdasarkan kontrol ISO/IEC 27001:2022 yang dipetakan.
+Semua ini adalah manifestasi (\textit{technical debt}: akumulasi masalah kualitas kode 
+yang ditunda penanganannya)
+yang sudah ada sebelum migrasi, bukan kesalahan yang diperkenalkan oleh proses konversi. PHP 8.3 memiliki sistem tipe yang jauh lebih ketat dibandingkan PHP 7.x, sehingga masalah yang sebelumnya tidak terdeteksi karena PHP 7.x lebih permisif kini menjadi terlihat oleh PHPStan. Gambar \ref{fig:phpstan-iso} menunjukkan distribusi temuan PHPStan berdasarkan kontrol ISO/IEC 27001:2022 yang dipetakan.
 
 \begin{figure}[h]
     \centering
@@ -224,7 +233,6 @@ Gambar \ref{fig:format-compliance-a} menunjukkan \textit{format compliance rate}
 
 CodeLlama adalah satu-satunya model yang secara konsisten mengikuti format instruksi \textit{prompt} di semua 33 percobaan (100\%). DeepSeek Coder mengikuti format di 5 dari 33 percobaan (15\%). Mistral mengikuti format di 2 dari 33 percobaan (6\%). Qwen2.5-Coder dan Llama 3.1 tidak menghasilkan satu pun respons yang memenuhi ketiga elemen format sekaligus.
 
-\newpage
 \subsection{Syntax Validity Rate}
 
 Gambar \ref{fig:syntax-validity-a} menunjukkan \textit{syntax validity rate} dan \textit{code block extraction rate} untuk masing-masing model.
@@ -245,7 +253,6 @@ Sebaliknya, Qwen2.5-Coder yang memiliki \textit{format compliance} 0\% berhasil 
 
 Mistral berhasil mengekstraksi 1 blok kode dari 33 percobaan, tetapi blok tersebut tidak lolos \texttt{php -l} (0\% validitas). DeepSeek Coder dan Llama 3.1 masing-masing mengekstraksi 3 dan 1 blok dengan validitas 100\%, namun jumlah sampel yang terlalu kecil membuat angka ini tidak representatif secara statistik.
 
-\newpage
 \subsection{Statistik Ringkasan}
 
 Gambar \ref{fig:stats-table-a} merangkum statistik lengkap untuk kelima model pada Kondisi A.
@@ -558,6 +565,47 @@ memberikan hasil yang hampir optimal, sementara peningkatan
 \textit{context window} ke 4000 atau 8000 karakter dapat 
 memberikan sedikit keuntungan tambahan pada kode yang lebih panjang.
 
+% ============================================================
+\section{Analisis Dependensi Composer (FT UGM)}
+% ============================================================
+
+Modul \texttt{composer\_analyzer.py} membaca berkas \texttt{composer.json} 
+pada direktori \textit{root} repositori FT UGM dan memeriksa kompatibilitas 
+setiap dependensi terhadap PHP 8.x menggunakan data dari Packagist. 
+Terdapat 5 dependensi yang teridentifikasi, dengan hasil sebagaimana 
+ditunjukkan pada Tabel \ref{tab:composer-ft}.
+
+\begin{table}[h]
+\centering
+\caption{Status kompatibilitas PHP 8.x dependensi \textit{composer} FT UGM}
+\label{tab:composer-ft}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Package} & \textbf{Versi} & \textbf{Status} \\
+\hline
+\texttt{vlucas/phpdotenv} & \texttt{\^{}5.4} & \texttt{SAFE} \\
+\hline
+\texttt{phpoffice/phpspreadsheet} & \texttt{\^{}1.12} & \texttt{SAFE} \\
+\hline
+\texttt{firebase/php-jwt} & \texttt{\^{}6.10} & \texttt{SAFE} \\
+\hline
+\texttt{ngekoding/google-login} & \texttt{\^{}1.0} & \texttt{MANUAL REVIEW} \\
+\hline
+\texttt{chriskacerguis/codeigniter-restserver} & \texttt{\^{}3.1} & \texttt{MANUAL REVIEW} \\
+\hline
+\end{tabularx}
+\end{table}
+
+Tiga dari lima dependensi (\texttt{phpdotenv}, \texttt{phpspreadsheet}, 
+\texttt{firebase/\allowbreak php-jwt}) berstatus \texttt{SAFE}, artinya versi yang 
+dikonfigurasi di \texttt{composer.json} sudah deklaratif mendukung PHP 8.x. 
+Dua dependensi lainnya berstatus \texttt{MANUAL REVIEW}: 
+\texttt{ngekoding/\allowbreak google-login} merupakan paket dengan aktivitas pemeliharaan 
+rendah sehingga kompatibilitas PHP 8.x-nya tidak dapat diverifikasi secara 
+otomatis, sementara \texttt{chriskacerguis/\allowbreak codeigniter-restserver} merupakan 
+ekstensi pihak ketiga untuk CodeIgniter 3.x yang diketahui tidak memiliki 
+dukungan resmi untuk PHP 8.x dan perlu diganti atau diperbarui secara manual 
+sebelum deployment ke lingkungan PHP 8.3.
 
 % ============================================================
 \section{Diskusi dan Keterbatasan}
@@ -581,3 +629,261 @@ Tidak ada korelasi yang jelas antara \textit{confidence score} yang dilaporkan m
 Dari ketiga metrik yang diukur $FCR$, \textit{extraction rate}, 
 dan $SVR$, hanya $SVR$ yang secara konsisten mencerminkan 
 kegunaan praktis model dalam konteks ini.
+
+% ============================================================
+\section{Studi Kasus 2: Sistem CBT DTI UGM}
+% ============================================================
+
+Studi kasus kedua menggunakan kode sumber aplikasi \textit{Computer-Based Test} 
+(CBT) milik Direktorat Teknologi Informasi (DTI) Universitas Gadjah Mada. 
+Aplikasi ini dibangun di atas \textit{framework} CodeIgniter 3 dengan persyaratan 
+versi PHP $\geq$ 7.0, dan dikonversi ke target PHP 8.3. \textit{Pipeline} 
+dijalankan terhadap direktori \texttt{application/} dengan mengeksklusi 
+subdirektori \texttt{libraries/}, \texttt{third\_party/}, dan \texttt{tcpdf/} 
+yang merupakan komponen \textit{framework} dan \textit{library} pihak ketiga, 
+sehingga menghasilkan 183 \textit{file} PHP kustom sebagai masukan.
+
+% ------------------------------------------------------------
+\subsection{Hasil Konversi Rector}
+% ------------------------------------------------------------
+
+Rector dijalankan terhadap 183 \textit{file} PHP dengan target versi PHP 8.3. 
+Dari jumlah tersebut, 158 \textit{file} berhasil dikonversi, 25 \textit{file} 
+dilewati (\textit{skipped}), dan tidak ada \textit{file} yang gagal diproses. 
+Tingkat konversi keseluruhan ($CR = 86{,}3\%$), sebagaimana ditunjukkan pada 
+Gambar \ref{fig:rector-conversion-dti}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{contents/chapter-4/dti/pipeline_chart_20260509_074426_3_rector_conversion.png}
+    \caption{Ringkasan hasil konversi Rector terhadap 183 \textit{file} PHP dataset CBT DTI UGM}
+    \label{fig:rector-conversion-dti}
+\end{figure}
+
+Tingkat konversi yang lebih rendah dibanding studi kasus FT UGM (86,3\% vs 
+97,6\%) disebabkan oleh proporsi \textit{file} yang dilewati yang lebih besar: 
+25 dari 183 \textit{file} (13,7\%) tidak memerlukan transformasi apa pun karena 
+kodenya sudah kompatibel dengan target PHP 8.3 atau tidak mengandung pola yang 
+perlu ditangani oleh \textit{ruleset} Rector. Tidak adanya \textit{file} yang 
+gagal diproses menunjukkan bahwa kode CBT DTI tidak mengandung konstruksi yang 
+memicu \textit{bug} \texttt{FiberNodeScopeResolver} seperti yang ditemukan pada 
+dataset FT UGM.
+
+Seluruh \textit{file} pada direktori \texttt{output/} diuji validitas 
+sintaksisnya menggunakan perintah \texttt{php -l} dan tidak ditemukan 
+\textit{parse error}, sehingga tingkat validitas sintaks pasca-konversi 
+mencapai 100\%.
+
+% ------------------------------------------------------------
+\subsection{Hasil Pemindaian Keamanan Semgrep}
+% ------------------------------------------------------------
+
+Pemindaian Semgrep terhadap 183 \textit{file} PHP pada direktori 
+\texttt{input/} tidak menghasilkan temuan kerentanan (0 \textit{findings}). 
+Pemindaian \textit{post-scan} terhadap direktori \texttt{output/} juga 
+menghasilkan 0 temuan, sehingga $\Delta F = 0$.
+
+Tidak adanya temuan Semgrep mengindikasikan bahwa kode kustom CBT DTI tidak 
+mengandung pola kerentanan yang dikenali oleh \textit{ruleset} Semgrep yang 
+digunakan, atau bahwa bagian kode yang berpotensi rentan berada pada komponen 
+\textit{framework} dan \textit{library} yang dieksklusi dari pemindaian. 
+Karena tidak ada temuan yang dapat dikirimkan ke model LLM, modul AI Engine 
+dilewati (\textit{skipped}) secara otomatis oleh \textit{pipeline}.
+
+% ------------------------------------------------------------
+\subsection{Hasil Validasi PHPStan}
+% ------------------------------------------------------------
+
+PHPStan \textit{level} 5 dijalankan terhadap kode hasil konversi di direktori 
+\texttt{output/} dengan target PHP 8.3. Hasilnya adalah 2.037 \textit{error}, 
+seluruhnya berkategori ERROR, tersebar di 97 dari 183 \textit{file} yang 
+dianalisis. Distribusi temuan berdasarkan kontrol ISO/IEC 27001:2022 
+ditunjukkan pada Gambar \ref{fig:phpstan-iso-dti}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1.0\textwidth]{contents/chapter-4/dti/pipeline_chart_20260509_074426_4_phpstan_iso.png}
+    \caption{Distribusi temuan PHPStan berdasarkan kontrol ISO/IEC 27001:2022 Annex A pada dataset CBT DTI UGM}
+    \label{fig:phpstan-iso-dti}
+\end{figure}
+\newpage
+Sebagaimana pada studi kasus FT UGM, seluruh \textit{error} PHPStan pada 
+dataset CBT DTI merupakan \textit{false positive} yang disebabkan oleh 
+keterbatasan PHPStan dalam memahami arsitektur CodeIgniter 3.x. PHPStan 
+tidak dapat menelusuri dua kategori elemen yang diinjeksi secara dinamis 
+oleh \textit{framework} pada saat \textit{runtime}. Pertama, 
+\textit{magic property}: yaitu properti kelas yang tidak dideklarasikan 
+secara eksplisit dalam kode sumber melainkan diinjeksi melalui metode 
+\texttt{\_\_get()} PHP seperti \texttt{\$this->db} dan 
+\texttt{\$this->load} yang berasal dari \texttt{CI\_Controller} dan 
+\texttt{CI\_Model}. Kedua, fungsi-fungsi \textit{helper} seperti 
+\texttt{base\_url()}, \texttt{redirect()}, dan \texttt{form\_open()} yang 
+dimuat secara dinamis melalui \texttt{\$this->load->helper()}. Karena 
+direktori \texttt{system/} CodeIgniter dieksklusi dari analisis, PHPStan 
+kehilangan definisi kelas induk dan fungsi-fungsi tersebut sehingga 
+melaporkannya sebagai \textit{undefined}.
+
+Pola distribusi \textit{error} PHPStan pada CBT DTI menunjukkan karakteristik 
+yang berbeda dengan FT UGM: proporsi \textit{error} A.8.25 lebih tinggi 
+(1.651 dari 2.037, atau 81,1\%) dibanding FT UGM (1.266 dari 2.871, atau 
+44,1\%). Perbedaan ini mencerminkan komposisi kode yang berbeda: CBT DTI lebih 
+banyak mengandung pola penggunaan \textit{magic property} CI3 yang memicu 
+\textit{error} kategori \textit{Secure Development Lifecycle}, sementara FT UGM 
+memiliki lebih banyak \textit{error} tipe dan kompatibilitas yang terdistribusi 
+di kategori A.8.28.
+
+% ------------------------------------------------------------
+\subsection{Status Kepatuhan ISO/IEC 27001:2022}
+% ------------------------------------------------------------
+
+Berdasarkan pemetaan yang dilakukan oleh \texttt{iso\_mapper.py}, status 
+kepatuhan terhadap enam kontrol ISO/IEC 27001:2022 yang dipetakan adalah 
+sebagaimana ditunjukkan pada Tabel \ref{tab:iso-status-dti}.
+
+\begin{table}[h]
+\centering
+\caption{Status kepatuhan ISO/IEC 27001:2022 hasil \textit{pipeline} pada dataset CBT DTI UGM}
+\label{tab:iso-status-dti}
+\begin{tabularx}{\textwidth}{|l|l|X|l|}
+\hline
+\textbf{Kontrol} & \textbf{Judul} & \textbf{Dasar Penilaian} & \textbf{Status} \\
+\hline
+A.5.17 & \textit{Authentication Information} & Tidak ada temuan \textit{hardcoded credentials} & \texttt{COMPLIANT} \\
+\hline
+A.8.24 & \textit{Use of Cryptography} & Tidak ada temuan penggunaan \texttt{md5()}/\texttt{sha1()} untuk kata sandi & \texttt{COMPLIANT} \\
+\hline
+A.8.25 & \textit{Secure Development Lifecycle} & 1.651 temuan PHPStan (\textit{false positive} CI3) & \texttt{NON\_COMPLIANT} \\
+\hline
+A.8.26 & \textit{Application Security Requirements} & Tidak ada temuan SQL Injection dari Semgrep & \texttt{COMPLIANT} \\
+\hline
+A.8.28 & \textit{Secure Coding} & 2.030 dari 2.037 ERROR PHPStan (\textit{false positive} CI3) & \texttt{NON\_COMPLIANT} \\
+\hline
+A.8.29 & \textit{Security Testing in Development} & Pemindaian Semgrep dijalankan, tidak ada temuan terbuka & \texttt{COMPLIANT} \\
+\hline
+\end{tabularx}
+\end{table}
+\newpage
+Status keseluruhan adalah \texttt{NON\_COMPLIANT} karena adanya temuan 
+PHPStan pada A.8.25 dan A.8.28. Perlu dicatat bahwa perbedaan status 
+dibanding FT UGM terdapat pada A.8.26 dan A.8.29: kedua kontrol ini 
+berstatus \texttt{COMPLIANT} pada CBT DTI karena tidak ada temuan Semgrep 
+aktif, sementara pada FT UGM keduanya berstatus \texttt{NON\_COMPLIANT} 
+dan \texttt{PARTIAL} akibat adanya temuan SQL Injection dan SSRF.
+
+% ------------------------------------------------------------
+\subsection{Analisis Dependensi Composer}
+% ------------------------------------------------------------
+
+Aplikasi CBT DTI UGM tidak memiliki berkas \texttt{composer.json} pada 
+tingkat aplikasi. Komponen pihak ketiga seperti \textit{library} TCPDF 
+disertakan langsung sebagai direktori dalam repositori dan telah dieksklusi 
+dari analisis \textit{pipeline}. Oleh karena itu, modul 
+\texttt{composer\_analyzer.py} tidak menghasilkan keluaran untuk studi 
+kasus ini dan langkah analisis dependensi dilewati secara otomatis.
+
+% ============================================================
+\section{Perbandingan Kedua Studi Kasus}
+% ============================================================
+
+Bagian ini membandingkan hasil implementasi \textit{pipeline} pada kedua 
+studi kasus secara berdampingan untuk mengidentifikasi pola yang konsisten 
+maupun perbedaan yang signifikan.
+
+% ------------------------------------------------------------
+\subsection{Perbandingan Temuan Keamanan Semgrep}
+% ------------------------------------------------------------
+
+Gambar \ref{fig:comparison-semgrep} menunjukkan perbandingan temuan Semgrep 
+\textit{pre-scan} berdasarkan jenis kerentanan pada kedua dataset.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.95\textwidth]{contents/chapter-4/comparison/comparison_1_semgrep_findings.png}
+    \caption{Perbandingan temuan Semgrep \textit{pre-scan} berdasarkan jenis kerentanan pada kedua studi kasus}
+    \label{fig:comparison-semgrep}
+\end{figure}
+
+Dataset FT UGM mengandung 11 temuan aktif (1 SQL Injection dan 10 SSRF), 
+sementara dataset CBT DTI tidak menghasilkan temuan sama sekali. Perbedaan 
+ini tidak serta-merta berarti kode CBT DTI lebih aman secara absolut; 
+melainkan mencerminkan perbedaan arsitektur dan cakupan kode yang dianalisis. 
+Seluruh temuan FT UGM terpusat pada \texttt{Output.php}, sebuah modul 
+\textit{framework} yang menangani operasi \textit{cache} dengan interaksi 
+tinggi terhadap data eksternal. Modul setara pada CBT DTI kemungkinan 
+berada di dalam direktori \textit{framework} yang dieksklusi dari pemindaian.
+\newpage
+% ------------------------------------------------------------
+\subsection{Perbandingan Tingkat Konversi Rector}
+% ------------------------------------------------------------
+
+Gambar \ref{fig:comparison-rector} menunjukkan perbandingan hasil konversi 
+Rector pada kedua dataset.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.98\textwidth]{contents/chapter-4/comparison/comparison_2_rector_conversion.png}
+    \caption{Perbandingan hasil konversi Rector pada kedua studi kasus}
+    \label{fig:comparison-rector}
+\end{figure}
+FT UGM mencatat \textit{conversion rate} 97,6\% (239/245) sementara CBT DTI 
+mencatat 86,3\% (158/183). Perbedaan 11,3 poin persentase ini terutama 
+disebabkan oleh proporsi \textit{file} yang dilewati: CBT DTI memiliki 
+25 \textit{file} \textit{skipped} (13,7\%) dibanding 4 \textit{file} pada 
+FT UGM (1,6\%). \textit{File} yang dilewati adalah \textit{file} yang sudah 
+kompatibel dengan PHP 8.3 atau tidak mengandung pola yang perlu ditangani 
+Rector, sehingga \textit{skipped} bukan berarti gagal melainkan sudah 
+kompatibel dengan PHP 8.3. FT UGM juga memiliki 2 \textit{file} yang gagal diproses akibat 
+\textit{bug} \texttt{FiberNodeScopeResolver}, sementara CBT DTI tidak 
+mengalami kegagalan yang sama. Pada kedua studi kasus, validitas sintaks 
+pasca-konversi mencapai 100\%.
+
+% ------------------------------------------------------------
+\subsection{Perbandingan Temuan PHPStan}
+% ------------------------------------------------------------
+
+Gambar \ref{fig:comparison-phpstan} menunjukkan perbandingan distribusi 
+\textit{error} PHPStan berdasarkan kontrol ISO/IEC 27001:2022 pada kedua 
+dataset.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.98\textwidth]{contents/chapter-4/comparison/comparison_3_phpstan_iso.png}
+    \caption{Perbandingan \textit{error} PHPStan berdasarkan kontrol ISO/IEC 27001:2022 pada kedua studi kasus}
+    \label{fig:comparison-phpstan}
+\end{figure}
+
+FT UGM menghasilkan 2.871 \textit{error} PHPStan sementara CBT DTI 
+menghasilkan 2.037 \textit{error}. Keduanya dijalankan pada PHPStan 
+\textit{level} 5 dengan target PHP 8.3, sehingga angka ini dapat 
+dibandingkan secara langsung. Seluruh \textit{error} pada kedua dataset 
+merupakan \textit{false positive} akibat keterbatasan PHPStan terhadap 
+arsitektur CodeIgniter 3.x sebagaimana dijelaskan pada subbab sebelumnya. 
+Jumlah \textit{error} yang lebih tinggi pada FT UGM sebanding dengan 
+ukuran dataset yang lebih besar (245 vs 183 \textit{file}) dan penggunaan 
+dependensi pihak ketiga yang lebih beragam.
+
+% ------------------------------------------------------------
+\subsection{Ringkasan Perbandingan dan Analisis Dependensi Composer}
+% ------------------------------------------------------------
+
+Gambar \ref{fig:comparison-summary} merangkum seluruh metrik utama kedua 
+studi kasus dalam satu tampilan, termasuk status dependensi \textit{composer} 
+FT UGM.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{contents/chapter-4/comparison/comparison_4_composer_summary.png}
+    \caption{Ringkasan perbandingan metrik \textit{pipeline} dan status dependensi \textit{composer} kedua studi kasus}
+    \label{fig:comparison-summary}
+\end{figure}
+
+Secara keseluruhan, kedua studi kasus menunjukkan pola yang konsisten: 
+\textit{pipeline} berhasil menjalankan seluruh tahapan secara otomatis, 
+konversi Rector menghasilkan kode yang valid secara sintaksis di kedua 
+dataset, dan status ISO/IEC 27001:2022 keduanya adalah \texttt{NON\_COMPLIANT} 
+yang disebabkan oleh \textit{error} PHPStan. Perbedaan utama terletak pada 
+keberadaan temuan Semgrep: FT UGM memiliki kerentanan aktif yang memerlukan 
+remediasi manual, sementara CBT DTI bersih dari temuan Semgrep pada kode 
+kustomnya. Perbedaan lain adalah durasi eksekusi: FT UGM membutuhkan sekitar 
+28 menit karena eksperimen LLM dijalankan terhadap 11 temuan Semgrep, 
+sementara CBT DTI selesai dalam sekitar 50 detik karena langkah AI Engine 
+dilewati akibat tidak adanya temuan Semgrep.

@@ -57,7 +57,7 @@ Chen et al. \cite{chen2022ast} mendokumentasikan penerapan migrasi kode berbasis
 Studi ini penting bukan karena inovasinya yang radikal, tapi karena validasi skalanya. Dengan membuktikan bahwa transformasi berbasis AST bisa dijalankan pada jutaan baris kode produksi tanpa regresi fungsional yang signifikan, Chen et al. mengkonfirmasi bahwa pilihan teknis yang sama yang mendasari Rector layak diandalkan dalam konteks institusional nyata.
 
 Ada dua perbedaan konteks yang perlu dicatat. Pertama, migrasi yang dilakukan Chen et al. adalah TypeScript ke TypeScript (\textit{refactoring} dalam bahasa yang sama), sedangkan penelitian ini berhadapan dengan \textit{breaking changes} antar versi PHP yang melibatkan penghapusan API dan perubahan sistem tipe. Kedua, seperti halnya Cai et al. \cite{cai2015pattern}, studi ini tidak menyentuh aspek keamanan sama sekali. Temuan keamanan yang muncul selama atau setelah migrasi bukan bagian dari cakupan mereka.
-
+\newpage
 \subsection{Ringkasan Perbandingan}
 
 \begin{longtable}{|l|p{3cm}|p{3cm}|p{4cm}|}
@@ -133,6 +133,7 @@ Chen et al. \cite{chen2022ast} & N/A & Tidak & Tidak ada & Tidak \\
 \textbf{Penelitian ini} & Lokal (Ollama) & Ya (PHPStan + Semgrep) & ISO/IEC 27001:2022 & Ya \\
 \hline
 \end{longtable}
+\newpage
 Dari kedua tabel terlihat kesenjangan yang konsisten. Studi-studi yang berfokus pada keamanan tidak menangani migrasi versi. Studi-studi yang berfokus pada transformasi kode, termasuk yang sudah terbukti di skala industri seperti Chen et al. \cite{chen2022ast} tidak menyertakan pemeriksaan keamanan maupun pemetaan ke standar formal. Tidak satu pun dari kedelapan studi yang menggabungkan migrasi versi PHP, analisis keamanan berbasis LLM, validasi pasca-konversi, dan kepatuhan ISO/IEC 27001:2022 dalam satu alur kerja \textit{open source} dengan \textit{deployment} lokal. Kombinasi inilah yang menjadi kontribusi utama penelitian ini.
 
 \section{Dasar Teori}
@@ -178,7 +179,7 @@ Dalam praktiknya, DevSecOps diwujudkan melalui integrasi alat keamanan otomatis 
 
 \subsection{\textit{Abstract Syntax Trees} dan \textit{Static Analysis}}
 
-Analisis statis adalah teknik pemeriksaan kode sumber tanpa menjalankan program. Dalam konteks keamanan perangkat lunak, ini digunakan untuk mengidentifikasi pola kerentanan, praktik pengkodean tidak aman, dan pelanggaran kebijakan secara otomatis. Analisis statis sudah menjadi bagian standar dari \textit{pipeline} DevSecOps modern karena bisa dijalankan terus-menerus selama pengembangan tanpa beban tambahan yang signifikan \cite{li2025software}.
+Analisis statis adalah teknik pemeriksaan kode sumber tanpa menjalankan program. Dalam konteks keamanan perangkat lunak, yang digunakan untuk mengidentifikasi pola kerentanan, praktik pengkodean tidak aman, dan pelanggaran kebijakan secara otomatis. Analisis statis sudah menjadi bagian standar dari \textit{pipeline} DevSecOps modern karena bisa dijalankan terus-menerus selama pengembangan tanpa beban tambahan yang signifikan \cite{li2025software}.
 
 \textit{Abstract Syntax Trees} (AST) adalah representasi pohon dari kode sumber di mana setiap \textit{node} mewakili konstruksi sintaksis seperti ekspresi, pernyataan, atau deklarasi. Alat yang bekerja dengan AST bisa menganalisis dan mengubah kode secara struktural, berbeda dari pendekatan berbasis teks biasa yang digunakan oleh Cai et al. \cite{cai2015pattern}. Rector menggunakan PHP AST untuk menemukan pola yang perlu diubah dan menghasilkan kode penggantinya. Chen et al. \cite{chen2022ast} mendemonstrasikan bahwa pendekatan berbasis AST bukan sekadar teori; mereka menerapkannya untuk migrasi kode TypeScript di Microsoft pada skala produksi.
 
@@ -192,7 +193,7 @@ Dalam penelitian ini, Rector berperan sebagai mesin transformasi utama. Transfor
 
 PHPStan adalah alat analisis statis untuk PHP yang memeriksa kebenaran tipe data, konsistensi pemanggilan fungsi, dan kesalahan logika tanpa menjalankan program \cite{phpstan2024}. Berbeda dari Semgrep yang mencari pola kerentanan keamanan, PHPStan fokus pada integritas kode dari sisi kompatibilitas dan tipe.
 
-PHPStan bekerja dengan sistem level 0--9, di mana level lebih tinggi berarti pemeriksaan lebih ketat. Dalam \textit{pipeline} penelitian ini, PHPStan digunakan pada level 5 sebagai komponen validasi pasca-konversi. Setelah Rector selesai, PHPStan memeriksa apakah kode hasil konversi kompatibel dengan versi PHP target dan bebas dari kesalahan tipe. Peran ini mendukung kontrol A.8.29 ISO/IEC 27001:2022 \cite{iso27001_2022} dengan memastikan kode yang dihasilkan secara otomatis tidak mengandung kesalahan yang bisa memengaruhi keandalan sebelum masuk produksi.
+PHPStan bekerja dengan sistem level 0--9, di mana level lebih tinggi berarti pemeriksaan lebih ketat. Dalam \textit{pipeline} penelitian ini, PHPStan digunakan pada level 5 sebagai komponen validasi pasca-konversi. Setelah Rector selesai, PHPStan memeriksa apakah kode hasil konversi kompatibel dengan versi PHP target dan bebas dari kesalahan tipe. Perannya mendukung kontrol A.8.29 ISO/IEC 27001:2022 \cite{iso27001_2022} dengan memastikan kode yang dihasilkan secara otomatis tidak mengandung kesalahan yang bisa memengaruhi keandalan sebelum masuk produksi.
 
 \subsection{Semgrep: Alat Analisis Statis Ringan untuk Keamanan}
 
@@ -220,6 +221,7 @@ Li, Dutta, dan Naik \cite{li2025iris} sudah menunjukkan bahwa kombinasi LLM dan 
 
 \subsection{Ollama: Menerapkan LLM Secara Lokal}
 
-Ollama adalah \textit{platform} \textit{open source} untuk menjalankan LLM secara lokal di infrastruktur pengguna \cite{ollama2024}. \textit{Platform} ini mengkuantisasi model secara otomatis agar sesuai sumber daya perangkat keras yang tersedia dan menyediakan API REST yang kompatibel dengan format OpenAI, sehingga mudah diintegrasikan ke aplikasi Python.
+Ollama adalah \textit{platform} \textit{open source} untuk menjalankan LLM secara lokal di infrastruktur pengguna \cite{ollama2024}. \textit{Platform} mengkuantisasi model secara otomatis agar sesuai sumber daya perangkat keras yang tersedia dan menyediakan API REST yang kompatibel dengan format OpenAI, sehingga mudah diintegrasikan ke aplikasi Python.
 
-Alasan memilih Ollama bukan sekadar teknis. Kode sumber yang dianalisis dalam penelitian ini bersifat rahasia milik institusi. Mengirimkannya ke API \textit{cloud} bukan pilihan yang bisa diterima. Dengan Ollama, semua inferensi terjadi di mesin lokal tanpa data keluar dari lingkungan organisasi \cite{ollama2024}, sejalan dengan prinsip ISO/IEC 27001:2022 \cite{iso27001_2022} dan merupakan persyaratan eksplisit dari FT UGM.
+Alasan memilih Ollama bukan sekadar teknis. Kode sumber yang dianalisis dalam penelitian ini bersifat rahasia milik institusi. Mengirimkannya ke API \textit{cloud} bukan pilihan yang bisa diterima. 
+Dengan Ollama, semua inferensi terjadi di mesin lokal tanpa data keluar dari lingkungan organisasi \cite{ollama2024}, sejalan dengan prinsip ISO/IEC 27001:2022 \cite{iso27001_2022} dan merupakan persyaratan eksplisit dari kedua institusi yang menjadi studi kasus penelitian ini.
