@@ -147,7 +147,7 @@ Gambar \ref{fig:alur-penelitian} menunjukkan alur penelitian yang terdiri dari t
 
     \item \textbf{Desain sistem}: Merancang arsitektur \textit{pipeline} secara modular dan menentukan tanggung jawab setiap modul.
 
-    \item \textbf{Implementasi}: Membangun keenam modul Python satu per satu. Setiap modul diuji secara terpisah sebelum diintegrasikan.
+    \item \textbf{Implementasi}: Membangun tujuh modul Python satu per satu. Setiap modul diuji secara terpisah sebelum diintegrasikan.
 
     \item \textbf{Pengujian}: Menguji prototipe dengan \textit{file} PHP sampel. Jika ditemukan masalah, proses kembali ke tahap implementasi (iterasi).
 
@@ -159,7 +159,7 @@ Gambar \ref{fig:alur-penelitian} menunjukkan alur penelitian yang terdiri dari t
 
 \section{Arsitektur Sistem}
 
-Sistem terdiri dari enam modul Python yang masing-masing menangani satu langkah dalam proses konversi dan analisis keamanan. \texttt{main.py} bertindak sebagai orkestrator yang mengontrol urutan eksekusi dan mengalirkan data antar modul. Arsitektur modular memungkinkan setiap bagian diuji, diperbaiki, atau diganti secara independen.
+Sistem terdiri dari Tujuh modul Python yang masing-masing menangani satu langkah dalam proses konversi dan analisis keamanan. \texttt{main.py} bertindak sebagai orkestrator yang mengontrol urutan eksekusi dan mengalirkan data antar modul. Arsitektur modular memungkinkan setiap bagian diuji, diperbaiki, atau diganti secara independen.
 
 Gambar \ref{fig:arsitektur-sistem} menunjukkan hubungan antar modul.
 
@@ -169,7 +169,7 @@ Gambar \ref{fig:arsitektur-sistem} menunjukkan hubungan antar modul.
 
     \includegraphics[width=0.65\textwidth]{contents/chapter-3/arsitektur-sistem.png}
 
-    \caption{Arsitektur sistem \textit{pipeline} dengan enam modul Python}
+    \caption{Arsitektur sistem \textit{pipeline} dengan tujuh modul Python}
 
     \label{fig:arsitektur-sistem}
 
@@ -183,7 +183,7 @@ Modul pertama yang berjalan. Scanner menjalankan Semgrep \cite{semgrep2024} pada
 
 \begin{sloppypar}
 
-Modul ini menggunakan Rector \cite{rector2024} untuk transformasi kode PHP berbasis AST. Argumen CLI \texttt{--target-php} menentukan versi target; nilai yang diterima adalah \texttt{"7.4"}, \texttt{"8.0"}, \texttt{"8.1"}, \texttt{"8.2"}, atau \texttt{"8.3"}. Sebelum Rector dijalankan, seluruh \textit{file} PHP dari \texttt{input/} disalin dahulu ke \texttt{output/}. Rector kemudian memodifikasi \textit{file} di \texttt{output/} di tempat. \textit{File} yang gagal dikonversi tetap ada di \texttt{output/} sebagai salinan kode asli dan statusnya dicatat \texttt{FAILED} di laporan; direktori \texttt{input/} tidak pernah disentuh. Konfigurasi Rector dibuat sebagai \textit{tempfile} saat \textit{runtime} dan dihapus otomatis setelahnya.
+Modul ini menggunakan Rector \cite{rector2024} untuk transformasi kode PHP berbasis AST. Argumen CLI \texttt{--target-php} menentukan versi target; nilai yang diterima adalah \texttt{"7.4"}, \texttt{"8.0"}, \texttt{"8.1"}, \texttt{"8.2"}, \texttt{"8.3"}, atau \texttt{"8.5"}. Sebelum Rector dijalankan, seluruh \textit{file} PHP dari \texttt{input/} disalin dahulu ke \texttt{output/}. Rector kemudian memodifikasi \textit{file} di \texttt{output/} di tempat. \textit{File} yang gagal dikonversi tetap ada di \texttt{output/} sebagai salinan kode asli dan statusnya dicatat \texttt{FAILED} di laporan; direktori \texttt{input/} tidak pernah disentuh. Konfigurasi Rector dibuat sebagai \textit{tempfile} saat \textit{runtime} dan dihapus otomatis setelahnya.
 
 \end{sloppypar}
 
@@ -277,11 +277,22 @@ Gambar \ref{fig:alur-pipeline} menunjukkan alur data lengkap dari masukan hingga
     \label{fig:alur-pipeline}
 
 \end{figure}
-
-Alurnya cukup linear. \textit{File} PHP ditempatkan di \texttt{input/}. Scanner memindai dengan Semgrep untuk menetapkan \textit{baseline}. Converter menyalin semua \textit{file} ke \texttt{output/} lalu menjalankan Rector dengan versi target yang ditentukan; \texttt{input/} tidak tersentuh. 
-Composer Analyzer memeriksa kompatibilitas dependensi \texttt{composer.json} terhadap PHP 8.x secara paralel, atau dilewati otomatis jika berkas tidak ditemukan.Analyzer menjalankan PHPStan level 5 pada \texttt{output/}. AI Engine mengambil temuan Semgrep prioritas 1--3 dan mengirimkannya ke model LLM. ISO Mapper mengumpulkan semua temuan dan memetakannya ke kontrol ISO. \texttt{main.py} menggabungkan semuanya menjadi laporan JSON dan menampilkan ringkasan di konsol.
-
-
+Alurnya cukup linear. \textit{File} PHP ditempatkan di 
+\texttt{input/}. Scanner menjalankan Semgrep pada \texttt{input/} 
+untuk menetapkan \textit{baseline} keamanan kode asli (\textit{pre-scan}). 
+Converter menyalin semua \textit{file} ke \texttt{output/} lalu 
+menjalankan Rector dengan versi target yang ditentukan; 
+\texttt{input/} tidak tersentuh. Setelah konversi, Scanner 
+menjalankan Semgrep kembali pada \texttt{output/} 
+(\textit{post-scan}) untuk mengukur perubahan postur keamanan 
+melalui nilai $\Delta F$. Composer Analyzer memeriksa kompatibilitas 
+dependensi \texttt{composer.json} terhadap PHP 8.x secara paralel, 
+atau dilewati otomatis jika berkas tidak ditemukan. Analyzer 
+menjalankan PHPStan level 5 pada \texttt{output/}. AI Engine 
+mengambil temuan Semgrep prioritas 1--3 dan mengirimkannya ke 
+model LLM. ISO Mapper mengumpulkan semua temuan dan memetakannya 
+ke kontrol ISO. \texttt{main.py} menggabungkan semuanya menjadi 
+laporan JSON dan menampilkan ringkasan di konsol.
 \section{Desain Prompt LLM}
 
 \label{sec:prompt-design}
@@ -602,10 +613,22 @@ dibahas di Bab IV.
 \section{Keamanan dan Privasi Data}
 \label{sec:data-privacy}
 
-Kode PHP dari FT UGM dan DTI UGM adalah aset institusi yang tidak boleh dikirimkan ke layanan eksternal. Kendala inilah yang menentukan arsitektur AI dalam penelitian ini. Daripada menggunakan API LLM berbasis \textit{cloud}, penelitian ini menggunakan Ollama \cite{ollama2024} sebagai \textit{runtime} lokal sehingga seluruh inferensi terjadi di mesin pengembangan.
+Kode PHP dari FT UGM dan DTI UGM adalah aset institusi yang tidak 
+boleh dikirimkan ke layanan eksternal. Kendala inilah yang menentukan 
+arsitektur AI dalam penelitian ini. Daripada menggunakan API LLM 
+berbasis \textit{cloud}, penelitian ini menggunakan Ollama 
+\cite{ollama2024} sebagai \textit{runtime} lokal sehingga seluruh 
+inferensi terjadi di mesin pengembangan.
 
-Tidak ada data yang dikirimkan ke \textit{server} eksternal. Seluruh proses analisis berlangsung secara statis: tidak ada koneksi ke basis data produksi FT UGM, tidak ada eksekusi kode PHP. Keputusan ini sejalan dengan ISO/IEC 27001:2022 \cite{iso27001_2022} yang mensyaratkan pemisahan lingkungan pengembangan dan pengendalian akses terhadap aset informasi sensitif.
-
+Tidak ada kode sumber yang dikirimkan ke \textit{server} eksternal. 
+Seluruh proses analisis berlangsung secara statis: tidak ada koneksi 
+ke basis data produksi FT UGM, tidak ada eksekusi kode PHP. 
+Satu-satunya koneksi eksternal yang terjadi adalah panggilan ke 
+Packagist API oleh modul \texttt{composer\_analyzer.py} untuk 
+memeriksa metadata versi dependensi — bukan kode sumber aplikasi. 
+Keputusan ini sejalan dengan ISO/IEC 27001:2022 \cite{iso27001_2022} 
+yang mensyaratkan pemisahan lingkungan pengembangan dan pengendalian 
+akses terhadap aset informasi sensitif.
 \section{Metode Pengujian dan Evaluasi}
 
 Pengujian dilakukan dengan pendekatan \textit{black-box}, fokus pada \textit{output} setiap modul bukan detail implementasi internal. Ada lima metrik utama:

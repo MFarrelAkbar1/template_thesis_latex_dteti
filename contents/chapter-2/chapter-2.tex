@@ -185,7 +185,8 @@ Analisis statis adalah teknik pemeriksaan kode sumber tanpa menjalankan program.
 
 \subsection{Rector: Alat Transformasi Kode Berbasis AST}
 
-Rector adalah alat \textit{open source} untuk transformasi kode PHP berbasis AST \cite{rector2024}. Prosesnya: kode sumber PHP diubah menjadi AST, aturan transformasi diterapkan, lalu kode PHP baru dihasilkan dari pohon yang sudah dimodifikasi. Rector dilengkapi aturan bawaan untuk berpindah antar versi PHP, termasuk \texttt{LevelSetList::UP\_TO\_PHP\_80} hingga \texttt{UP\_TO\_PHP\_83}, dan \textit{ruleset}-nya bersifat kumulatif sehingga mencakup semua perubahan dari versi sumber hingga versi target.
+Rector adalah alat \textit{open source} untuk transformasi kode PHP berbasis AST \cite{rector2024}. Prosesnya: kode sumber PHP diubah menjadi AST, aturan transformasi diterapkan, lalu kode PHP baru dihasilkan dari pohon yang sudah dimodifikasi. Rector dilengkapi aturan bawaan untuk berpindah antar versi PHP, termasuk \texttt{LevelSetList::UP\_TO\_PHP\_80} hingga 
+\texttt{UP\_TO\_PHP\_85}, dan \textit{ruleset}-nya bersifat kumulatif sehingga mencakup semua perubahan dari versi sumber hingga versi target.
 
 Dalam penelitian ini, Rector berperan sebagai mesin transformasi utama. Transformasi sintaksis dan struktural dari PHP 5.x atau 7.x ke PHP 8.x ditangani sepenuhnya oleh Rector. Yang tidak bisa ditangani adalah penggantian \texttt{ext/mysql} karena itu butuh penulisan ulang semantik, bukan sekadar penggantian sintaks. Itulah yang ditangani oleh AI Engine.
 

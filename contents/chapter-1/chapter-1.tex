@@ -34,11 +34,23 @@ Penelitian ini membangun \textit{platform} berbasis AI dan alat \textit{open sou
 
 Berdasarkan latar belakang yang telah diuraikan, penelitian ini merumuskan tiga permasalahan sebagai berikut:
 
+Berdasarkan latar belakang yang telah diuraikan, penelitian ini 
+merumuskan empat permasalahan sebagai berikut:
+
 \begin{enumerate}
-	\item Bagaimana merancang sistem berbasis AI yang mampu melakukan konversi otomatis aplikasi web PHP lama ke versi PHP tertentu sambil mempertahankan fitur aplikasi?
-	\item Bagaimana mengintegrasikan pemeriksaan \textit{secure coding} yang selaras dengan standar ISO/IEC 27001:2022 ke dalam proses konversi otomatis?
-	\item Bagaimana memvalidasi bahwa hasil konversi memenuhi persyaratan fungsional dan keamanan ISO/IEC 27001:2022?
+    \item Bagaimana merancang sistem berbasis AI yang mampu melakukan 
+    konversi otomatis aplikasi web PHP lama ke versi PHP tertentu 
+    sambil mempertahankan fitur aplikasi?
+    \item Bagaimana mengintegrasikan pemeriksaan \textit{secure coding} 
+    yang selaras dengan standar ISO/IEC 27001:2022 ke dalam proses 
+    konversi otomatis?
+    \item Bagaimana memvalidasi bahwa hasil konversi memenuhi 
+    persyaratan fungsional dan keamanan ISO/IEC 27001:2022?
+    \item Bagaimana performa komparatif model-model LLM \textit{open 
+    source} lokal dalam mendukung analisis dan saran perbaikan keamanan 
+    kode PHP dalam konteks migrasi versi?
 \end{enumerate}
+
 
 \section{Tujuan Penelitian}
 
@@ -56,13 +68,25 @@ Penelitian ini memiliki empat tujuan yang menjawab rumusan masalah di atas:
 Penelitian ini memiliki batasan-batasan sebagai berikut:
 
 \begin{enumerate}
-	\item \textbf{Ruang lingkup konversi:} Secara teknis, \textit{pipeline} yang dibangun mendukung konversi dari PHP 5.2 ke atas, karena Rector menggunakan rantai \textit{ruleset} kumulatif yang mencakup semua perubahan dari PHP 5.2 hingga versi target yang dipilih \cite{rector2024}. Namun studi kasus dalam penelitian ini menggunakan kode sumber PHP 7.x milik FT UGM sebagai representasi kondisi yang paling umum ditemukan saat ini \cite{w3techs2024php}. Versi target yang dapat dikonfigurasi mencakup PHP 7.4 hingga PHP 8.3, yang merupakan rentang versi paling relevan untuk kebutuhan modernisasi institusi saat ini \cite{phpgroup2022supported}.
+	\item \textbf{Ruang lingkup konversi:} Secara teknis, \textit{pipeline} 
+yang dibangun mendukung konversi dari PHP 5.2 ke atas, karena Rector 
+menggunakan rantai \textit{ruleset} kumulatif yang mencakup semua 
+perubahan dari PHP 5.2 hingga versi target yang dipilih 
+\cite{rector2024}. Namun studi kasus dalam penelitian ini menggunakan 
+kode sumber PHP 7.x milik FT UGM sebagai representasi kondisi yang 
+paling umum ditemukan saat ini \cite{w3techs2024php}. Versi target 
+yang dapat dikonfigurasi mencakup PHP 7.4 hingga PHP 8.5, yang 
+merupakan rentang versi paling relevan untuk kebutuhan modernisasi 
+institusi saat ini \cite{phpgroup2022supported}.
 	\item \textbf{Studi kasus:} Fokus utama studi kasus ini adalah aplikasi \textit{Dashboard} TCK (\textit{Target Capaian Kerja}) milik Fakultas Teknik (FT) Universitas Gadjah Mada, yang dibangun di atas \textit{framework} CodeIgniter 3 dengan versi PHP 7.4.9. \textit{Pipeline} yang dikembangkan bekerja pada kode \textit{backend} PHP di direktori \texttt{application/} dan tidak menyentuh komponen \textit{frontend} Vue 2 SPA. \textit{Pipeline} bekerja pada level \textit{file} PHP individual dan tidak bergantung pada \textit{framework} yang digunakan, sehingga secara teknis dapat diterapkan pada aplikasi berbasis \textit{framework} lain seperti Laravel atau Symfony maupun pada aplikasi PHP tanpa \textit{framework}. Pengujian terhadap \textit{framework} selain CodeIgniter 3 bukan bagian dari ruang lingkup penelitian ini.
 	\item \textbf{Kontrol keamanan:} Pemeriksaan keamanan hanya dilakukan pada kontrol ISO/IEC 27001:2022 Annex A yang relevan dengan \textit{secure coding}: A.8.25, A.8.28, dan A.8.29, serta A.5.17 dan A.8.24 dan A.8.26 yang turut dipetakan oleh \textit{pipeline} \cite{iso27001_2022}.
 	\item \textbf{Model AI:} Penelitian ini mengevaluasi dan membandingkan lima model LLM \textit{open source} yang dijalankan secara lokal melalui Ollama \cite{ollama2024} dalam eksperimen komparasi \textit{zero-shot}: DeepSeek Coder 6.7b \cite{deepseek2024coder}, Qwen2.5-Coder 7b \cite{hui2024qwen}, CodeLlama 7b \cite{roziere2024codellama}, Mistral 7b \cite{jiang2023mistral}, dan Llama 3.1 8b \cite{dubey2024llama3}. Semua model digunakan tanpa \textit{fine-tuning}.
 	\item \textbf{Lingkungan validasi:} Pengujian dilakukan dalam pengaturan lokal menggunakan kode sumber dari lingkungan institusional. Pengujian dalam lingkungan produksi skala besar bukan bagian dari ruang lingkup penelitian ini.
 	\item \textbf{Bahasa pemrograman:} Penelitian ini terbatas pada aplikasi PHP. Bahasa lain tidak dicakup.
-	\item \textbf{Kompleksitas aplikasi:} Aplikasi uji memiliki kompleksitas tingkat menengah, dengan maksimum 10.000 baris kode.
+	\item \textbf{Kompleksitas aplikasi:} Aplikasi uji memiliki 
+kompleksitas tingkat menengah, mencakup ratusan \textit{file} PHP 
+dengan campuran logika bisnis, akses basis data, dan presentasi 
+dalam satu basis kode \textit{framework}.
 \end{enumerate}
 
 \section{Manfaat Penelitian}
