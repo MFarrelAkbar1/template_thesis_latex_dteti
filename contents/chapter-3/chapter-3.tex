@@ -62,7 +62,7 @@ menghasilkan rata-rata 20--40 token per detik pada kuantisasi
 Q4\_0. Ollama menyimpan model yang sudah dimuat di VRAM selama 
 sesi aktif sehingga latensi \textit{cold start} (waktu muat model pertama kali ke VRAM) 
 hanya terjadi sekali per sesi eksperimen
-    \item \textbf{PHP 8.5.1}: Interpreter PHP untuk validasi sintaks menggunakan \texttt{php -l}.
+    \item \textbf{PHP 8.4.1}: Interpreter PHP untuk validasi sintaks menggunakan \texttt{php -l}.
 
     \item \textbf{Composer}: Manajer dependensi PHP untuk instalasi Rector dan PHPStan.
 
@@ -183,7 +183,7 @@ Modul pertama yang berjalan. Scanner menjalankan Semgrep \cite{semgrep2024} pada
 
 \begin{sloppypar}
 
-Modul ini menggunakan Rector \cite{rector2024} untuk transformasi kode PHP berbasis AST. Argumen CLI \texttt{--target-php} menentukan versi target; nilai yang diterima adalah \texttt{"7.4"}, \texttt{"8.0"}, \texttt{"8.1"}, \texttt{"8.2"}, \texttt{"8.3"}, atau \texttt{"8.5"}. Sebelum Rector dijalankan, seluruh \textit{file} PHP dari \texttt{input/} disalin dahulu ke \texttt{output/}. Rector kemudian memodifikasi \textit{file} di \texttt{output/} di tempat. \textit{File} yang gagal dikonversi tetap ada di \texttt{output/} sebagai salinan kode asli dan statusnya dicatat \texttt{FAILED} di laporan; direktori \texttt{input/} tidak pernah disentuh. Konfigurasi Rector dibuat sebagai \textit{tempfile} saat \textit{runtime} dan dihapus otomatis setelahnya.
+Modul ini menggunakan Rector \cite{rector2024} untuk transformasi kode PHP berbasis AST. Argumen CLI \texttt{--target-php} menentukan versi target; nilai yang diterima adalah \texttt{"7.4"}, \texttt{"8.0"}, \texttt{"8.1"}, \texttt{"8.2"}, atau \texttt{"8.3"}. Sebelum Rector dijalankan, seluruh \textit{file} PHP dari \texttt{input/} disalin dahulu ke \texttt{output/}. Rector kemudian memodifikasi \textit{file} di \texttt{output/} di tempat. \textit{File} yang gagal dikonversi tetap ada di \texttt{output/} sebagai salinan kode asli dan statusnya dicatat \texttt{FAILED} di laporan; direktori \texttt{input/} tidak pernah disentuh. Konfigurasi Rector dibuat sebagai \textit{tempfile} saat \textit{runtime} dan dihapus otomatis setelahnya.
 
 \end{sloppypar}
 

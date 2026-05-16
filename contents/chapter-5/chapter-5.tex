@@ -134,3 +134,14 @@ dapat dijajaki. Arsitektur modular \textit{pipeline} yang dibangun memungkinkan
 penggantian komponen Rector dan Semgrep dengan alat setara untuk bahasa lain, 
 sehingga pendekatan yang sama berpotensi diterapkan pada migrasi aplikasi 
 berbasis Python, JavaScript, atau bahasa lain yang menghadapi tantangan serupa.
+
+\textbf{Kesembilan}, pengujian \textit{pipeline} terhadap versi PHP 
+yang lebih baru seperti PHP 8.4 dan PHP 8.5 dapat dilakukan sebagai 
+kelanjutan penelitian. Eksperimen awal pada PHP 8.5 menunjukkan bahwa 
+\textit{ruleset} Rector untuk versi tersebut masih bersifat 
+eksperimental dan belum stabil untuk basis kode CodeIgniter 3.x. 
+PHP 8.4 diprediksi lebih \textit{feasible} karena \textit{ruleset}-nya 
+sudah lebih matang, namun tetap memerlukan validasi empiris. Untuk 
+target PHP 8.5 dan di atasnya, migrasi \textit{framework} ke 
+CodeIgniter 4 atau \textit{framework} modern lainnya perlu dipertimbangkan 
+sebagai prasyarat sebelum konversi otomatis dapat dilakukan.
