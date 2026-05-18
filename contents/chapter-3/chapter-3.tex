@@ -123,7 +123,9 @@ privasi data yang sama dengan dataset FT UGM.
 
 \section{Metode Penelitian}
 
-Penelitian ini menggunakan metodologi Penelitian dan Pengembangan (\textit{Research and Development}, R\&D) dengan model prototipe. Pilihan ini didasarkan pada fakta bahwa penelitian menghasilkan produk perangkat lunak nyata, bukan hanya analisis teoritis. Model prototipe dipilih karena dalam praktiknya banyak keputusan desain baru bisa dibuat setelah melihat perilaku nyata sistem, bukan dari perencanaan di atas kertas saja. Ini terutama berlaku untuk format \textit{prompt} AI dan cara menangani kode yang tidak bisa diotomatisasi sepenuhnya.
+Penelitian ini menggunakan metodologi Penelitian dan Pengembangan (\textit{Research and Development}, R\&D) dengan model prototipe. 
+Pendekatan ini dipilih karena penelitian menghasilkan produk perangkat lunak nyata, bukan hanya analisis teoritis. 
+Model prototipe dipilih karena memungkinkan penyesuaian keputusan desain secara iteratif berdasarkan observasi terhadap perilaku sistem secara aktual. Ini terutama berlaku untuk format \textit{prompt} AI dan cara menangani kode yang tidak bisa diotomatisasi sepenuhnya.
 \newpage
 Gambar \ref{fig:alur-penelitian} menunjukkan alur penelitian yang terdiri dari tujuh tahapan.
 
@@ -239,7 +241,7 @@ Modul ini menerima temuan dari Semgrep \textit{pre-scan} sebagai masukan, bukan 
 
 \begin{sloppypar}
 
-Untuk setiap temuan yang lolos filter, modul mengirimkan konteks dan potongan kode ke model LLM melalui endpoint \texttt{/api/chat} Ollama \cite{ollama2024} di \texttt{localhost:11434}. Kalau model tidak menghasilkan blok kode PHP sama sekali, respons tetap dicatat dengan \textit{placeholder} \texttt{// Manual review required}, bukan di-skip. Jika Ollama tidak tersedia, \textit{pipeline} tetap berjalan tanpa komponen AI. Desain \textit{prompt} yang digunakan dibahas dalam Subbab \ref{sec:prompt-design}.
+Untuk setiap temuan yang lolos filter, modul mengirimkan konteks dan potongan kode ke model LLM melalui endpoint \texttt{/api/chat} Ollama \cite{ollama2024} di \texttt{localhost:11434}. Kalau model tidak menghasilkan blok kode PHP sama sekali, respons tetap dicatat dengan \textit{placeholder} \texttt{// Manual review required} dan tidak dilewati (diabaikan). Jika Ollama tidak tersedia, \textit{pipeline} tetap berjalan tanpa komponen AI. Desain \textit{prompt} yang digunakan dibahas dalam Subbab \ref{sec:prompt-design}.
 
 \end{sloppypar}
 
@@ -524,92 +526,37 @@ Eksperimen komparasi dirancang dengan kondisi yang sepenuhnya terkontrol dan dil
     \item \textbf{Model}: dijalankan lokal melalui Ollama tanpa modifikasi
 
 \end{itemize}
-
 \subsection{Metrik Evaluasi}
-
 \label{sec:metrik-evaluasi}
 
-Berikut definisi formal metrik yang digunakan dalam penelitian ini.
+Definisi formal seluruh metrik yang digunakan dalam penelitian ini
+beserta landasannya dalam literatur telah diuraikan dalam
+Subbab~\ref{subsec:metrik-llm}. Secara ringkas, lima metrik yang
+diterapkan adalah: Conversion Rate (CR) untuk mengukur keberhasilan
+konversi Rector, Format Compliance Rate (FCR) untuk mengukur kepatuhan
+format respons model, Syntax Validity Rate (SVR) sebagai metrik primer
+kualitas kode yang dihasilkan, Security Finding Delta ($\Delta F$) untuk
+mengukur perubahan postur keamanan pasca-konversi, dan Mean Confidence
+Score ($\bar{C}_m$) sebagai metrik sekunder konsistensi model.
 
-\textbf{Tingkat Konversi Rector} (\textit{Conversion Rate}, CR) mengukur
-persentase \textit{file} PHP yang berhasil dikonversi:
+Dalam eksperimen ini, setiap model dijalankan sebanyak 33 percobaan
+(3 \textit{run} per temuan, 11 temuan), sehingga $r_{total} = 33$ per
+model untuk perhitungan FCR. SVR ditetapkan sebagai metrik primer karena
+hasilnya dapat diverifikasi secara independen menggunakan \texttt{php -l},
+sedangkan $\bar{C}_m$ bersifat sekunder karena merupakan penilaian mandiri
+model yang tidak dapat diverifikasi dari luar \cite{akuthota2023vulnerability}
+\cite{li2025iris}.
 
-\begin{equation}
-    CR = \frac{f_{success}}{f_{total}} \times 100\%
-\end{equation}
+\subsection{Interpretasi \textit{Trade-off} Antar Metrik}
 
-di mana $f_{success}$ adalah jumlah \textit{file} yang berhasil
-dikonversi dan $f_{total}$ adalah total \textit{file} PHP dalam
-direktori \texttt{input/}.
-
-\textbf{Format Compliance Rate} (FCR) mengukur persentase respons
-model yang memenuhi ketiga elemen format \textit{prompt} sekaligus:
-
-\begin{equation}
-    FCR = \frac{r_{compliant}}{r_{total}} \times 100\%
-\end{equation}
-
-di mana $r_{compliant}$ adalah jumlah respons yang patuh format dan
-$r_{total}$ adalah total percobaan per model (33 per model).
-Metrik ini mencerminkan kemampuan model mengikuti instruksi,
-bukan kualitas kodenya.
-
-\textbf{Syntax Validity Rate} (SVR) mengukur persentase blok kode
-PHP yang diekstraksi dan lolos \texttt{php -l}:
-
-\begin{equation}
-    SVR = \frac{c_{valid}}{c_{extracted}} \times 100\%
-\end{equation}
-
-di mana $c_{valid}$ adalah jumlah blok kode yang lolos pemeriksaan
-sintaks dan $c_{extracted}$ adalah total blok kode yang berhasil
-diekstraksi dari respons model. Ini adalah metrik primer karena
-hasilnya konkret dan dapat diverifikasi secara independen.
-
-\textbf{Security Finding Delta} ($\Delta F$) mengukur perubahan
-jumlah temuan keamanan antara \textit{pre-scan} dan
-\textit{post-scan}:
-
-\begin{equation}
-    \Delta F = F_{post} - F_{pre}
-\end{equation}
-
-Nilai $\Delta F < 0$ menunjukkan pengurangan temuan, $\Delta F = 0$
-berarti tidak ada perubahan, dan $\Delta F > 0$ tidak otomatis
-diinterpretasikan sebagai regresi karena bisa mencerminkan
-kerentanan laten yang baru terlihat setelah transformasi kode.
-
-\textbf{Mean Confidence Score} ($\bar{C}_m$) mengukur rata-rata
-skor kepercayaan yang dilaporkan sendiri oleh model $m$:
-
-\begin{equation}
-    \bar{C}_m = \frac{1}{n} \sum_{i=1}^{n} c_i
-\end{equation}
-
-di mana $n$ adalah jumlah \textit{run} dan $c_i$ adalah skor
-kepercayaan pada \textit{run} ke-$i$. Untuk mengukur konsistensi
-antar \textit{run}, digunakan variansi:
-
-\begin{equation}
-    \sigma^2_m = \frac{1}{n} \sum_{i=1}^{n} (c_i - \bar{C}_m)^2
-\end{equation}
-
-Model dengan $\sigma^2_m$ rendah menunjukkan perilaku yang lebih
-stabil dan dapat diandalkan. Perlu dicatat bahwa $\bar{C}_m$
-adalah metrik sekunder; implikasinya terhadap kualitas kode
-dibahas di Bab IV.
-
-\subsection{Interpretasi Trade-off Antar Metrik}
-
-Kedua metrik utama FCR dan SVR bisa memberikan gambaran
-yang berbeda dan perlu diinterpretasikan bersama. Model dengan
-FCR tinggi tapi SVR rendah menunjukkan kemampuan mengikuti
-instruksi format namun kualitas kode yang buruk. Sebaliknya,
-model dengan FCR rendah tapi SVR tinggi mengabaikan instruksi
-format namun menghasilkan kode yang berkualitas baik. Kedua
-kondisi ini punya implikasi praktis yang berbeda dan akan
-dibahas di Bab IV.
-
+FCR dan SVR merupakan dua dimensi yang independen dan perlu
+diinterpretasikan bersama, sebagaimana dijelaskan dalam
+Subbab~\ref{subsec:metrik-llm}. Model dengan FCR tinggi namun SVR
+rendah menunjukkan kemampuan mengikuti instruksi format tetapi
+kualitas kode yang buruk. Sebaliknya, model dengan FCR rendah namun
+SVR tinggi mengabaikan instruksi format tetapi menghasilkan kode
+berkualitas baik. Kedua kondisi ini punya implikasi praktis yang
+berbeda dan dibahas secara empiris di Bab IV.
 \section{Keamanan dan Privasi Data}
 \label{sec:data-privacy}
 

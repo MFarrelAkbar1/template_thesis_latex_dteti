@@ -29,7 +29,7 @@ Karena dataset mengandung campuran kode PHP 5.x dan PHP 7.x, Rector menerapkan r
 
 \subsection{Contoh Transformasi Rector}
 
-Untuk memperlihatkan jenis-jenis perubahan yang dilakukan Rector secara konkret, berikut tiga contoh transformasi yang ditemukan pada dataset FT UGM.
+Sebagai gambaran nyata mengenai jenis-jenis perubahan yang dilakukan Rector, berikut tiga contoh transformasi yang ditemukan pada dataset FT UGM.
 
 \textbf{Transformasi 1: Array sintaks pendek (\texttt{ArrayShortSyntaxRector})}
 
@@ -76,7 +76,7 @@ $atts[$key] = $attributes[$key] ?? $val;
 
 \textbf{Transformasi 3: Fungsi \texttt{str\_contains()} (\texttt{StrContainsRector})}
 
-Pada \texttt{system/helpers/url\_helper.php}, pola pencarian substring dengan \texttt{strpos()} diubah ke fungsi \texttt{str\_contains()} yang diperkenalkan di PHP 8.0. Rector juga menambahkan \textit{cast} \texttt{(string)} karena hasil dari \texttt{\$\_SERVER['SERVER\_SOFTWARE']} bertipe \texttt{mixed} di PHP 8.x:
+Pada \texttt{system/helpers/url\_helper.php}, pola pencarian substring dengan \texttt{strpos()} diubah ke fungsi \texttt{str\_contains()} yang dikenalkan di PHP 8.0. Rector juga menambahkan \textit{cast} \texttt{(string)} karena hasil dari \texttt{\$\_SERVER['SERVER\_SOFTWARE']} bertipe \texttt{mixed} di PHP 8.x:
 
 \begin{small}
 \begin{verbatim}
@@ -168,7 +168,7 @@ Sebagian besar \textit{error} yang ditemukan PHPStan berasal dari tiga kategori 
 
 Semua ini adalah manifestasi (\textit{technical debt}: akumulasi masalah kualitas kode 
 yang ditunda penanganannya)
-yang sudah ada sebelum migrasi, bukan kesalahan yang diperkenalkan oleh proses konversi. PHP 8.3 memiliki sistem tipe yang jauh lebih ketat dibandingkan PHP 7.x, sehingga masalah yang sebelumnya tidak terdeteksi karena PHP 7.x lebih permisif kini menjadi terlihat oleh PHPStan. Gambar \ref{fig:phpstan-iso} menunjukkan distribusi temuan PHPStan berdasarkan kontrol ISO/IEC 27001:2022 yang dipetakan.
+yang sudah ada sebelum migrasi, bukan kesalahan yang ditimbulkan oleh proses konversi. PHP 8.3 memiliki sistem tipe yang jauh lebih ketat dibandingkan PHP 7.x, sehingga masalah yang sebelumnya tidak terdeteksi karena PHP 7.x lebih permisif kini menjadi terlihat oleh PHPStan. Gambar \ref{fig:phpstan-iso} menunjukkan distribusi temuan PHPStan berdasarkan kontrol ISO/IEC 27001:2022 yang dipetakan.
 
 \begin{figure}[h]
     \centering
@@ -208,7 +208,7 @@ A.8.29 & \textit{Security Testing in Development} & 10 temuan SSRF dari Semgrep 
 \end{tabularx}
 \end{table}
 
-Status keseluruhan adalah \texttt{NON\_COMPLIANT}. Ini bukan hasil yang mengejutkan mengingat kondisi kode warisan yang dianalisis; justru ini adalah gambaran yang jujur tentang postur keamanan aplikasi sebelum dilakukan remediasi manual.
+Status keseluruhan adalah \texttt{NON\_COMPLIANT}. Ini bukan hasil yang mengejutkan mengingat kondisi kode warisan yang dianalisis; justru ini adalah representasi nyata tentang postur keamanan aplikasi sebelum dilakukan remediasi manual.
 
 Dua kontrol yang berstatus \texttt{COMPLIANT}, yaitu A.5.17 dan A.8.24, perlu dipahami dalam konteks yang tepat. Status ini berarti \textit{ruleset} Semgrep yang digunakan tidak menghasilkan temuan yang dipetakan ke kedua kontrol tersebut, bukan berarti kode bebas dari masalah autentikasi atau kriptografi secara absolut.
 
@@ -613,7 +613,7 @@ sebelum deployment ke lingkungan PHP 8.3.
 
 \subsection{Keterbatasan Dataset}
 
-Dataset yang digunakan terdiri dari satu aplikasi berbasis CodeIgniter 3.x milik FT UGM. Dari 245 \textit{file}, 237 diklasifikasikan sebagai \textit{unknown} oleh Rector karena merupakan \textit{file framework} CodeIgniter yang tidak mengandung pola yang perlu ditransformasi. Hal ini membatasi seberapa jauh hasil penelitian ini bisa digeneralisasi ke jenis aplikasi PHP lain, terutama yang tidak menggunakan \textit{framework} atau yang menggunakan \textit{framework} berbeda.
+Dataset yang digunakan terdiri dari satu aplikasi berbasis CodeIgniter 3.x milik FT UGM. Dari 245 \textit{file}, 237 diklasifikasikan sebagai \textit{unknown} oleh Rector karena merupakan \textit{file framework} CodeIgniter yang tidak mengandung pola yang perlu ditransformasi. Hal ini membatasi tingkat generalisasi hasil penelitian ini bisa digeneralisasi ke jenis aplikasi PHP lain, terutama yang tidak menggunakan \textit{framework} atau yang menggunakan \textit{framework} berbeda.
 
 Dari sisi \textit{input} eksperimen LLM, 10 dari 11 temuan adalah SSRF yang berasal dari satu pola kode yang berulang di \texttt{Output.php}. Homogenitas \textit{input} ini berarti eksperimen komparasi pada dasarnya menguji respons model terhadap dua jenis kerentanan dengan variasi terbatas. Hasil komparasi perlu diinterpretasikan dalam konteks keterbatasan ini.
 
@@ -648,7 +648,7 @@ dihapus di PHP 8.4. PHP 8.3 tetap merupakan target migrasi otomatis
 yang paling realistis untuk basis kode CodeIgniter 3.x yang masih 
 aktif digunakan.
 
-Jalur yang realistis menuju PHP 8.5 adalah pembaruan \textit{framework} 
+Pendekatan yang paling memungkinkan menuju PHP 8.5 adalah pembaruan \textit{framework} 
 ke CodeIgniter 4 atau \textit{framework} modern lainnya yang sudah 
 mendukung PHP 8.x secara \textit{native} — sebuah proses yang melampaui 
 cakupan migrasi versi otomatis dan pada dasarnya merupakan penulisan 

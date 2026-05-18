@@ -93,7 +93,7 @@ Cai et al. \cite{cai2015pattern} & Java & Tidak ada & \textit{Cloud migration} \
 \hline
 Chen et al. \cite{chen2022ast} & TypeScript & Tidak ada & \textit{Code migration} (AST) \\
 \hline
-\textbf{Penelitian ini} & PHP & 5 model LLM lokal & Migrasi versi + \textit{security compliance} \\
+\textbf{Penelitian ini} & PHP & Membamdingkan 5 LLM lokal dan memilih AI terbaik untuk migrasi PHP & Migrasi versi + \textit{security compliance} \\
 \hline
 \end{longtable}
 
@@ -133,7 +133,7 @@ Chen et al. \cite{chen2022ast} & N/A & Tidak & Tidak ada & Tidak \\
 \textbf{Penelitian ini} & Lokal (Ollama) & Ya (PHPStan + Semgrep) & ISO/IEC 27001:2022 & Ya \\
 \hline
 \end{longtable}
-\newpage
+
 Dari kedua tabel terlihat kesenjangan yang konsisten. Studi-studi yang berfokus pada keamanan tidak menangani migrasi versi. Studi-studi yang berfokus pada transformasi kode, termasuk yang sudah terbukti di skala industri seperti Chen et al. \cite{chen2022ast} tidak menyertakan pemeriksaan keamanan maupun pemetaan ke standar formal. Tidak satu pun dari kedelapan studi yang menggabungkan migrasi versi PHP, analisis keamanan berbasis LLM, validasi pasca-konversi, dan kepatuhan ISO/IEC 27001:2022 dalam satu alur kerja \textit{open source} dengan \textit{deployment} lokal. Kombinasi inilah yang menjadi kontribusi utama penelitian ini.
 
 \section{Dasar Teori}
@@ -220,9 +220,132 @@ Penelitian ini mengevaluasi lima model LLM \textit{open source} yang dijalankan 
 
 Li, Dutta, dan Naik \cite{li2025iris} sudah menunjukkan bahwa kombinasi LLM dan analisis statis menghasilkan deteksi kerentanan yang lebih baik dari masing-masing yang berjalan sendiri. Perbandingan performa kelima model di atas dalam konteks analisis keamanan kode PHP akan dibahas secara empiris di Bab IV.
 
+\subsection{Metrik Evaluasi Kualitas Keluaran LLM}
+
+Evaluasi kualitas keluaran model LLM pada tugas pemrograman memerlukan
+metrik yang dapat diverifikasi secara otomatis dan objektif. Dua dimensi
+utama yang digunakan dalam literatur adalah kemampuan mengikuti instruksi
+format dan kemampuan menghasilkan kode yang valid secara sintaksis.
+
+\textbf{Pass@k} adalah metrik standar untuk mengukur kualitas kode yang
+dihasilkan LLM \cite{roziere2024codellama}\cite{hui2024qwen}. Metrik ini
+mengukur probabilitas bahwa setidaknya satu dari $k$ sampel kode yang
+dihasilkan model dapat lulus serangkaian pengujian. Pada nilai $k=1$
+dengan \textit{greedy decoding}, pass@1 secara langsung mengukur persentase
+percobaan yang menghasilkan kode valid dari total percobaan.
+
+\textbf{Instruction-following evaluation} mengukur sejauh mana model
+mematuhi instruksi format yang diberikan dalam \textit{prompt}, terlepas
+dari kualitas konten yang dihasilkan. Zhou dkk.\ \cite{zhou2023ifeval}
+memperkenalkan IFEval yang mendefinisikan \textit{prompt-level
+strict-accuracy} sebagai persentase \textit{prompt} di mana seluruh
+instruksi yang dapat diverifikasi terpenuhi sekaligus. Pendekatan ini
+bersifat \textit{all-or-nothing}: respons yang hanya memenuhi sebagian
+instruksi tidak dihitung sebagai patuh.
+
+Penelitian ini mengadaptasi kedua konsep tersebut ke dalam empat metrik
+formal yang disesuaikan dengan konteks migrasi PHP dan analisis keamanan.
+
+\textbf{Tingkat Konversi Rector} (\textit{Conversion Rate}, CR) mengukur
+persentase \textit{file} PHP yang berhasil dikonversi oleh Rector:
+
+\begin{equation}
+    CR = \frac{f_{success}}{f_{total}} \times 100\%
+    \label{eq:cr}
+\end{equation}
+
+di mana $f_{success}$ adalah jumlah \textit{file} yang berhasil
+dikonversi dan $f_{total}$ adalah total \textit{file} PHP dalam
+direktori \texttt{input/}.
+
+\textbf{Format Compliance Rate} (FCR) mengadaptasi konsep
+\textit{prompt-level strict-accuracy} dari IFEval \cite{zhou2023ifeval}
+untuk mengukur persentase respons model yang memenuhi ketiga elemen
+format \textit{prompt} sekaligus:
+
+\begin{equation}
+    FCR = \frac{r_{compliant}}{r_{total}} \times 100\%
+    \label{eq:fcr}
+\end{equation}
+
+di mana $r_{compliant}$ adalah jumlah respons yang patuh format dan
+$r_{total}$ adalah total percobaan per model. Metrik ini mencerminkan
+kemampuan model mengikuti instruksi, bukan kualitas kodenya.
+
+\textbf{Syntax Validity Rate} (SVR) mengadaptasi konsep pass@1
+\cite{roziere2024codellama}\cite{hui2024qwen} untuk mengukur persentase
+blok kode PHP yang diekstraksi dan lolos \texttt{php -l}:
+
+\begin{equation}
+    SVR = \frac{c_{valid}}{c_{extracted}} \times 100\%
+    \label{eq:svr}
+\end{equation}
+
+di mana $c_{valid}$ adalah jumlah blok kode yang lolos pemeriksaan
+sintaks dan $c_{extracted}$ adalah total blok kode yang berhasil
+diekstraksi dari respons model. Ini adalah metrik primer karena
+hasilnya konkret dan dapat diverifikasi secara independen.
+
+\textbf{Security Finding Delta} ($\Delta F$) mengukur perubahan
+jumlah temuan keamanan antara \textit{pre-scan} dan \textit{post-scan}:
+
+\begin{equation}
+    \Delta F = F_{post} - F_{pre}
+    \label{eq:deltaf}
+\end{equation}
+
+Nilai $\Delta F < 0$ menunjukkan pengurangan temuan, $\Delta F = 0$
+berarti tidak ada perubahan, dan $\Delta F > 0$ tidak otomatis
+diinterpretasikan sebagai regresi karena bisa mencerminkan kerentanan
+laten yang baru terlihat setelah transformasi kode.
+Selain keempat metrik di atas, penelitian ini juga mencatat
+\textbf{Mean Confidence Score} ($\bar{C}_m$) sebagai metrik sekunder
+yang mengukur rata-rata skor kepercayaan yang dilaporkan sendiri oleh
+model $m$:
+
+\begin{equation}
+    \bar{C}_m = \frac{1}{n} \sum_{i=1}^{n} c_i
+    \label{eq:conf-mean}
+\end{equation}
+
+Untuk mengukur konsistensi antar \textit{run}, digunakan variansi:
+
+\begin{equation}
+    \sigma^2_m = \frac{1}{n} \sum_{i=1}^{n} (c_i - \bar{C}_m)^2
+    \label{eq:conf-var}
+\end{equation}
+
+di mana $n$ adalah jumlah \textit{run} dan $c_i$ adalah skor
+kepercayaan pada \textit{run} ke-$i$. Perlu dicatat bahwa $\bar{C}_m$
+adalah metrik sekunder; model LLM berukuran kecil umumnya tidak
+terkalibrasi dengan baik dalam menilai \textit{output} mereka sendiri
+\cite{akuthota2023vulnerability, li2025iris}, sehingga skor ini
+tidak bisa dijadikan proksi kualitas kode. FCR dan SVR merupakan dua
+dimensi yang independen: model dapat mencapai FCR tinggi dengan SVR
+rendah, atau sebaliknya \cite{zhou2023ifeval}. Hal ini didukung oleh
+evaluasi CodeIF yang menemukan bahwa kepatuhan LLM terhadap instruksi
+(terutama instruksi multi-konstrain) sering kali mengorbankan 
+konsistensi dan validitas kode yang dihasilkan \cite{yan2025codeif}. 
+Implikasi dari pola ini dibahas di Bab IV.
+
 \subsection{Ollama: Menerapkan LLM Secara Lokal}
 
-Ollama adalah \textit{platform} \textit{open source} untuk menjalankan LLM secara lokal di infrastruktur pengguna \cite{ollama2024}. \textit{Platform} mengkuantisasi model secara otomatis agar sesuai sumber daya perangkat keras yang tersedia dan menyediakan API REST yang kompatibel dengan format OpenAI, sehingga mudah diintegrasikan ke aplikasi Python.
+Beberapa alternatif dengan fungsi serupa tersedia, di antaranya LM Studio
+\cite{elementlabs2024lmstudio} dan llama.cpp \cite{gerganov2023llamacpp}.
+LM Studio menyediakan antarmuka grafis yang intuitif untuk menjalankan
+model secara lokal, namun tidak menyediakan API REST bawaan yang dapat
+dipanggil langsung dari skrip Python tanpa konfigurasi tambahan.
+llama.cpp adalah \textit{backend} inferensi berperforma tinggi yang
+ditulis dalam C/C++ tanpa dependensi eksternal
+\cite{gerganov2023llamacpp} dan menjadi dasar teknis Ollama, namun
+memerlukan kompilasi manual dan tidak memiliki lapisan manajemen model
+yang terintegrasi. 
 
-Alasan memilih Ollama bukan sekadar teknis. Kode sumber yang dianalisis dalam penelitian ini bersifat rahasia milik institusi. Mengirimkannya ke API \textit{cloud} bukan pilihan yang bisa diterima. 
-Dengan Ollama, semua inferensi terjadi di mesin lokal tanpa data keluar dari lingkungan organisasi \cite{ollama2024}, sejalan dengan prinsip ISO/IEC 27001:2022 \cite{iso27001_2022} dan merupakan persyaratan eksplisit dari kedua institusi yang menjadi studi kasus penelitian ini.
+Ollama dipilih karena tiga alasan. Pertama, API
+REST-nya yang kompatibel dengan format OpenAI memungkinkan integrasi
+langsung ke skrip Python tanpa pustaka tambahan. Kedua, manajemen model
+dilakukan melalui satu perintah \texttt{ollama pull} tanpa konfigurasi
+manual, sehingga eksperimen dapat direproduksi dengan mudah di lingkungan
+lain. Ketiga, Ollama mendukung kuantisasi Q4\_0 secara otomatis yang
+memungkinkan model berukuran 6--8 miliar parameter berjalan dalam VRAM
+8 GB tanpa pengaturan tambahan.
