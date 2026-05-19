@@ -494,19 +494,6 @@ Ketiga, tidak memerlukan koneksi eksternal atau model tambahan,
 sehingga konsisten dengan persyaratan privasi data yang ditetapkan
 dalam Subbab \ref{sec:data-privacy}.
 
-\section{Dataset Studi Kasus}
-
-Studi kasus pertama menggunakan 245 \textit{file} PHP dari satu aplikasi web internal berbasis CodeIgniter 3.x yang dikelola oleh FT UGM. Struktur direktorinya mengikuti konvensi standar CodeIgniter 3.x: \texttt{application/} untuk kode aplikasi (kontroler, model, \textit{view}, \textit{helper}, konfigurasi, layanan) dan \texttt{system/} untuk kode \textit{framework}. Kode diperoleh melalui koordinasi langsung dengan FT UGM dan hanya digunakan untuk analisis statis dalam lingkungan lokal, tanpa akses ke basis data produksi dan tanpa eksekusi kode.
-
-Hanya \textit{file} \texttt{.php} yang diproses; \textit{file} lain seperti \texttt{.html}, \texttt{.js}, dan \texttt{.css} tidak disalin ke \texttt{output/} dan tidak dianalisis. Dataset mencerminkan karakteristik kode warisan yang umum: pencampuran logika bisnis, akses basis data, dan presentasi dalam \textit{file} yang sama, serta beberapa pola kode PHP 5.x yang masih ada meski aplikasi secara keseluruhan berjalan di atas PHP 7.x.
-
-Untuk eksperimen komparasi LLM, digunakan 11 temuan dari Semgrep \textit{pre-scan}: 1 SQL Injection dan 10 SSRF (\textit{Server-Side Request Forgery}). Ini adalah seluruh populasi temuan \textit{pre-scan}, bukan subset yang dipilih secara subjektif.
-Studi kasus kedua menggunakan 183 \textit{file} PHP kustom dari aplikasi 
-CBT milik DTI UGM, dengan mengeksklusi direktori \texttt{libraries/}, 
-\texttt{third\_party/}, dan \texttt{tcpdf/}. Target konversi adalah 
-PHP 8.3. Karena tidak ada berkas \texttt{composer.json} pada tingkat 
-aplikasi, langkah analisis dependensi dilewati secara otomatis untuk 
-studi kasus ini.
 \section{Rancangan Eksperimen Komparasi Model LLM}
 
 Eksperimen komparasi dirancang dengan kondisi yang sepenuhnya terkontrol dan dilakukan terpisah dari pengujian \textit{pipeline} utama menggunakan skrip evaluasi khusus.

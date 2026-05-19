@@ -1,19 +1,47 @@
 \chapter{Hasil dan Diskusi}
 
-Bab ini menyajikan hasil implementasi \textit{pipeline} pada dua studi kasus: 
-kode PHP milik FT UGM (Dashboard TCK) dan kode PHP milik DTI UGM (Sistem CBT), 
-beserta analisis perbandingan keduanya. Pembahasan studi kasus pertama mencakup: hasil konversi Rector, 
-hasil pemindaian keamanan Semgrep sebelum dan sesudah konversi, 
-hasil validasi PHPStan, status kepatuhan ISO/IEC 27001:2022, 
-analisis dependensi \textit{composer}, hasil komparasi lima model 
-LLM dengan \textit{prompt} identik (Kondisi A), hasil komparasi 
-dengan \textit{prompt} yang dioptimasi per model (Kondisi B), 
-optimasi parameter Qwen2.5-Coder (Kondisi C), serta diskusi dan 
-keterbatasan penelitian. Bagian penutup menyajikan perbandingan hasil kedua 
-studi kasus secara menyeluruh.
+Bab ini menyajikan hasil implementasi \textit{pipeline} pada dua studi 
+kasus: kode PHP milik FT UGM (Dashboard TCK) dan kode PHP milik DTI UGM 
+(Sistem CBT), beserta analisis perbandingan keduanya. Setiap studi kasus 
+diawali dengan deskripsi dataset yang digunakan, diikuti hasil konversi 
+Rector, pemindaian Semgrep, validasi PHPStan, dan pemetaan kepatuhan 
+ISO/IEC 27001:2022. Studi kasus pertama juga mencakup eksperimen komparasi 
+lima model LLM pada tiga kondisi serta analisis dependensi \textit{composer}. 
+Bagian penutup menyajikan perbandingan hasil kedua studi kasus secara 
+menyeluruh.
 
 % ============================================================
-\section{Hasil Konversi Rector}
+\section{Studi Kasus 1: FT UGM (Dashboard TCK)}
+% ============================================================
+
+% ------------------------------------------------------------
+\subsection{Deskripsi Dataset}
+% ------------------------------------------------------------
+
+Studi kasus pertama menggunakan 245 \textit{file} PHP dari satu aplikasi 
+web internal berbasis CodeIgniter 3.x yang dikelola oleh FT UGM. 
+Struktur direktorinya mengikuti konvensi standar CodeIgniter 3.x: 
+\texttt{application/} untuk kode aplikasi (kontroler, model, \textit{view}, 
+\textit{helper}, konfigurasi, layanan) dan \texttt{system/} untuk kode 
+\textit{framework}. Kode diperoleh melalui koordinasi langsung dengan 
+FT UGM dan hanya digunakan untuk analisis statis dalam lingkungan lokal, 
+tanpa akses ke basis data produksi dan tanpa eksekusi kode.
+
+Hanya \textit{file} \texttt{.php} yang diproses; \textit{file} lain 
+seperti \texttt{.html}, \texttt{.js}, dan \texttt{.css} tidak disalin 
+ke \texttt{output/} dan tidak dianalisis. Dataset mencerminkan 
+karakteristik kode warisan yang umum: pencampuran logika bisnis, akses 
+basis data, dan presentasi dalam \textit{file} yang sama, serta beberapa 
+pola kode PHP 5.x yang masih ada meski aplikasi secara keseluruhan 
+berjalan di atas PHP 7.x.
+
+Untuk eksperimen komparasi LLM, digunakan 11 temuan dari Semgrep 
+\textit{pre-scan}: 1 SQL Injection dan 10 SSRF 
+(\textit{Server-Side Request Forgery}). Ini adalah seluruh populasi 
+temuan \textit{pre-scan}, bukan subset yang dipilih secara subjektif.
+
+% ============================================================
+\subsection{Hasil Konversi Rector}
 % ============================================================
 
 Rector dijalankan terhadap 245 \textit{file} PHP dari dataset FT UGM dengan target versi PHP 8.3. Dari 245 \textit{file} tersebut, 239 \textit{file} berhasil dikonversi, 4 \textit{file} dilewati (\textit{skipped}), dan 2 \textit{file} gagal diproses. Tingkat konversi keseluruhan ($CR = 97{,}6\%$), sebagaimana ditunjukkan pada Gambar \ref{fig:rector-conversion}.
@@ -27,7 +55,7 @@ Rector dijalankan terhadap 245 \textit{file} PHP dari dataset FT UGM dengan targ
 \newpage
 Karena dataset mengandung campuran kode PHP 5.x dan PHP 7.x, Rector menerapkan rantai \textit{ruleset} kumulatif dari \texttt{UP\_TO\_PHP\_53} hingga \texttt{UP\_TO\_PHP\_83} secara otomatis dalam satu proses. Ini membuktikan bahwa \textit{pipeline} dapat menangani kode dari berbagai era PHP sekaligus tanpa konfigurasi tambahan.
 
-\subsection{Contoh Transformasi Rector}
+\subsubsection{Contoh Transformasi Rector}
 
 Sebagai gambaran nyata mengenai jenis-jenis perubahan yang dilakukan Rector, berikut tiga contoh transformasi yang ditemukan pada dataset FT UGM.
 
@@ -97,7 +125,7 @@ if ($method === 'auto'
 
 Ketiga transformasi ini mencerminkan kategori perubahan yang paling umum dilakukan Rector: modernisasi sintaks, penggunaan API PHP yang lebih baru, dan penambahan informasi tipe yang dibutuhkan PHP 8.x.
 
-\subsection{File yang Gagal Dikonversi}
+\subsubsection{File yang Gagal Dikonversi}
 
 Kedua \textit{file} yang gagal dikonversi mengalami \textit{internal error} yang sama, yaitu pada fungsi \texttt{FiberNodeScopeResolver::callNodeCallback()} yang menerima argumen bertipe \texttt{null}, padahal seharusnya bertipe \texttt{\detokenize{PhpParser\Node}}. Permasalahan ini merupakan \textit{bug} pada versi Rector yang digunakan, bukan berasal dari kode sumber FT UGM.
 
@@ -118,10 +146,10 @@ Kedua \textit{file} tersebut tetap disertakan dalam direktori \texttt{\detokeniz
 
 Setelah proses konversi, seluruh \textit{file} pada direktori \texttt{\detokenize{output/}} diuji validitas sintaksisnya menggunakan perintah \texttt{\detokenize{php -l}}. Hasil pengujian menunjukkan tidak adanya \textit{parse error}, sehingga tingkat validitas sintaks pasca-konversi mencapai 100\%.
 % ============================================================
-\section{Hasil Pemindaian Keamanan Semgrep}
+\subsection{Hasil Pemindaian Keamanan Semgrep}
 % ============================================================
 
-\subsection{Pre-Scan: Baseline Keamanan Kode Asli}
+\subsubsection{Pre-Scan: Baseline Keamanan Kode Asli}
 
 Pemindaian Semgrep terhadap 241 \textit{file} PHP pada direktori 
 \texttt{\detokenize{input/}} (dari total 245 \textit{file}, dengan 4 \textit{file} 
@@ -143,7 +171,7 @@ pada kode warisan, di mana modul yang menangani \textit{output} dan \textit{cach
 cenderung menjadi titik kerentanan akibat tingginya interaksi dengan data eksternal 
 yang tidak divalidasi secara konsisten.
 
-\subsection{Post-Scan: Perbandingan Setelah Konversi}
+\subsubsection{Post-Scan: Perbandingan Setelah Konversi}
 
 Pemindaian Semgrep terhadap direktori \texttt{\detokenize{output/}} setelah proses 
 konversi oleh Rector menghasilkan jumlah temuan yang identik dengan tahap 
@@ -159,7 +187,7 @@ diatasi melalui transformasi sintaksis berbasis AST, karena memerlukan
 perbaikan pada tingkat logika program (semantik), yang berada di luar 
 cakupan pendekatan tersebut.
 % ============================================================
-\section{Hasil Validasi PHPStan}
+\subsection{Hasil Validasi PHPStan}
 % ============================================================
 
 PHPStan level 5 dijalankan terhadap kode hasil konversi di direktori \texttt{output/} dengan target PHP 8.3. Hasilnya adalah 2.871 temuan yang terdiri dari 2.549 ERROR dan 322 WARNING, tersebar di 174 dari 241 \textit{file} yang dianalisis.
@@ -180,7 +208,7 @@ yang sudah ada sebelum migrasi, bukan kesalahan yang ditimbulkan oleh proses kon
 Angka PHPStan yang tinggi justru menunjukkan manfaat nyata dari komponen validasi dalam \textit{pipeline} ini. Tanpa PHPStan, 2.871 potensi masalah tipe dan kompatibilitas ini tidak akan terdeteksi sampai kode dijalankan di lingkungan produksi, sesuai dengan temuan Strobl et al. \cite{strobl2020automated} tentang pentingnya jaminan kualitas otomatis dalam transformasi kode skala besar.
 
 % ============================================================
-\section{Status Kepatuhan ISO/IEC 27001:2022}
+\subsection{Status Kepatuhan ISO/IEC 27001:2022}
 % ============================================================
 
 Berdasarkan pemetaan yang dilakukan oleh \texttt{iso\_mapper.py}, status kepatuhan terhadap enam kontrol ISO/IEC 27001:2022 yang dipetakan adalah sebagaimana ditunjukkan pada Tabel \ref{tab:iso-status}.
@@ -215,12 +243,12 @@ Dua kontrol yang berstatus \texttt{COMPLIANT}, yaitu A.5.17 dan A.8.24, perlu di
 Kontrol A.8.29 berstatus \texttt{PARTIAL} karena \textit{pipeline} sudah menjalankan pengujian keamanan otomatis sebagai bagian dari proses, yang memenuhi sebagian persyaratan kontrol ini. Namun masih ada temuan terbuka, sehingga kontrol belum sepenuhnya terpenuhi. Laporan kepatuhan ini dihasilkan secara otomatis dan dapat langsung digunakan sebagai dokumentasi audit ISO/IEC 27001:2022 \cite{iso27001_2022}.
 
 % ============================================================
-\section{Hasil Komparasi Lima Model LLM (Kondisi A)}
+\subsection{Hasil Komparasi Lima Model LLM (Kondisi A)}
 % ============================================================
 
 Eksperimen Kondisi A dijalankan dengan \textit{prompt} yang identik untuk semua model (\textit{zero-shot}), 11 temuan Semgrep \textit{pre-scan} sebagai masukan, 3 \textit{run} per temuan per model, dan \textit{temperature} 0,1. Total percobaan adalah 165 (33 per model). Semua model dijalankan secara lokal melalui Ollama tanpa modifikasi.
 
-\subsection{Format Compliance Rate}
+\subsubsection{Format Compliance Rate}
 
 Gambar \ref{fig:format-compliance-a} menunjukkan \textit{format compliance rate} untuk masing-masing model pada Kondisi A.
 
@@ -233,7 +261,7 @@ Gambar \ref{fig:format-compliance-a} menunjukkan \textit{format compliance rate}
 
 CodeLlama adalah satu-satunya model yang secara konsisten mengikuti format instruksi \textit{prompt} di semua 33 percobaan (100\%). DeepSeek Coder mengikuti format di 5 dari 33 percobaan (15\%). Mistral mengikuti format di 2 dari 33 percobaan (6\%). Qwen2.5-Coder dan Llama 3.1 tidak menghasilkan satu pun respons yang memenuhi ketiga elemen format sekaligus.
 
-\subsection{Syntax Validity Rate}
+\subsubsection{Syntax Validity Rate}
 
 Gambar \ref{fig:syntax-validity-a} menunjukkan \textit{syntax validity rate} dan \textit{code block extraction rate} untuk masing-masing model.
 
@@ -253,7 +281,7 @@ Sebaliknya, Qwen2.5-Coder yang memiliki \textit{format compliance} 0\% berhasil 
 
 Mistral berhasil mengekstraksi 1 blok kode dari 33 percobaan, tetapi blok tersebut tidak lolos \texttt{php -l} (0\% validitas). DeepSeek Coder dan Llama 3.1 masing-masing mengekstraksi 3 dan 1 blok dengan validitas 100\%, namun jumlah sampel yang terlalu kecil membuat angka ini tidak representatif secara statistik.
 
-\subsection{Statistik Ringkasan}
+\subsubsection{Statistik Ringkasan}
 
 Gambar \ref{fig:stats-table-a} merangkum statistik lengkap untuk kelima model pada Kondisi A.
 
@@ -268,7 +296,7 @@ CodeLlama memiliki \textit{confidence score} rata-rata $\bar{C}_m = 0{,}909$ (0,
 
 Qwen2.5-Coder memiliki \textit{confidence score} rata-rata $\bar{C}_m = 0{,}000$ (0,000) karena tidak pernah menghasilkan baris \texttt{CONFIDENCE: N}. Ketidakhadiran skor ini bukan tanda ketidakmampuan, melainkan refleksi dari gaya respons model yang mengabaikan instruksi format sambil tetap mengerjakan tugas utama dengan sangat baik. Waktu inferensi Qwen2.5-Coder (10,0 detik) paling lama dibanding model lain, kemungkinan karena model ini menghasilkan respons yang lebih panjang dan detail.
 
-\subsection{Analisis Kualitatif: Perbandingan Respons terhadap Temuan SQL Injection}
+\subsubsection{Analisis Kualitatif: Perbandingan Respons terhadap Temuan SQL Injection}
 
 Untuk memperlihatkan perbedaan perilaku model secara konkret, berikut perbandingan respons CodeLlama dan Qwen2.5-Coder terhadap temuan SQL Injection yang sama dari \texttt{Output.php} baris 768. Kode yang dikirimkan ke model adalah sebagai berikut:
 
@@ -342,7 +370,7 @@ Dari perbandingan ini terlihat beberapa perbedaan yang signifikan. CodeLlama men
 
 Qwen2.5-Coder menunjukkan pemahaman kontekstual yang lebih dalam. Model ini menyadari bahwa meskipun Semgrep menandainya sebagai SQL Injection, kode tersebut sebenarnya membangun \textit{cache path}, bukan kueri SQL. Saran perbaikannya menggunakan \texttt{urlencode()} untuk menghindari karakter berbahaya dalam \textit{path}. Secara semantik ini lebih tepat, meski solusi yang ideal tetap perlu ditinjau oleh pengembang yang memahami konteks penuh aplikasi.
 
-\subsection{Trade-off dan Implikasinya}
+\subsubsection{Trade-off dan Implikasinya}
 
 Dari keseluruhan hasil Kondisi A, terdapat \textit{trade-off} yang jelas antara kepatuhan format dan kualitas kode. Model yang paling patuh pada instruksi format (CodeLlama, 100\%) menghasilkan kode dengan tingkat sintaksis \textit{error} tertinggi (72,7\% kode tidak valid). Model yang menghasilkan kode paling berkualitas (Qwen2.5-Coder, 97\% \textit{extraction rate} dan 100\% validitas) mengabaikan instruksi format sepenuhnya.
 
@@ -351,14 +379,14 @@ Temuan ini memiliki implikasi langsung untuk desain sistem berbasis LLM lokal: m
 \textit{Trade-off} ini juga menunjukkan bahwa kondisi \textit{zero-shot} dengan \textit{prompt} identik mungkin tidak optimal untuk semua model secara bersamaan. Ini menjadi motivasi utama untuk Kondisi B, di mana setiap model menerima \textit{prompt} yang dioptimasi berdasarkan karakteristik dan kelemahan yang terobservasi pada Kondisi A.
 
 % ============================================================
-\section{Hasil Komparasi Lima Model LLM (Kondisi B)}
+\subsection{Hasil Komparasi Lima Model LLM (Kondisi B)}
 % ============================================================
 
 Kondisi B dirancang untuk mengatasi kelemahan spesifik setiap model yang teridentifikasi pada Kondisi A. Setiap model menerima \textit{prompt} yang berbeda melalui metode \texttt{\_build\_optimized\_chat\_messages()} di \texttt{ai\_engine.py}, sementara parameter eksperimen lainnya tetap sama: 11 temuan Semgrep yang sama, 3 \textit{run} per temuan per model, dan \textit{temperature} 0,1.
 
 Strategi optimasi per model dirumuskan berdasarkan pola kegagalan Kondisi A. Qwen2.5-Coder menerima \textit{prompt} yang lebih longgar tanpa tuntutan format ketat karena kualitas kodenya sudah baik. DeepSeek Coder menerima instruksi yang lebih pendek dan langsung untuk mengurangi kompleksitas yang diduga menjadi penyebab rendahnya \textit{extraction rate}. Mistral menerima satu contoh \textit{few-shot} konkret untuk menunjukkan format keluaran yang diharapkan. Llama 3.1 menerima instruksi berbasis \textit{role-playing} eksplisit dengan langkah-langkah bernomor. CodeLlama mempertahankan format Kondisi A dengan tambahan instruksi eksplisit agar menghasilkan kode PHP yang \textit{valid} secara sintaksis.
 
-\subsection{Format Compliance Rate}
+\subsubsection{Format Compliance Rate}
 
 Gambar \ref{fig:format-compliance-b} menunjukkan \textit{format compliance rate} untuk masing-masing model pada Kondisi B.
 
@@ -371,7 +399,7 @@ Gambar \ref{fig:format-compliance-b} menunjukkan \textit{format compliance rate}
 
 DeepSeek Coder mencatat peningkatan yang paling signifikan, dari 15\% pada Kondisi A menjadi 61\% pada Kondisi B. Ini mengkonfirmasi bahwa model ini sangat sensitif terhadap kompleksitas instruksi: \textit{prompt} yang lebih pendek dan langsung secara substansial meningkatkan kemampuannya mengikuti format. CodeLlama mempertahankan \textit{format compliance} 100\% seperti pada Kondisi A. Sebaliknya, Mistral mengalami regresi dari 6\% menjadi 0\%, dan Llama 3.1 hanya naik tipis dari 0\% menjadi 3\% (1 dari 33 \textit{run}).
 \newpage
-\subsection{Syntax Validity Rate}
+\subsubsection{Syntax Validity Rate}
 
 Gambar \ref{fig:syntax-validity-b} menunjukkan \textit{syntax validity rate} dan \textit{code block extraction rate} pada Kondisi B.
 
@@ -384,7 +412,7 @@ Gambar \ref{fig:syntax-validity-b} menunjukkan \textit{syntax validity rate} dan
 
 Qwen2.5-Coder mempertahankan posisinya sebagai model dengan kualitas kode terbaik: \textit{extraction rate} naik dari 97\% menjadi 100\% dan \textit{syntax validity} tetap 100\%. CodeLlama menunjukkan perbaikan parsial pada \textit{syntax validity}, dari 27,3\% menjadi 39,4\%, meskipun masih jauh dari ambang batas yang dapat diandalkan. DeepSeek Coder mengalami penurunan \textit{extraction rate} dari 9\% menjadi 3\% meskipun \textit{format compliance}-nya meningkat, yang menunjukkan adanya \textit{trade-off} antara kepatuhan format dan kemampuan menghasilkan blok kode. Mistral dan Llama 3.1 secara efektif tidak menghasilkan kode yang dapat digunakan pada Kondisi B.
 \newpage
-\subsection{Statistik Ringkasan}
+\subsubsection{Statistik Ringkasan}
 
 Gambar \ref{fig:stats-table-b} merangkum statistik lengkap untuk 
 kelima model pada Kondisi B.
@@ -435,7 +463,7 @@ berukuran kecil hingga menengah, \textit{syntax validity rate}
 tetap menjadi metrik evaluasi yang lebih sahih dibandingkan 
 \textit{confidence score self-reported}.
 % ============================================================
-\section{Perbandingan Kondisi A dan Kondisi B}
+\subsection{Perbandingan Kondisi A dan Kondisi B}
 % ============================================================
 
 Tabel \ref{tab:ab-comparison} merangkum perbandingan metrik utama antara Kondisi A dan Kondisi B untuk kelima model.
@@ -496,7 +524,7 @@ Dari perbandingan ini, ada tiga pola utama yang dapat diidentifikasi.
 Secara keseluruhan, hasil Kondisi B mempertegas kesimpulan dari Kondisi A bahwa pilihan model adalah faktor yang lebih menentukan dibandingkan strategi \textit{prompt} dalam konteks analisis keamanan kode PHP menggunakan LLM lokal berukuran kecil hingga menengah. Qwen2.5-Coder secara konsisten menghasilkan kode yang paling berkualitas di kedua kondisi, terlepas dari format \textit{prompt} yang diberikan.
 
 % ============================================================
-\section{Optimasi Parameter Qwen2.5-Coder (Kondisi C)}
+\subsection{Optimasi Parameter Qwen2.5-Coder (Kondisi C)}
 % ============================================================
 
 Setelah Kondisi A dan B mengidentifikasi Qwen2.5-Coder sebagai 
@@ -518,7 +546,7 @@ utama di semua variasi parameter.
     \label{fig:kondisi-c}
 \end{figure}
 
-\subsection{Pengaruh Temperature}
+\subsubsection{Pengaruh Temperature}
 
 Pada variasi \textit{temperature}, \textit{syntax validity rate} 
 bertahan di 100\% di semua nilai yang diuji (0,1 hingga 0,7). 
@@ -539,7 +567,7 @@ ini mengindikasikan bahwa kepatuhan format pada Qwen2.5-Coder
 lebih dipengaruhi oleh variabilitas stokastik daripada perubahan 
 \textit{temperature} secara sistematis.
 
-\subsection{Pengaruh Context Window}
+\subsubsection{Pengaruh Context Window}
 
 Pada variasi \textit{context window}, baik CTX=4000 maupun 
 CTX=8000 menghasilkan \textit{extraction rate} dan 
@@ -553,7 +581,7 @@ kode yang lebih lengkap, model lebih konsisten menghasilkan blok
 kode dalam setiap respons. Namun peningkatan ini marginal dan 
 tidak mengubah karakteristik utama model.
 
-\subsection{Implikasi Kondisi C}
+\subsubsection{Implikasi Kondisi C}
 
 Kondisi C menunjukkan bahwa karakteristik Qwen2.5-Coder lebih 
 ditentukan oleh arsitektur modelnya daripada konfigurasi parameter. 
@@ -566,7 +594,7 @@ memberikan hasil yang hampir optimal, sementara peningkatan
 memberikan sedikit keuntungan tambahan pada kode yang lebih panjang.
 
 % ============================================================
-\section{Analisis Dependensi Composer (FT UGM)}
+\subsection{Analisis Dependensi Composer}
 % ============================================================
 
 Modul \texttt{composer\_analyzer.py} membaca berkas \texttt{composer.json} 
@@ -608,16 +636,16 @@ dukungan resmi untuk PHP 8.x dan perlu diganti atau diperbarui secara manual
 sebelum deployment ke lingkungan PHP 8.3.
 
 % ============================================================
-\section{Diskusi dan Keterbatasan}
+\subsection{Diskusi dan Keterbatasan}
 % ============================================================
 
-\subsection{Keterbatasan Dataset}
+\subsubsection{Keterbatasan Dataset}
 
 Dataset yang digunakan terdiri dari satu aplikasi berbasis CodeIgniter 3.x milik FT UGM. Dari 245 \textit{file}, 237 diklasifikasikan sebagai \textit{unknown} oleh Rector karena merupakan \textit{file framework} CodeIgniter yang tidak mengandung pola yang perlu ditransformasi. Hal ini membatasi tingkat generalisasi hasil penelitian ini bisa digeneralisasi ke jenis aplikasi PHP lain, terutama yang tidak menggunakan \textit{framework} atau yang menggunakan \textit{framework} berbeda.
 
 Dari sisi \textit{input} eksperimen LLM, 10 dari 11 temuan adalah SSRF yang berasal dari satu pola kode yang berulang di \texttt{Output.php}. Homogenitas \textit{input} ini berarti eksperimen komparasi pada dasarnya menguji respons model terhadap dua jenis kerentanan dengan variasi terbatas. Hasil komparasi perlu diinterpretasikan dalam konteks keterbatasan ini.
 
-\subsection{Keterbatasan Kompatibilitas PHP 8.4 dan PHP 8.5}
+\subsubsection{Keterbatasan Kompatibilitas PHP 8.4 dan PHP 8.5}
 
 Eksperimen tambahan dilakukan untuk menguji \textit{pipeline} dengan 
 target PHP 8.5 terhadap dataset CBT DTI UGM. Hasil menunjukkan dua 
@@ -650,19 +678,19 @@ aktif digunakan.
 
 Pendekatan yang paling memungkinkan menuju PHP 8.5 adalah pembaruan \textit{framework} 
 ke CodeIgniter 4 atau \textit{framework} modern lainnya yang sudah 
-mendukung PHP 8.x secara \textit{native} — sebuah proses yang melampaui 
+mendukung PHP 8.x secara \textit{native}, sebuah proses yang melampaui 
 cakupan migrasi versi otomatis dan pada dasarnya merupakan penulisan 
 ulang aplikasi. Oleh karena itu, PHP 8.3 ditetapkan sebagai versi 
 target dalam penelitian ini sebagai pilihan yang dapat dicapai secara 
 otomatis untuk aplikasi berbasis CodeIgniter 3.x.
 
-\subsection{Keterbatasan Teknis Pipeline}
+\subsubsection{Keterbatasan Teknis Pipeline}
 
 AI Engine hanya memproses temuan dengan prioritas 1--3 dan membatasi potongan kode yang dikirim ke model pada 2.000 karakter pertama. Untuk \textit{file} PHP yang panjang, konteks yang diterima model terpotong sehingga saran perbaikan mungkin tidak mempertimbangkan keseluruhan logika fungsi. Sebagaimana terlihat pada contoh respons Qwen2.5-Coder, model dapat membuat inferensi yang tepat tentang konteks kode meski dengan informasi yang terbatas, namun tidak selalu bisa dipastikan.
 
 Selain itu, validasi menggunakan \texttt{php -l} hanya memeriksa kebenaran sintaksis, bukan kebenaran semantik. Kode yang lolos \texttt{php -l} bisa saja masih mengandung kerentanan yang tidak tertangani atau logika yang tidak ekuivalen dengan kode aslinya. Pengujian fungsional terhadap kode hasil perbaikan AI bukan bagian dari cakupan penelitian ini.
 
-\subsection{Interpretasi Confidence Score}
+\subsubsection{Interpretasi Confidence Score}
 
 Tidak ada korelasi yang jelas antara \textit{confidence score} yang dilaporkan model dan kualitas kode yang dihasilkan, baik pada Kondisi A maupun Kondisi B. CodeLlama melaporkan kepercayaan diri rata-rata lebih dari 90\% di kedua kondisi, tetapi mayoritas kode yang dihasilkannya tidak \textit{valid} secara sintaksis. Qwen2.5-Coder tidak melaporkan skor sama sekali tetapi menghasilkan kode yang hampir selalu berkualitas baik. Temuan ini konsisten dengan literatur yang menunjukkan bahwa model LLM berukuran kecil umumnya tidak terkalibrasi dengan baik dalam menilai \textit{output} mereka sendiri \cite{akuthota2023vulnerability}\cite{li2025iris}.
 Dari ketiga metrik yang diukur $FCR$, \textit{extraction rate}, 
@@ -673,14 +701,20 @@ kegunaan praktis model dalam konteks ini.
 \section{Studi Kasus 2: Sistem CBT DTI UGM}
 % ============================================================
 
-Studi kasus kedua menggunakan kode sumber aplikasi \textit{Computer-Based Test} 
-(CBT) milik Direktorat Teknologi Informasi (DTI) Universitas Gadjah Mada. 
-Aplikasi ini dibangun di atas \textit{framework} CodeIgniter 3 dengan persyaratan 
-versi PHP $\geq$ 7.0, dan dikonversi ke target PHP 8.3. \textit{Pipeline} 
-dijalankan terhadap direktori \texttt{application/} dengan mengeksklusi 
-subdirektori \texttt{libraries/}, \texttt{third\_party/}, dan \texttt{tcpdf/} 
-yang merupakan komponen \textit{framework} dan \textit{library} pihak ketiga, 
-sehingga menghasilkan 183 \textit{file} PHP kustom sebagai masukan.
+% ------------------------------------------------------------
+\subsection{Deskripsi Dataset}
+% ------------------------------------------------------------
+
+Studi kasus kedua menggunakan 183 \textit{file} PHP kustom dari aplikasi 
+\textit{Computer-Based Test} (CBT) milik Direktorat Teknologi Informasi 
+(DTI) Universitas Gadjah Mada. Aplikasi ini dibangun di atas 
+\textit{framework} CodeIgniter 3 dengan persyaratan versi PHP $\geq$ 7.0. 
+\textit{Pipeline} dijalankan terhadap direktori \texttt{application/} 
+dengan mengeksklusi subdirektori \texttt{libraries/}, 
+\texttt{third\_party/}, dan \texttt{tcpdf/} yang merupakan komponen 
+\textit{framework} dan \textit{library} pihak ketiga. Karena tidak ada 
+berkas \texttt{composer.json} pada tingkat aplikasi, langkah analisis 
+dependensi dilewati secara otomatis.
 
 % ------------------------------------------------------------
 \subsection{Hasil Konversi Rector}
@@ -746,9 +780,10 @@ ditunjukkan pada Gambar \ref{fig:phpstan-iso-dti}.
     \label{fig:phpstan-iso-dti}
 \end{figure}
 \newpage
-Sebagaimana pada studi kasus FT UGM, seluruh \textit{error} PHPStan pada 
-dataset CBT DTI merupakan \textit{false positive} yang disebabkan oleh 
-keterbatasan PHPStan dalam memahami arsitektur CodeIgniter 3.x. PHPStan 
+Sebagaimana pada studi kasus FT UGM, mayoritas \textit{error} PHPStan
+pada dataset CBT DTI bersumber dari keterbatasan PHPStan dalam memahami
+arsitektur CodeIgniter 3.x, sehingga diklasifikasikan sebagai
+\textit{false positive} kerangka kerja. PHPStan 
 tidak dapat menelusuri dua kategori elemen yang diinjeksi secara dinamis 
 oleh \textit{framework} pada saat \textit{runtime}. Pertama, 
 \textit{magic property}: yaitu properti kelas yang tidak dideklarasikan 
@@ -894,9 +929,13 @@ dataset.
 FT UGM menghasilkan 2.871 \textit{error} PHPStan sementara CBT DTI 
 menghasilkan 2.037 \textit{error}. Keduanya dijalankan pada PHPStan 
 \textit{level} 5 dengan target PHP 8.3, sehingga angka ini dapat 
-dibandingkan secara langsung. Seluruh \textit{error} pada kedua dataset 
-merupakan \textit{false positive} akibat keterbatasan PHPStan terhadap 
-arsitektur CodeIgniter 3.x sebagaimana dijelaskan pada subbab sebelumnya. 
+dibandingkan secara langsung. Sebagian besar \textit{error} pada kedua dataset merupakan
+\textit{false positive} akibat keterbatasan PHPStan dalam menelusuri
+arsitektur dinamis CodeIgniter 3.x, khususnya \textit{magic property}
+dan fungsi \textit{helper} yang diinjeksi saat \textit{runtime}.
+Di samping itu, sebagian \textit{error} mencerminkan masalah
+kompatibilitas dan kualitas kode aplikasi yang sesungguhnya,
+sebagaimana dibahas pada subbab sebelumnya.  
 Jumlah \textit{error} yang lebih tinggi pada FT UGM sebanding dengan 
 ukuran dataset yang lebih besar (245 vs 183 \textit{file}) dan penggunaan 
 dependensi pihak ketiga yang lebih beragam.

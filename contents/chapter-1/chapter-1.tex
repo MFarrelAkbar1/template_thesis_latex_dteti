@@ -32,35 +32,43 @@ Penelitian ini membangun \textit{platform} berbasis AI dan alat \textit{open sou
 
 \section{Rumusan Masalah}
 
-Berdasarkan latar belakang yang telah diuraikan, penelitian ini merumuskan tiga permasalahan sebagai berikut:
-
-Berdasarkan latar belakang yang telah diuraikan, penelitian ini 
+Berdasarkan latar belakang yang telah diuraikan, penelitian ini
 merumuskan empat permasalahan sebagai berikut:
 
 \begin{enumerate}
-    \item Bagaimana merancang sistem berbasis AI yang mampu melakukan 
-    konversi otomatis aplikasi web PHP lama ke versi PHP tertentu 
-    sambil mempertahankan fitur aplikasi?
-    \item Bagaimana mengintegrasikan pemeriksaan \textit{secure coding} 
-    yang selaras dengan standar ISO/IEC 27001:2022 ke dalam proses 
-    konversi otomatis?
-    \item Bagaimana memvalidasi bahwa hasil konversi memenuhi 
-    persyaratan fungsional dan keamanan ISO/IEC 27001:2022?
-    \item Bagaimana performa komparatif model-model LLM \textit{open 
-    source} lokal dalam mendukung analisis dan saran perbaikan keamanan 
-    kode PHP dalam konteks migrasi versi?
+    \item Bagaimana merancang \textit{pipeline} berbasis AI yang mampu
+    melakukan konversi otomatis aplikasi web PHP 7.x ke PHP 8.3
+    menggunakan alat \textit{open source}?
+    \item Bagaimana memvalidasi bahwa hasil konversi mempertahankan
+    fungsionalitas kode sumber yang telah dikonversi?
+    \item Bagaimana mengintegrasikan pemeriksaan \textit{secure coding}
+    yang selaras dengan kontrol ISO/IEC 27001:2022 Annex A.8 ke dalam
+    \textit{pipeline} konversi otomatis?
+    \item Model LLM \textit{open source} lokal mana yang memberikan
+    analisis keamanan dan saran perbaikan kode PHP terbaik dalam
+    konteks migrasi dari PHP 7.x ke PHP 8.3?
 \end{enumerate}
 
 
 \section{Tujuan Penelitian}
 
-Penelitian ini memiliki empat tujuan yang menjawab rumusan masalah di atas:
+Penelitian ini memiliki empat tujuan yang menjawab rumusan masalah
+di atas:
 
 \begin{enumerate}
-	\item Mengembangkan \textit{platform} berbasis AI yang menggunakan alat \textit{open source} untuk secara otomatis mengubah aplikasi web PHP lama ke versi PHP target yang dapat dikonfigurasi tanpa kehilangan fungsionalitasnya.
-	\item Mengimplementasikan mekanisme pemeriksaan \textit{secure coding} yang terhubung dengan kontrol dalam ISO/IEC 27001:2022 Annex A.8 \cite{iso27001_2022}, yang akan menjaga keamanan kode yang dikonversi.
-	\item Membangun sistem \textit{quality assurance} yang memeriksa hasil konversi terhadap kebenaran fungsional dan standar kepatuhan keamanan yang ditetapkan oleh ISO/IEC 27001:2022 \cite{iso27001_2022}.
-	\item Menghasilkan dokumentasi otomatis berupa laporan konversi dan pemetaan kepatuhan terhadap ISO/IEC 27001:2022 \cite{iso27001_2022}, untuk membantu audit keamanan informasi.
+    \item Membangun \textit{pipeline} berbasis AI menggunakan alat
+    \textit{open source} untuk mengonversi aplikasi web PHP 7.x ke
+    PHP 8.3 secara otomatis.
+    \item Memvalidasi bahwa hasil konversi mempertahankan
+    fungsionalitas kode sumber melalui pemeriksaan validitas sintaksis
+    dan kompatibilitas tipe pasca-konversi.
+    \item Mengimplementasikan mekanisme pemeriksaan \textit{secure
+    coding} yang dipetakan ke kontrol ISO/IEC 27001:2022 Annex A.8
+    sebagai bagian dari alur konversi.
+    \item Membandingkan performa lima model LLM \textit{open source}
+    yang dijalankan secara lokal untuk menentukan model yang paling
+    efektif dalam memberikan analisis dan saran perbaikan keamanan
+    kode PHP dalam konteks migrasi versi.
 \end{enumerate}
 
 \section{Batasan Penelitian}
