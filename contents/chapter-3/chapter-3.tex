@@ -32,13 +32,13 @@ Alasan penggunaan spesifikasi ini bukan sekadar ketersediaan. Model LLM yang dij
 
     \item \textbf{Python 3.x}: Bahasa pemrograman utama untuk membangun \textit{pipeline} yang menghubungkan semua modul. Dipilih karena kemudahannya memanggil perintah eksternal via \textit{subprocess} dan ketersediaan pustaka \texttt{requests} untuk berkomunikasi dengan API Ollama.
 
-    \item \textbf{Rector} \cite{rector2024}: Alat transformasi kode berbasis AST untuk PHP, dikonfigurasi secara dinamis sesuai versi target yang dipilih.
+    \item \textbf{Rector}: Alat transformasi kode berbasis AST untuk PHP, dikonfigurasi secara dinamis sesuai versi target yang dipilih.
 
-    \item \textbf{Semgrep} \cite{semgrep2024}: Alat analisis statis untuk pemindaian kerentanan. Dijalankan dengan \textit{ruleset} \texttt{p/php} dan \texttt{p/owasp-top-ten} \cite{owasp2021}.
+    \item \textbf{Semgrep}: Alat analisis statis untuk pemindaian kerentanan. Dijalankan dengan \textit{ruleset} \texttt{p/php} dan \texttt{p/owasp-top-ten}.
 
-    \item \textbf{PHPStan} \cite{phpstan2024}: Alat analisis statis untuk validasi tipe dan kompatibilitas kode PHP, dijalankan pada level 5.
+    \item \textbf{PHPStan}: Alat analisis statis untuk validasi tipe dan kompatibilitas kode PHP, dijalankan pada level 5.
 
-\item \textbf{Ollama} \cite{ollama2024}: \textit{Platform} untuk 
+\item \textbf{Ollama}: \textit{Platform} untuk 
 menjalankan LLM secara lokal, diakses via API REST di 
 \texttt{localhost:11434}. Ollama dipilih dibandingkan alternatif 
 lain seperti LM Studio dan llama.cpp karena tiga alasan. Pertama, 
@@ -75,27 +75,26 @@ hanya terjadi sekali per sesi eksperimen
 Lima model LLM \textit{open source} dievaluasi, semuanya dijalankan 
 secara lokal melalui Ollama tanpa \textit{fine-tuning}. Pemilihan 
 model didasarkan pada dua kriteria: model harus dapat dijalankan di 
-GPU dengan VRAM 8 GB pada kuantisasi Q4\_0 \cite{ollama2024}, dan 
+GPU dengan VRAM 8 GB pada kuantisasi Q4\_0, dan 
 kemampuan pemahaman kodenya harus terdokumentasi dalam literatur 
-ilmiah \cite{deepseek2024coder}\cite{hui2024qwen}
-\cite{roziere2024codellama}\cite{jiang2023mistral}\cite{dubey2024llama3}.
+ilmiah.
 
 \begin{itemize}
 
-    \item DeepSeek Coder 6.7b \cite{deepseek2024coder}: Model 
+    \item DeepSeek Coder 6.7b: Model 
     spesialis kode, dilatih pada 2 triliun token dengan 87\% kode 
     sumber.
 
-    \item Qwen2.5-Coder 7b \cite{hui2024qwen}: Model kode dari 
+    \item Qwen2.5-Coder 7b: Model kode dari 
     Alibaba, dilatih pada 5,5 triliun token kode.
 
-    \item CodeLlama 7b \cite{roziere2024codellama}: Model berbasis 
+    \item CodeLlama 7b: Model berbasis 
     Llama 2 dari Meta AI untuk tugas pemrograman.
 
-    \item Mistral 7b \cite{jiang2023mistral}: Model tujuan umum dari 
+    \item Mistral 7b: Model tujuan umum dari 
     Mistral AI dengan arsitektur \textit{grouped-query attention}.
 
-    \item Llama 3.1 8b \cite{dubey2024llama3}: Model dari seri 
+    \item Llama 3.1 8b: Model dari seri 
     Llama 3 yang dilatih pada lebih dari 15 triliun token 
     multibahasa.
 
@@ -104,7 +103,7 @@ ilmiah \cite{deepseek2024coder}\cite{hui2024qwen}
 
 \begin{itemize}
 
-    \item \textbf{Dokumen ISO/IEC 27001:2022} \cite{iso27001_2022}: Acuan utama untuk pemetaan kontrol keamanan.
+    \item \textbf{Dokumen ISO/IEC 27001:2022}: Acuan utama untuk pemetaan kontrol keamanan.
 
     \item \textbf{Kode sumber PHP dari FT UGM}: Kumpulan \textit{file} PHP 
 dari aplikasi \textit{Dashboard} TCK berbasis CodeIgniter 3.x dengan 
@@ -115,9 +114,9 @@ tanpa akses ke basis data produksi.
 dari aplikasi \textit{Computer-Based Test} (CBT) berbasis CodeIgniter 3.x 
 dengan persyaratan PHP $\geq$ 7.0. Bersifat rahasia dengan perlakuan 
 privasi data yang sama dengan dataset FT UGM.
-    \item \textbf{Dokumentasi resmi PHP} \cite{phpgroup2022supported}: Referensi untuk memverifikasi kebenaran konversi Rector.
+    \item \textbf{Dokumentasi resmi PHP}: Referensi untuk memverifikasi kebenaran konversi Rector.
 
-    \item \textbf{Registri aturan Semgrep} \cite{semgrep2024}: Aturan publik \texttt{p/php} dan \texttt{p/owasp-top-ten} untuk pemindaian keamanan.
+    \item \textbf{Registri aturan Semgrep}: Aturan publik \texttt{p/php} dan \texttt{p/owasp-top-ten} untuk pemindaian keamanan.
 
 \end{itemize}
 
@@ -143,7 +142,7 @@ Gambar \ref{fig:alur-penelitian} menunjukkan alur penelitian yang terdiri dari t
 
 \begin{enumerate}
 
-    \item \begin{sloppypar}\textbf{Tinjauan pustaka}: Mempelajari permasalahan migrasi PHP lama, persyaratan ISO/IEC 27001:2022 \cite{iso27001_2022}, kemampuan model LLM \textit{open source}, dan alat analisis statis yang relevan. Koordinasi awal dengan FT UGM dan DTI UGM dilakukan pada tahap ini.\end{sloppypar}
+    \item \begin{sloppypar}\textbf{Tinjauan pustaka}: Mempelajari permasalahan migrasi PHP lama, persyaratan ISO/IEC 27001:2022, kemampuan model LLM \textit{open source}, dan alat analisis statis yang relevan. Koordinasi awal dengan FT UGM dan DTI UGM dilakukan pada tahap ini.\end{sloppypar}
 
     \item \textbf{Analisis persyaratan}: Mendefinisikan persyaratan fungsional dan non-fungsional berdasarkan hasil tinjauan pustaka dan koordinasi dengan FT UGM dan DTI UGM, termasuk menentukan kontrol ISO yang dicakup dan persyaratan privasi data.
 
@@ -179,13 +178,13 @@ Gambar \ref{fig:arsitektur-sistem} menunjukkan hubungan antar modul.
 
 \subsection{Scanner (scanner.py)}
 
-Modul pertama yang berjalan. Scanner menjalankan Semgrep \cite{semgrep2024} pada direktori \texttt{input/} sebelum konversi dimulai untuk menetapkan \textit{baseline} keamanan kode asli. Hasil pemindaian dikelompokkan berdasarkan jenis kerentanan (injeksi SQL, XSS, \textit{path traversal}, injeksi perintah, fungsi usang, kriptografi lemah) dan diberi tingkat prioritas. Data ini menjadi pembanding untuk mengukur perubahan keamanan setelah konversi.
+Modul pertama yang berjalan. Scanner menjalankan Semgrep pada direktori \texttt{input/} sebelum konversi dimulai untuk menetapkan \textit{baseline} keamanan kode asli. Hasil pemindaian dikelompokkan berdasarkan jenis kerentanan (injeksi SQL, XSS, \textit{path traversal}, injeksi perintah, fungsi usang, kriptografi lemah) dan diberi tingkat prioritas. Data ini menjadi pembanding untuk mengukur perubahan keamanan setelah konversi.
 
 \subsection{Converter (converter.py)}
 
 \begin{sloppypar}
 
-Modul ini menggunakan Rector \cite{rector2024} untuk transformasi kode PHP berbasis AST. Argumen CLI \texttt{--target-php} menentukan versi target; nilai yang diterima adalah \texttt{"7.4"}, \texttt{"8.0"}, \texttt{"8.1"}, \texttt{"8.2"}, atau \texttt{"8.3"}. Sebelum Rector dijalankan, seluruh \textit{file} PHP dari \texttt{input/} disalin dahulu ke \texttt{output/}. Rector kemudian memodifikasi \textit{file} di \texttt{output/} di tempat. \textit{File} yang gagal dikonversi tetap ada di \texttt{output/} sebagai salinan kode asli dan statusnya dicatat \texttt{FAILED} di laporan; direktori \texttt{input/} tidak pernah disentuh. Konfigurasi Rector dibuat sebagai \textit{tempfile} saat \textit{runtime} dan dihapus otomatis setelahnya.
+Modul ini menggunakan Rector untuk transformasi kode PHP berbasis AST. Argumen CLI \texttt{--target-php} menentukan versi target; nilai yang diterima adalah \texttt{"7.4"}, \texttt{"8.0"}, \texttt{"8.1"}, \texttt{"8.2"}, atau \texttt{"8.3"}. Sebelum Rector dijalankan, seluruh \textit{file} PHP dari \texttt{input/} disalin dahulu ke \texttt{output/}. Rector kemudian memodifikasi \textit{file} di \texttt{output/} di tempat. \textit{File} yang gagal dikonversi tetap ada di \texttt{output/} sebagai salinan kode asli dan statusnya dicatat \texttt{FAILED} di laporan; direktori \texttt{input/} tidak pernah disentuh. Konfigurasi Rector dibuat sebagai \textit{tempfile} saat \textit{runtime} dan dihapus otomatis setelahnya.
 
 \end{sloppypar}
 
@@ -233,7 +232,7 @@ Karena \textit{ruleset}-nya kumulatif, kode PHP 5.x pun bisa diproses langsung m
 
 \subsection{Analyzer (analyzer.py)}
 
-Setelah konversi, Analyzer menjalankan PHPStan \cite{phpstan2024} pada direktori \texttt{output/} untuk memverifikasi kompatibilitas kode dengan versi PHP target. Level 5 dipilih sebagai keseimbangan antara keketatan dan jumlah \textit{false positive} yang wajar untuk kode warisan. Setiap temuan PHPStan dikategorikan sebagai ERROR atau WARNING, lalu dikaitkan dengan kontrol ISO/IEC 27001:2022 yang relevan.
+Setelah konversi, Analyzer menjalankan PHPStan pada direktori \texttt{output/} untuk memverifikasi kompatibilitas kode dengan versi PHP target. Level 5 dipilih sebagai keseimbangan antara keketatan dan jumlah \textit{false positive} yang wajar untuk kode warisan. Setiap temuan PHPStan dikategorikan sebagai ERROR atau WARNING, lalu dikaitkan dengan kontrol ISO/IEC 27001:2022 yang relevan.
 
 \subsection{AI Engine (ai\_engine.py)}
 
@@ -241,13 +240,13 @@ Modul ini menerima temuan dari Semgrep \textit{pre-scan} sebagai masukan, bukan 
 
 \begin{sloppypar}
 
-Untuk setiap temuan yang lolos filter, modul mengirimkan konteks dan potongan kode ke model LLM melalui endpoint \texttt{/api/chat} Ollama \cite{ollama2024} di \texttt{localhost:11434}. Kalau model tidak menghasilkan blok kode PHP sama sekali, respons tetap dicatat dengan \textit{placeholder} \texttt{// Manual review required} dan tidak dilewati (diabaikan). Jika Ollama tidak tersedia, \textit{pipeline} tetap berjalan tanpa komponen AI. Desain \textit{prompt} yang digunakan dibahas dalam Subbab \ref{sec:prompt-design}.
+Untuk setiap temuan yang lolos filter, modul mengirimkan konteks dan potongan kode ke model LLM melalui endpoint \texttt{/api/chat} Ollama di \texttt{localhost:11434}. Kalau model tidak menghasilkan blok kode PHP sama sekali, respons tetap dicatat dengan \textit{placeholder} \texttt{// Manual review required} dan tidak dilewati (diabaikan). Jika Ollama tidak tersedia, \textit{pipeline} tetap berjalan tanpa komponen AI. Desain \textit{prompt} yang digunakan dibahas dalam Subbab \ref{sec:prompt-design}.
 
 \end{sloppypar}
 
 \subsection{ISO Mapper (iso\_mapper.py)}
 
-Modul ini menerima semua hasil dari Scanner, Analyzer, dan AI Engine sebagai objek Python \textit{in-memory} langsung dari \texttt{main.py}, lalu memetakannya ke kontrol ISO/IEC 27001:2022 \cite{iso27001_2022} secara berbasis aturan. Tidak ada pembacaan \textit{file} JSON. Pemetaan berbasis aturan dipilih agar hasilnya deterministik dan dapat diaudit. Detail pemetaan dibahas dalam Subbab \ref{sec:iso-mapping-design}.
+Modul ini menerima semua hasil dari Scanner, Analyzer, dan AI Engine sebagai objek Python \textit{in-memory} langsung dari \texttt{main.py}, lalu memetakannya ke kontrol ISO/IEC 27001:2022 secara berbasis aturan. Tidak ada pembacaan \textit{file} JSON. Pemetaan berbasis aturan dipilih agar hasilnya deterministik dan dapat diaudit. Detail pemetaan dibahas dalam Subbab \ref{sec:iso-mapping-design}.
 
 \subsection{Main (main.py)}
 
@@ -531,8 +530,7 @@ Dalam eksperimen ini, setiap model dijalankan sebanyak 33 percobaan
 model untuk perhitungan FCR. SVR ditetapkan sebagai metrik primer karena
 hasilnya dapat diverifikasi secara independen menggunakan \texttt{php -l},
 sedangkan $\bar{C}_m$ bersifat sekunder karena merupakan penilaian mandiri
-model yang tidak dapat diverifikasi dari luar \cite{akuthota2023vulnerability}
-\cite{li2025iris}.
+model yang tidak dapat diverifikasi dari luar.
 
 \subsection{Interpretasi \textit{Trade-off} Antar Metrik}
 
@@ -550,8 +548,7 @@ berbeda dan dibahas secara empiris di Bab IV.
 Kode PHP dari FT UGM dan DTI UGM adalah aset institusi yang tidak 
 boleh dikirimkan ke layanan eksternal. Kendala inilah yang menentukan 
 arsitektur AI dalam penelitian ini. Daripada menggunakan API LLM 
-berbasis \textit{cloud}, penelitian ini menggunakan Ollama 
-\cite{ollama2024} sebagai \textit{runtime} lokal sehingga seluruh 
+berbasis \textit{cloud}, penelitian ini menggunakan Ollama sebagai \textit{runtime} lokal sehingga seluruh 
 inferensi terjadi di mesin pengembangan.
 
 Tidak ada kode sumber yang dikirimkan ke \textit{server} eksternal. 
@@ -560,7 +557,7 @@ ke basis data produksi FT UGM, tidak ada eksekusi kode PHP.
 Satu-satunya koneksi eksternal yang terjadi adalah panggilan ke 
 Packagist API oleh modul \texttt{composer\_analyzer.py} untuk 
 memeriksa metadata versi dependensi — bukan kode sumber aplikasi. 
-Keputusan ini sejalan dengan ISO/IEC 27001:2022 \cite{iso27001_2022} 
+Keputusan ini sejalan dengan ISO/IEC 27001:2022 
 yang mensyaratkan pemisahan lingkungan pengembangan dan pengendalian 
 akses terhadap aset informasi sensitif.
 \section{Metode Pengujian dan Evaluasi}
