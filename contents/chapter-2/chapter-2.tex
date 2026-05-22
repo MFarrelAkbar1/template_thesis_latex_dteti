@@ -65,12 +65,12 @@ Ada dua perbedaan konteks yang perlu dicatat. Pertama, migrasi yang dilakukan Ch
 \label{tab:perbandingan-1} \\
 \hline
 \textbf{Studi} & \textbf{Bahasa} & \textbf{AI/LLM Digunakan} & \textbf{Tugas Utama} \\
-\hline
+\hline \hline
 \endfirsthead
 \multicolumn{4}{l}{\textit{(lanjutan Tabel \ref{tab:perbandingan-1})}} \\
 \hline
 \textbf{Studi} & \textbf{Bahasa} & \textbf{AI/LLM Digunakan} & \textbf{Tugas Utama} \\
-\hline
+\hline \hline
 \endhead
 \hline
 \multicolumn{4}{r}{\textit{(bersambung ke halaman berikutnya)}} \\
@@ -93,7 +93,7 @@ Cai et al. \cite{cai2015pattern} & Java & Tidak ada & \textit{Cloud migration} \
 \hline
 Chen et al. \cite{chen2022ast} & TypeScript & Tidak ada & \textit{Code migration} (AST) \\
 \hline
-\textbf{Penelitian ini} & PHP & Membamdingkan 5 LLM lokal dan memilih AI terbaik untuk migrasi PHP & Migrasi versi + \textit{security compliance} \\
+\textbf{Penelitian ini} & PHP & Membandingkan 5 LLM lokal dan memilih AI terbaik untuk migrasi PHP & Migrasi versi + \textit{security compliance} \\
 \hline
 \end{longtable}
 
@@ -102,12 +102,12 @@ Chen et al. \cite{chen2022ast} & TypeScript & Tidak ada & \textit{Code migration
 \label{tab:perbandingan-2} \\
 \hline
 \textbf{Studi} & \textbf{\textit{Deployment}} & \textbf{Validasi Pasca-Konversi} & \textbf{Standar Keamanan} & \textbf{\textit{Open Source}} \\
-\hline
+\hline \hline
 \endfirsthead
 \multicolumn{5}{l}{\textit{(lanjutan Tabel \ref{tab:perbandingan-2})}} \\
 \hline
 \textbf{Studi} & \textbf{\textit{Deployment}} & \textbf{Validasi Pasca-Konversi} & \textbf{Standar Keamanan} & \textbf{\textit{Open Source}} \\
-\hline
+\hline \hline
 \endhead
 \hline
 \multicolumn{5}{r}{\textit{(bersambung ke halaman berikutnya)}} \\
@@ -184,6 +184,7 @@ Analisis statis adalah teknik pemeriksaan kode sumber tanpa menjalankan program.
 \textit{Abstract Syntax Trees} (AST) adalah representasi pohon dari kode sumber di mana setiap \textit{node} mewakili konstruksi sintaksis seperti ekspresi, pernyataan, atau deklarasi. Alat yang bekerja dengan AST bisa menganalisis dan mengubah kode secara struktural, berbeda dari pendekatan berbasis teks biasa yang digunakan oleh Cai et al. \cite{cai2015pattern}. Rector menggunakan PHP AST untuk menemukan pola yang perlu diubah dan menghasilkan kode penggantinya. Chen et al. \cite{chen2022ast} mendemonstrasikan bahwa pendekatan berbasis AST bukan sekadar teori; mereka menerapkannya untuk migrasi kode TypeScript di Microsoft pada skala produksi.
 
 \subsection{Rector: Alat Transformasi Kode Berbasis AST}
+\label{subsec:rector}
 
 Rector adalah alat \textit{open source} untuk transformasi kode PHP berbasis AST \cite{rector2024}. Prosesnya: kode sumber PHP diubah menjadi AST, aturan transformasi diterapkan, lalu kode PHP baru dihasilkan dari pohon yang sudah dimodifikasi. Rector dilengkapi aturan bawaan untuk berpindah antar versi PHP, termasuk \texttt{LevelSetList::UP\_TO\_PHP\_80} hingga 
 \texttt{UP\_TO\_PHP\_85}, dan \textit{ruleset}-nya bersifat kumulatif sehingga mencakup semua perubahan dari versi sumber hingga versi target.
@@ -203,6 +204,7 @@ Semgrep adalah alat analisis statis ringan yang mendukung lebih dari 30 bahasa p
 Dalam penelitian ini, Semgrep digunakan dua kali: sebelum konversi untuk menetapkan \textit{baseline} keamanan kode asli, dan sesudah konversi untuk memastikan tidak ada kerentanan baru yang muncul. Kedua pemindaian ini mendukung kontrol A.8.28 dan A.8.29 ISO/IEC 27001:2022 \cite{iso27001_2022}.
 
 \subsection{Model-Model LLM untuk Analisis Kode}
+\label{subsec:model-llm}
 
 LLM (\textit{Large Language Model}) adalah model bahasa neural berbasis \textit{transformer} yang dilatih pada data teks dan kode dalam jumlah besar. LLM yang dilatih pada kode bisa memahami semantik kode, mengidentifikasi pola kerentanan, menyarankan perbaikan, dan menghasilkan kode baru \cite{akuthota2023vulnerability}. Kemampuan ini berbeda dari analisis berbasis aturan: LLM mempertimbangkan konteks dan tujuan kode, bukan hanya strukturnya.
 
@@ -221,6 +223,7 @@ Penelitian ini mengevaluasi lima model LLM \textit{open source} yang dijalankan 
 Li, Dutta, dan Naik \cite{li2025iris} sudah menunjukkan bahwa kombinasi LLM dan analisis statis menghasilkan deteksi kerentanan yang lebih baik dari masing-masing yang berjalan sendiri. Perbandingan performa kelima model di atas dalam konteks analisis keamanan kode PHP akan dibahas secara empiris di Bab IV.
 
 \subsection{Metrik Evaluasi Kualitas Keluaran LLM}
+\label{subsec:metrik-llm}
 
 Evaluasi kualitas keluaran model LLM pada tugas pemrograman memerlukan
 metrik yang dapat diverifikasi secara otomatis dan objektif. Dua dimensi
@@ -329,6 +332,7 @@ konsistensi dan validitas kode yang dihasilkan \cite{yan2025codeif}.
 Implikasi dari pola ini dibahas di Bab IV.
 
 \subsection{Ollama: Menerapkan LLM Secara Lokal}
+\label{subsec:justifikasi-ollama}
 
 Beberapa alternatif dengan fungsi serupa tersedia, di antaranya LM Studio
 \cite{elementlabs2024lmstudio} dan llama.cpp \cite{gerganov2023llamacpp}.

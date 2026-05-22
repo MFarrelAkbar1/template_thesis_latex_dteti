@@ -63,8 +63,7 @@ Sebagai gambaran nyata mengenai jenis-jenis perubahan yang dilakukan Rector, ber
 
 Pada \texttt{system/core/Security.php}, deklarasi \textit{array} menggunakan sintaks lama diubah ke sintaks pendek PHP 5.4:
 
-\begin{small}
-\begin{verbatim}
+\begin{lstlisting}[style=promptstyle]
 // Sebelum (PHP 7.x)
 public $filename_bad_chars = array(
     '../', '<!--', '-->', '<', '>',
@@ -84,30 +83,26 @@ protected $_never_allowed_str = [
     'document.cookie' => '',
     'document.write'  => '',
 ];
-\end{verbatim}
-\end{small}
+\end{lstlisting}
 
 \textbf{Transformasi 2: Operator \textit{null coalescing} (\texttt{NullCoalescingRector})}
 
 Pada \texttt{system/helpers/url\_helper.php}, pola pengecekan tiga bagian \texttt{isset()} diubah ke operator \texttt{??} yang lebih ringkas:
 
-\begin{small}
-\begin{verbatim}
+\begin{lstlisting}[style=promptstyle]
 // Sebelum (PHP 7.x)
 $atts[$key] = isset($attributes[$key])
     ? $attributes[$key] : $val;
 
 // Sesudah (PHP 8.3)
 $atts[$key] = $attributes[$key] ?? $val;
-\end{verbatim}
-\end{small}
+\end{lstlisting}
 
 \textbf{Transformasi 3: Fungsi \texttt{str\_contains()} (\texttt{StrContainsRector})}
 
 Pada \texttt{system/helpers/url\_helper.php}, pola pencarian substring dengan \texttt{strpos()} diubah ke fungsi \texttt{str\_contains()} yang dikenalkan di PHP 8.0. Rector juga menambahkan \textit{cast} \texttt{(string)} karena hasil dari \texttt{\$\_SERVER['SERVER\_SOFTWARE']} bertipe \texttt{mixed} di PHP 8.x:
 
-\begin{small}
-\begin{verbatim}
+\begin{lstlisting}[style=promptstyle]
 // Sebelum (PHP 7.x)
 if ($method === 'auto'
     && isset($_SERVER['SERVER_SOFTWARE'])
@@ -120,8 +115,7 @@ if ($method === 'auto'
     && str_contains(
         (string) $_SERVER['SERVER_SOFTWARE'],
         'Microsoft-IIS'))
-\end{verbatim}
-\end{small}
+\end{lstlisting}
 
 Ketiga transformasi ini mencerminkan kategori perubahan yang paling umum dilakukan Rector: modernisasi sintaks, penggunaan API PHP yang lebih baru, dan penambahan informasi tipe yang dibutuhkan PHP 8.x.
 
@@ -212,15 +206,24 @@ Angka PHPStan yang tinggi justru menunjukkan manfaat nyata dari komponen validas
 % ============================================================
 
 Berdasarkan pemetaan yang dilakukan oleh \texttt{iso\_mapper.py}, status kepatuhan terhadap enam kontrol ISO/IEC 27001:2022 yang dipetakan adalah sebagaimana ditunjukkan pada Tabel \ref{tab:iso-status}.
-
-\begin{table}[h]
-\centering
+% Use fixed column widths to avoid "Column widths have changed" warnings from longtable
+\begin{longtable}{|l|p{3.5cm}|p{6cm}|l|}
 \caption{Status kepatuhan ISO/IEC 27001:2022 hasil \textit{pipeline} pada dataset FT UGM}
-\label{tab:iso-status}
-\begin{tabularx}{\textwidth}{|l|l|X|l|}
+\label{tab:iso-status} \\
 \hline
 \textbf{Kontrol} & \textbf{Judul} & \textbf{Dasar Penilaian} & \textbf{Status} \\
+\hline \hline
+\endfirsthead
+\multicolumn{4}{l}{\textit{(lanjutan Tabel \ref{tab:iso-status})}} \\
 \hline
+\textbf{Kontrol} & \textbf{Judul} & \textbf{Dasar Penilaian} & \textbf{Status} \\
+\hline \hline
+\endhead
+\hline
+\multicolumn{4}{r}{\textit{(bersambung ke halaman berikutnya)}} \\
+\endfoot
+\hline
+\endlastfoot
 A.5.17 & \textit{Authentication Information} & Tidak ada temuan \textit{hardcoded credentials} & \texttt{COMPLIANT} \\
 \hline
 A.8.24 & \textit{Use of Cryptography} & Tidak ada temuan penggunaan \texttt{md5()}/\texttt{sha1()} untuk kata sandi & \texttt{COMPLIANT} \\
@@ -232,10 +235,7 @@ A.8.26 & \textit{Application Security Requirements} & 1 temuan SQL Injection dar
 A.8.28 & \textit{Secure Coding} & Temuan Semgrep aktif dan 2.549 ERROR PHPStan & \texttt{NON\_COMPLIANT} \\
 \hline
 A.8.29 & \textit{Security Testing in Development} & 10 temuan SSRF dari Semgrep & \texttt{PARTIAL} \\
-\hline
-\end{tabularx}
-\end{table}
-
+\end{longtable}
 Status keseluruhan adalah \texttt{NON\_COMPLIANT}. Ini bukan hasil yang mengejutkan mengingat kondisi kode warisan yang dianalisis; justru ini adalah representasi nyata tentang postur keamanan aplikasi sebelum dilakukan remediasi manual.
 
 Dua kontrol yang berstatus \texttt{COMPLIANT}, yaitu A.5.17 dan A.8.24, perlu dipahami dalam konteks yang tepat. Status ini berarti \textit{ruleset} Semgrep yang digunakan tidak menghasilkan temuan yang dipetakan ke kedua kontrol tersebut, bukan berarti kode bebas dari masalah autentikasi atau kriptografi secara absolut.
@@ -322,8 +322,7 @@ dengan baik. Waktu inferensi Qwen2.5-Coder (10,0 detik) adalah
 yang tertinggi dibanding model lain, selaras dengan respons yang 
 lebih panjang dan detail yang dihasilkannya.
 
-\begin{small}
-\begin{verbatim}
+\begin{lstlisting}[style=promptstyle]
 $uri .= '?'.$_SERVER['QUERY_STRING'];
 $cache_path .= md5(
     $CI->config->item('base_url')
@@ -335,13 +334,11 @@ if ( ! @unlink($cache_path)) {
         'Unable to delete cache file for '.$uri);
     return FALSE;
 }
-\end{verbatim}
-\end{small}
+\end{lstlisting}
 
 \textbf{Respons CodeLlama:}
 
-\begin{small}
-\begin{verbatim}
+\begin{lstlisting}[style=promptstyle]
 VULNERABILITY: SQL Injection Vulnerability
 
 The vulnerability is caused by the manual construction
@@ -360,14 +357,12 @@ if ( ! @unlink($cache_path)) {
         'Unable to delete cache file for '.$uri);
     return FALSE;
 }
-(blok kode tidak ditutup, php -l gagal)
-\end{verbatim}
-\end{small}
+% (blok kode tidak ditutup, php -l gagal)
+\end{lstlisting}
 
 \textbf{Respons Qwen2.5-Coder:}
 
-\begin{small}
-\begin{verbatim}
+\begin{lstlisting}[style=promptstyle]
 ### Explanation of Vulnerability
 ...
 Here's the corrected PHP 8.x code:
@@ -385,8 +380,7 @@ if (!@unlink($cache_path)) {
     return FALSE;
 }
 ```
-\end{verbatim}
-\end{small}
+\end{lstlisting}
 
 Dari perbandingan ini terlihat beberapa perbedaan yang signifikan. CodeLlama mengidentifikasi kerentanan dengan benar tapi solusinya tidak tepat: model hanya mengubah cara penulisan kode tanpa benar-benar mengatasi masalahnya. Kode yang dihasilkan masih menggunakan \texttt{\$\_SERVER['QUERY\_STRING']} secara langsung tanpa sanitasi apapun.
 
@@ -407,18 +401,18 @@ Temuan ini memiliki implikasi langsung untuk desain sistem berbasis LLM lokal: m
 Kondisi B dirancang untuk mengatasi kelemahan spesifik setiap model yang teridentifikasi pada Kondisi A. Setiap model menerima \textit{prompt} yang berbeda melalui metode \texttt{\_build\_optimized\_chat\_messages()} di \texttt{ai\_engine.py}, sementara parameter eksperimen lainnya tetap sama: 11 temuan Semgrep yang sama, 3 \textit{run} per temuan per model, dan \textit{temperature} 0,1.
 
 Strategi optimasi per model dirumuskan berdasarkan pola kegagalan Kondisi A. Qwen2.5-Coder menerima \textit{prompt} yang lebih longgar tanpa tuntutan format ketat karena kualitas kodenya sudah baik. DeepSeek Coder menerima instruksi yang lebih pendek dan langsung untuk mengurangi kompleksitas yang diduga menjadi penyebab rendahnya \textit{extraction rate}. Mistral menerima satu contoh \textit{few-shot} konkret untuk menunjukkan format keluaran yang diharapkan. Llama 3.1 menerima instruksi berbasis \textit{role-playing} eksplisit dengan langkah-langkah bernomor. CodeLlama mempertahankan format Kondisi A dengan tambahan instruksi eksplisit agar menghasilkan kode PHP yang \textit{valid} secara sintaksis.
-\newpage
+
 \subsubsection{Format Compliance Rate}
 
 Gambar \ref{fig:format-compliance-b} menunjukkan \textit{format compliance rate} untuk masing-masing model pada Kondisi B.
-
+\newpage
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.85\textwidth]{contents/chapter-4/llm_chart_20260427_130844_2_format_compliance.png}
     \caption{\textit{Format compliance rate} kelima model LLM pada Kondisi B (\textit{prompt} dioptimasi per model)}
     \label{fig:format-compliance-b}
 \end{figure}
-
+\newpage
 DeepSeek Coder mencatat peningkatan yang paling signifikan, dari 15\% pada Kondisi A menjadi 61\% pada Kondisi B. Ini mengkonfirmasi bahwa model ini sangat sensitif terhadap kompleksitas instruksi: \textit{prompt} yang lebih pendek dan langsung secara substansial meningkatkan kemampuannya mengikuti format. CodeLlama mempertahankan \textit{format compliance} 100\% seperti pada Kondisi A. Sebaliknya, Mistral mengalami regresi dari 6\% menjadi 0\%, dan Llama 3.1 hanya naik tipis dari 0\% menjadi 3\% (1 dari 33 \textit{run}).
 
 \subsubsection{Syntax Validity Rate}
@@ -488,10 +482,10 @@ tetap menjadi metrik evaluasi yang lebih sahih dibandingkan
 % ============================================================
 
 Tabel \ref{tab:ab-comparison} merangkum perbandingan metrik utama antara Kondisi A dan Kondisi B untuk kelima model.
-
 \begin{table}[h]
-\centering
 \caption{Perbandingan metrik utama Kondisi A vs Kondisi B untuk kelima model LLM}
+\vspace{0.5em}
+\centering
 \label{tab:ab-comparison}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{|l|c|c|c|c|c|c|}
@@ -504,7 +498,7 @@ Tabel \ref{tab:ab-comparison} merangkum perbandingan metrik utama antara Kondisi
  & \textbf{Kond.~A} & \textbf{Kond.~B} &
    \textbf{Kond.~A} & \textbf{Kond.~B} &
    \textbf{Kond.~A} & \textbf{Kond.~B} \\
-\hline
+\hline \hline
 DeepSeek Coder 6.7b
   & 15\%  & \textbf{61\%} $\uparrow$
   & 9\%   & 3\% $\downarrow$
@@ -625,13 +619,14 @@ Terdapat 5 dependensi yang teridentifikasi, dengan hasil sebagaimana
 ditunjukkan pada Tabel \ref{tab:composer-ft}.
 
 \begin{table}[h]
-\centering
 \caption{Status kompatibilitas PHP 8.x dependensi \textit{composer} FT UGM}
+\vspace{0.5em}
+\centering
 \label{tab:composer-ft}
 \begin{tabularx}{\textwidth}{|l|l|X|}
 \hline
 \textbf{Package} & \textbf{Versi} & \textbf{Status} \\
-\hline
+\hline \hline
 \texttt{vlucas/phpdotenv} & \texttt{\^{}5.4} & \texttt{SAFE} \\
 \hline
 \texttt{phpoffice/phpspreadsheet} & \texttt{\^{}1.12} & \texttt{SAFE} \\
@@ -1057,15 +1052,16 @@ dipetakan adalah sebagaimana ditunjukkan pada
 Tabel~\ref{tab:iso-status-dti}.
 
 \begin{table}[h]
-\centering
 \caption{Status kepatuhan ISO/IEC 27001:2022 hasil 
 \textit{pipeline} pada dataset CBT DTI UGM}
+\vspace{0.5em}
+\centering
 \label{tab:iso-status-dti}
 \begin{tabularx}{\textwidth}{|l|l|X|l|}
 \hline
 \textbf{Kontrol} & \textbf{Judul} & \textbf{Dasar Penilaian} 
 & \textbf{Status} \\
-\hline
+\hline \hline
 A.5.17 & \textit{Authentication Information} & Tidak ada temuan 
 \textit{hardcoded credentials} & \texttt{COMPLIANT} \\
 \hline
@@ -1162,6 +1158,7 @@ Rector pada kedua dataset.
     \caption{Perbandingan hasil konversi Rector pada kedua studi kasus}
     \label{fig:comparison-rector}
 \end{figure}
+\newpage
 FT UGM mencatat \textit{conversion rate} 97,6\% (239/245) 
 sementara CBT DTI mencatat 91,7\% (299/326). Perbedaan 5,9 poin 
 persentase ini terutama disebabkan oleh proporsi \textit{file} 

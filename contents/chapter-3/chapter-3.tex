@@ -1,6 +1,6 @@
 \chapter{Metodologi Penelitian}
 
-Bab ini menjelaskan langkah-langkah yang diambil dalam penelitian ini untuk mencapai tujuan yang ditetapkan dalam Subbab 1.3. Cakupannya meliputi alat dan bahan yang digunakan, metode penelitian, arsitektur sistem, alur data \textit{pipeline}, desain \textit{prompt} LLM, pemetaan kontrol ISO/IEC 27001:2022, rancangan eksperimen komparasi model, dan metode evaluasi.
+Bab ini menjelaskan langkah-langkah yang diambil dalam penelitian ini untuk mencapai tujuan yang ditetapkan dalam Subbab~\ref{sec:tujuan-penelitian}. Cakupannya meliputi alat dan bahan yang digunakan, metode penelitian, arsitektur sistem, alur data \textit{pipeline}, desain \textit{prompt} LLM, pemetaan kontrol ISO/IEC 27001:2022, rancangan eksperimen komparasi model, dan metode evaluasi.
 
 \section{Alat dan Bahan Penelitian}
 
@@ -49,8 +49,8 @@ Alasan penggunaan spesifikasi ini bukan sekadar ketersediaan. Model LLM yang dij
     \item \textbf{Ollama}: \textit{Platform} untuk menjalankan LLM 
     secara lokal, diakses via API REST di \texttt{localhost:11434}. 
     Justifikasi pemilihan Ollama dibandingkan alternatif LM Studio 
-    dan llama.cpp dibahas pada Subbab~2.11. Secara teknis, Ollama 
-    memuat bobot model dalam format GGUF ke dalam VRAM GPU 
+    dan llama.cpp dibahas pada Subbab~\ref{subsec:justifikasi-ollama}. 
+    Secara teknis, Ollama memuat bobot model dalam format GGUF ke dalam VRAM GPU 
     menggunakan \textit{backend} llama.cpp. Pada RTX 4060 dengan 
     VRAM 8 GB, kelima model yang diuji menghasilkan rata-rata 
     20--40 token per detik pada kuantisasi Q4\_0. Ollama menyimpan 
@@ -74,7 +74,7 @@ ini: DeepSeek Coder 6.7b, Qwen2.5-Coder 7b, CodeLlama 7b,
 Mistral 7b, dan Llama 3.1 8b. Kelima model dijalankan pada 
 kuantisasi Q4\_0 agar dapat dimuat ke dalam VRAM 8 GB. 
 Rincian spesifikasi dan literatur pendukung masing-masing model 
-telah diuraikan pada Subbab~2.9.
+telah diuraikan pada Subbab~\ref{subsec:model-llm}.
 \subsection{Bahan Penelitian}
 
 \begin{itemize}
@@ -167,22 +167,15 @@ Modul pertama yang berjalan. Scanner menjalankan Semgrep pada direktori \texttt{
 Modul ini menggunakan Rector untuk transformasi kode PHP berbasis AST. Argumen CLI \texttt{--target-php} menentukan versi target; nilai yang diterima adalah \texttt{"7.4"}, \texttt{"8.0"}, \texttt{"8.1"}, \texttt{"8.2"}, atau \texttt{"8.3"}. Sebelum Rector dijalankan, seluruh \textit{file} PHP dari \texttt{input/} disalin dahulu ke \texttt{output/}. Rector kemudian memodifikasi \textit{file} di \texttt{output/} di tempat. \textit{File} yang gagal dikonversi tetap ada di \texttt{output/} sebagai salinan kode asli dan statusnya dicatat \texttt{FAILED} di laporan; direktori \texttt{input/} tidak pernah disentuh. Konfigurasi Rector dibuat sebagai \textit{tempfile} saat \textit{runtime} dan dihapus otomatis setelahnya.
 
 \end{sloppypar}
-
 \begin{table}[htbp]
-
-\centering
-
 \caption{Pemetaan argumen \texttt{--target-php} ke konfigurasi Rector}
-
+\vspace{0.5em}
+\centering
 \label{tab:rector-levelset}
-
 \begin{tabularx}{\textwidth}{|l|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
-
 \hline
-
 \textbf{Nilai \texttt{--target-php}} & \textbf{LevelSetList yang diterapkan} & \textbf{Cakupan rule kumulatif} \\
-
-\hline
+\hline \hline
 
 \texttt{7.4} & \texttt{UP\_TO\_PHP\_74} & PHP 5.2, 5.3, 5.4, 5.5, 5.6, 7.0, 7.1, 7.2, 7.3, 7.4 \\
 
@@ -211,7 +204,7 @@ Modul ini menggunakan Rector untuk transformasi kode PHP berbasis AST. Argumen C
 Karena \textit{ruleset}-nya kumulatif, kode PHP 5.x pun bisa diproses langsung menuju PHP 8.3 dalam satu langkah. 
 Jenis-jenis transformasi yang ditangani Rector dan 
 keterbatasannya pada pola semantik seperti \texttt{mysql\_*()} 
-telah dibahas pada Subbab~2.6.
+telah dibahas pada Subbab~\ref{subsec:rector}.
 \subsection{Analyzer (analyzer.py)}
 
 Setelah konversi, Analyzer menjalankan PHPStan pada direktori \texttt{output/} untuk memverifikasi kompatibilitas kode dengan versi PHP target. Level 5 dipilih sebagai keseimbangan antara keketatan dan jumlah \textit{false positive} yang wajar untuk kode warisan. Setiap temuan PHPStan dikategorikan sebagai ERROR atau WARNING, lalu dikaitkan dengan kontrol ISO/IEC 27001:2022 yang relevan.
@@ -303,7 +296,7 @@ Desain \textit{prompt} adalah salah satu keputusan metodologis yang paling berpe
 
 \textit{Prompt} terdiri dari dua bagian yang dikirim melalui endpoint \texttt{/api/chat}: \textit{system message} dan \textit{user message}. \textit{System message}:
 
-{\small
+
 
 \begin{lstlisting}[style=promptstyle]
 
@@ -314,9 +307,8 @@ Always follow output format instructions exactly as given.
 
 \end{lstlisting}
 
-}
 \textit{User message} untuk setiap temuan:
-{\small
+
 \begin{lstlisting}[style=promptstyle]
 
 TASK: Analyze the following PHP code for a [vulnerability_type]
@@ -337,7 +329,6 @@ CONFIDENCE: [number between 0 and 100]
 Example last line: CONFIDENCE: 85
 \end{lstlisting}
 
-}
 
 \subsection{Keputusan Desain Prompt}
 
@@ -371,22 +362,15 @@ tidak dibaca dari \textit{file} JSON. Pilihan desain berbasis aturan ini disenga
 agar hasilnya deterministik dan bisa diaudit, berbeda dari pendekatan berbasis AI yang hasilnya bisa berubah antar inferensi. Ada enam kontrol yang dipetakan, sebagaimana ditunjukkan pada Tabel \ref{tab:iso-mapping}.
 
 \end{sloppypar}
-
 \begin{table}[htbp]
-
-\centering
-
 \caption{Pemetaan sumber temuan ke kontrol ISO/IEC 27001:2022 Annex A}
-
+\vspace{0.5em}
+\centering
 \label{tab:iso-mapping}
-
 \begin{tabularx}{\textwidth}{|l|l|>{\raggedright\arraybackslash}X|}
-
 \hline
-
 \textbf{Kontrol ISO} & \textbf{Judul} & \textbf{Sumber temuan yang dipetakan} \\
-
-\hline
+\hline \hline
 
 A.5.17 & \textit{Authentication Information} & Semgrep: \textit{hardcoded credentials} \\
 
@@ -430,18 +414,13 @@ nilai prioritas. Tabel \ref{tab:keyword-mapping} menunjukkan pemetaan
 kata kunci ke jenis kerentanan dan kontrol ISO yang ditugaskan.
 
 \begin{table}[htbp]
-
-\centering
-
 \caption{Pemetaan kata kunci \texttt{rule\_id} Semgrep ke jenis
 kerentanan dan kontrol ISO/IEC 27001:2022}
-
+\vspace{0.5em}
+\centering
 \label{tab:keyword-mapping}
-
 \resizebox{\textwidth}{!}{%
-
 \begin{tabular}{|l|l|l|c|}
-
 \hline
 
 \textbf{Kata Kunci (\texttt{rule\_id}/\texttt{message})} &
