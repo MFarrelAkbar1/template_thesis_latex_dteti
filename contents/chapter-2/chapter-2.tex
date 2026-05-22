@@ -230,9 +230,9 @@ format dan kemampuan menghasilkan kode yang valid secara sintaksis.
 \textbf{Pass@k} adalah metrik standar untuk mengukur kualitas kode yang
 dihasilkan LLM \cite{roziere2024codellama}\cite{hui2024qwen}. Metrik ini
 mengukur probabilitas bahwa setidaknya satu dari $k$ sampel kode yang
-dihasilkan model dapat lulus serangkaian pengujian. Pada nilai $k=1$
-dengan \textit{greedy decoding}, pass@1 secara langsung mengukur persentase
-percobaan yang menghasilkan kode valid dari total percobaan.
+dihasilkan model dapat lulus serangkaian pengujian. Pada nilai $k=1$ dengan \textit{greedy decoding}, pass@1 mengukur
+persentase percobaan yang menghasilkan solusi yang berhasil melewati
+pengujian dari total percobaan.
 
 \textbf{Instruction-following evaluation} mengukur sejauh mana model
 mematuhi instruksi format yang diberikan dalam \textit{prompt}, terlepas

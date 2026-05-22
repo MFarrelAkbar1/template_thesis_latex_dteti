@@ -25,80 +25,56 @@ Seluruh proses pengembangan dan pengujian dalam penelitian ini dilakukan pada sa
 \end{itemize}
 
 Alasan penggunaan spesifikasi ini bukan sekadar ketersediaan. Model LLM yang dijalankan secara lokal melalui Ollama membutuhkan VRAM yang cukup agar inferensi bisa berjalan sepenuhnya di GPU. RTX 4060 dengan VRAM 8 GB memungkinkan kelima model yang dievaluasi (masing-masing 6--8 miliar parameter) dijalankan pada kuantisasi Q4\_0 tanpa harus memindahkan sebagian perhitungan ke RAM atau CPU. Spesifikasi ini juga merepresentasikan perangkat keras kelas menengah yang realistis dimiliki oleh institusi atau pengembang individual, sehingga hasil pengujian tidak hanya berlaku di lingkungan riset yang ideal.
-
 \subsection{Perangkat Lunak}
 
 \begin{itemize}
 
-    \item \textbf{Python 3.x}: Bahasa pemrograman utama untuk membangun \textit{pipeline} yang menghubungkan semua modul. Dipilih karena kemudahannya memanggil perintah eksternal via \textit{subprocess} dan ketersediaan pustaka \texttt{requests} untuk berkomunikasi dengan API Ollama.
+    \item \textbf{Python 3.x}: Bahasa pemrograman utama untuk 
+    membangun \textit{pipeline} yang menghubungkan semua modul. 
+    Dipilih karena kemudahannya memanggil perintah eksternal via 
+    \textit{subprocess} dan ketersediaan pustaka \texttt{requests} 
+    untuk berkomunikasi dengan API Ollama.
 
-    \item \textbf{Rector}: Alat transformasi kode berbasis AST untuk PHP, dikonfigurasi secara dinamis sesuai versi target yang dipilih.
+    \item \textbf{Rector}: Alat transformasi kode berbasis AST 
+    untuk PHP, dikonfigurasi secara dinamis sesuai versi target 
+    yang dipilih.
 
-    \item \textbf{Semgrep}: Alat analisis statis untuk pemindaian kerentanan. Dijalankan dengan \textit{ruleset} \texttt{p/php} dan \texttt{p/owasp-top-ten}.
+    \item \textbf{Semgrep}: Alat analisis statis untuk pemindaian 
+    kerentanan. Dijalankan dengan \textit{ruleset} \texttt{p/php} 
+    dan \texttt{p/owasp-top-ten}.
 
-    \item \textbf{PHPStan}: Alat analisis statis untuk validasi tipe dan kompatibilitas kode PHP, dijalankan pada level 5.
+    \item \textbf{PHPStan}: Alat analisis statis untuk validasi 
+    tipe dan kompatibilitas kode PHP, dijalankan pada level 5.
 
-\item \textbf{Ollama}: \textit{Platform} untuk 
-menjalankan LLM secara lokal, diakses via API REST di 
-\texttt{localhost:11434}. Ollama dipilih dibandingkan alternatif 
-lain seperti LM Studio dan llama.cpp karena tiga alasan. Pertama, 
-Ollama menyediakan API REST yang kompatibel dengan format OpenAI 
-sehingga mudah diintegrasikan ke skrip Python tanpa pustaka 
-tambahan. Kedua, manajemen model dilakukan melalui satu perintah 
-\texttt{ollama pull} tanpa konfigurasi manual, sehingga 
-eksperimen dapat direproduksi dengan mudah. Ketiga, Ollama 
-mendukung kuantisasi Q4\_0 secara otomatis yang memungkinkan 
-kelima model berjalan dalam VRAM 8 GB tanpa pengaturan tambahan. 
-LM Studio menyediakan antarmuka grafis yang tidak diperlukan 
-untuk otomatisasi berbasis skrip, sementara llama.cpp memerlukan 
-kompilasi manual dan tidak memiliki API REST bawaan.
-Secara teknis, Ollama memuat bobot model dalam format GGUF ke 
-dalam VRAM GPU menggunakan \textit{backend} llama.cpp. Proses 
-inferensi berjalan sepenuhnya di GPU: setiap token keluaran 
-dihasilkan melalui operasi perkalian matriks pada bobot model 
-yang sudah dikuantisasi tanpa melibatkan server eksternal. 
-Pada RTX 4060 dengan VRAM 8 GB, kelima model yang diuji 
-menghasilkan rata-rata 20--40 token per detik pada kuantisasi 
-Q4\_0. Ollama menyimpan model yang sudah dimuat di VRAM selama 
-sesi aktif sehingga latensi \textit{cold start} (waktu muat model pertama kali ke VRAM) 
-hanya terjadi sekali per sesi eksperimen
-    \item \textbf{PHP 8.4.1}: Interpreter PHP untuk validasi sintaks menggunakan \texttt{php -l}.
+    \item \textbf{Ollama}: \textit{Platform} untuk menjalankan LLM 
+    secara lokal, diakses via API REST di \texttt{localhost:11434}. 
+    Justifikasi pemilihan Ollama dibandingkan alternatif LM Studio 
+    dan llama.cpp dibahas pada Subbab~2.11. Secara teknis, Ollama 
+    memuat bobot model dalam format GGUF ke dalam VRAM GPU 
+    menggunakan \textit{backend} llama.cpp. Pada RTX 4060 dengan 
+    VRAM 8 GB, kelima model yang diuji menghasilkan rata-rata 
+    20--40 token per detik pada kuantisasi Q4\_0. Ollama menyimpan 
+    model yang sudah dimuat di VRAM selama sesi aktif sehingga 
+    latensi \textit{cold start} hanya terjadi sekali per sesi.
 
-    \item \textbf{Composer}: Manajer dependensi PHP untuk instalasi Rector dan PHPStan.
+    \item \textbf{PHP 8.4.1}: Interpreter PHP untuk validasi 
+    sintaks menggunakan \texttt{php -l}.
 
-    \item \textbf{Visual Studio Code} dengan ekstensi Claude Code sebagai IDE utama selama pengembangan.
+    \item \textbf{Composer}: Manajer dependensi PHP untuk 
+    instalasi Rector dan PHPStan.
+
+    \item \textbf{Visual Studio Code} dengan ekstensi Claude Code 
+    sebagai IDE utama selama pengembangan.
 
 \end{itemize}
-
 \subsection{Model LLM yang Dievaluasi}
 
-Lima model LLM \textit{open source} dievaluasi, semuanya dijalankan 
-secara lokal melalui Ollama tanpa \textit{fine-tuning}. Pemilihan 
-model didasarkan pada dua kriteria: model harus dapat dijalankan di 
-GPU dengan VRAM 8 GB pada kuantisasi Q4\_0, dan 
-kemampuan pemahaman kodenya harus terdokumentasi dalam literatur 
-ilmiah.
-
-\begin{itemize}
-
-    \item DeepSeek Coder 6.7b: Model 
-    spesialis kode, dilatih pada 2 triliun token dengan 87\% kode 
-    sumber.
-
-    \item Qwen2.5-Coder 7b: Model kode dari 
-    Alibaba, dilatih pada 5,5 triliun token kode.
-
-    \item CodeLlama 7b: Model berbasis 
-    Llama 2 dari Meta AI untuk tugas pemrograman.
-
-    \item Mistral 7b: Model tujuan umum dari 
-    Mistral AI dengan arsitektur \textit{grouped-query attention}.
-
-    \item Llama 3.1 8b: Model dari seri 
-    Llama 3 yang dilatih pada lebih dari 15 triliun token 
-    multibahasa.
-
-\end{itemize}
+Lima model LLM \textit{open source} dievaluasi dalam penelitian 
+ini: DeepSeek Coder 6.7b, Qwen2.5-Coder 7b, CodeLlama 7b, 
+Mistral 7b, dan Llama 3.1 8b. Kelima model dijalankan pada 
+kuantisasi Q4\_0 agar dapat dimuat ke dalam VRAM 8 GB. 
+Rincian spesifikasi dan literatur pendukung masing-masing model 
+telah diuraikan pada Subbab~2.9.
 \subsection{Bahan Penelitian}
 
 \begin{itemize}
@@ -125,7 +101,7 @@ privasi data yang sama dengan dataset FT UGM.
 Penelitian ini menggunakan metodologi Penelitian dan Pengembangan (\textit{Research and Development}, R\&D) dengan model prototipe. 
 Pendekatan ini dipilih karena penelitian menghasilkan produk perangkat lunak nyata, bukan hanya analisis teoritis. 
 Model prototipe dipilih karena memungkinkan penyesuaian keputusan desain secara iteratif berdasarkan observasi terhadap perilaku sistem secara aktual. Ini terutama berlaku untuk format \textit{prompt} AI dan cara menangani kode yang tidak bisa diotomatisasi sepenuhnya.
-\newpage
+
 Gambar \ref{fig:alur-penelitian} menunjukkan alur penelitian yang terdiri dari tujuh tahapan.
 
 \begin{figure}[htbp]
@@ -148,11 +124,12 @@ Gambar \ref{fig:alur-penelitian} menunjukkan alur penelitian yang terdiri dari t
 
     \item \textbf{Desain sistem}: Merancang arsitektur \textit{pipeline} secara modular dan menentukan tanggung jawab setiap modul.
 
-    \item \textbf{Implementasi}: Membangun tujuh modul Python satu per satu. Setiap modul diuji secara terpisah sebelum diintegrasikan.
+    \item \textbf{Implementasi}: Membangun enam modul fungsional Python satu per satu, 
+dikoordinasikan oleh \texttt{main.py} sebagai orkestrator. Setiap modul diuji secara terpisah sebelum diintegrasikan.
 
     \item \textbf{Pengujian}: Menguji prototipe dengan \textit{file} PHP sampel. Jika ditemukan masalah, proses kembali ke tahap implementasi (iterasi).
 
-    \item \textbf{Validasi studi kasus}: Pengujian akhir menggunakan kode sumber asli FT UGM dan DTI UGM setelah prototipe stabil.
+    \item \textbf{Validasi studi kasus}: Pengujian akhir menggunakan kode sumber FT UGM dan DTI UGM setelah prototipe stabil.
 
     \item \textbf{Evaluasi dan dokumentasi}: Menganalisis hasil dan menyusun laporan penelitian.
 
@@ -160,7 +137,10 @@ Gambar \ref{fig:alur-penelitian} menunjukkan alur penelitian yang terdiri dari t
 
 \section{Arsitektur Sistem}
 
-Sistem terdiri dari Tujuh modul Python yang masing-masing menangani satu langkah dalam proses konversi dan analisis keamanan. \texttt{main.py} bertindak sebagai orkestrator yang mengontrol urutan eksekusi dan mengalirkan data antar modul. Arsitektur modular memungkinkan setiap bagian diuji, diperbaiki, atau diganti secara independen.
+Sistem terdiri dari enam modul fungsional Python yang
+dikoordinasikan oleh \texttt{main.py} sebagai orkestrator
+yang masing-masing menangani satu langkah dalam proses konversi dan analisis keamanan. 
+Arsitektur modular memungkinkan setiap bagian diuji, diperbaiki, atau diganti secara independen.
 
 Gambar \ref{fig:arsitektur-sistem} menunjukkan hubungan antar modul.
 
@@ -170,7 +150,7 @@ Gambar \ref{fig:arsitektur-sistem} menunjukkan hubungan antar modul.
 
     \includegraphics[width=0.65\textwidth]{contents/chapter-3/arsitektur-sistem.png}
 
-    \caption{Arsitektur sistem \textit{pipeline} dengan tujuh modul Python}
+    \caption{Arsitektur sistem \textit{pipeline} dengan enam modul fungsional dan satu orkestrator}
 
     \label{fig:arsitektur-sistem}
 
@@ -228,15 +208,22 @@ Modul ini menggunakan Rector untuk transformasi kode PHP berbasis AST. Argumen C
 
 \end{table}
 
-Karena \textit{ruleset}-nya kumulatif, kode PHP 5.x pun bisa diproses langsung menuju PHP 8.3 dalam satu langkah. Transformasi seperti \texttt{var} menjadi \texttt{public}, \texttt{array()} menjadi \texttt{[]}, dan penghapusan modifier \texttt{/e} pada \texttt{preg\_replace()} ditangani sepenuhnya. Yang tidak bisa ditangani adalah \texttt{mysql\_*()} karena butuh penulisan ulang semantik, bukan sekadar penggantian sintaks.
-
+Karena \textit{ruleset}-nya kumulatif, kode PHP 5.x pun bisa diproses langsung menuju PHP 8.3 dalam satu langkah. 
+Jenis-jenis transformasi yang ditangani Rector dan 
+keterbatasannya pada pola semantik seperti \texttt{mysql\_*()} 
+telah dibahas pada Subbab~2.6.
 \subsection{Analyzer (analyzer.py)}
 
 Setelah konversi, Analyzer menjalankan PHPStan pada direktori \texttt{output/} untuk memverifikasi kompatibilitas kode dengan versi PHP target. Level 5 dipilih sebagai keseimbangan antara keketatan dan jumlah \textit{false positive} yang wajar untuk kode warisan. Setiap temuan PHPStan dikategorikan sebagai ERROR atau WARNING, lalu dikaitkan dengan kontrol ISO/IEC 27001:2022 yang relevan.
 
+
 \subsection{AI Engine (ai\_engine.py)}
 
-Modul ini menerima temuan dari Semgrep \textit{pre-scan} sebagai masukan, bukan dari PHPStan dan bukan dari \textit{post-scan}. Hanya temuan dengan prioritas 1--3 yang dikirim ke AI Engine: SQL Injection (prioritas 1), XSS (prioritas 2), dan fungsi usang (prioritas 3). Temuan prioritas 4 ke atas seperti \textit{hardcoded credentials} dan \textit{path traversal} tidak diproses.
+Modul ini menerima temuan dari Semgrep \textit{pre-scan} sebagai masukan, bukan dari PHPStan dan bukan dari \textit{post-scan}. 
+Hanya temuan dengan prioritas 1--3 yang dikirim ke AI Engine: SQL Injection (prioritas 1), XSS (prioritas 2), dan fungsi usang (prioritas 3). Temuan prioritas 4 ke atas seperti 
+\textit{hardcoded credentials} dan \textit{path traversal} tidak diproses. Prioritas ditentukan berdasarkan potensi dampak langsung terhadap 
+kerahasiaan dan integritas sistem serta frekuensi kemunculannya 
+pada aplikasi PHP warisan menurut OWASP Top 10. 
 
 \begin{sloppypar}
 
@@ -250,7 +237,7 @@ Modul ini menerima semua hasil dari Scanner, Analyzer, dan AI Engine sebagai obj
 
 \subsection{Main (main.py)}
 
-File main adalah orkestrator yang mengontrol seluruh \textit{pipeline}. Menerima direktori \textit{input} dan versi PHP target sebagai argumen CLI, menjalanka keenam modul secara berurutan, dan menghasilkan laporan JSON di direktori \texttt{reports/}. Ringkasan hasil ditampilkan di konsol menggunakan pustaka Rich.
+File main adalah orkestrator yang mengontrol seluruh \textit{pipeline}. Menerima direktori \textit{input} dan versi PHP target sebagai argumen CLI, menjalankan keenam modul secara berurutan, dan menghasilkan laporan JSON di direktori \texttt{reports/}. Ringkasan hasil ditampilkan di konsol menggunakan pustaka Rich.
 
 \subsection{Composer Analyzer (composer\_analyzer.py)}
 
@@ -265,35 +252,47 @@ diverifikasi secara otomatis).
 \newpage
 \section{Alur Data Pipeline}
 
-Gambar \ref{fig:alur-pipeline} menunjukkan alur data lengkap dari masukan hingga laporan akhir.
-
 \begin{figure}[htbp]
-
     \centering
-
-    \includegraphics[width=0.7\textwidth]{contents/chapter-3/alur-data-pipeline.png}
-
-    \caption{Alur data \textit{pipeline} dari \textit{input} hingga laporan akhir}
-
-    \label{fig:alur-pipeline}
-
+    \includegraphics[width=0.7\textwidth]{contents/chapter-3/alur-pipeline-input.png}
+    \caption{Alur data \textit{pipeline}: tahap masukan: 
+    Scanner, Converter, dan Composer Analyzer}
+    \label{fig:alur-pipeline-input}
 \end{figure}
-Alurnya cukup linear. \textit{File} PHP ditempatkan di 
-\texttt{input/}. Scanner menjalankan Semgrep pada \texttt{input/} 
-untuk menetapkan \textit{baseline} keamanan kode asli (\textit{pre-scan}). 
-Converter menyalin semua \textit{file} ke \texttt{output/} lalu 
-menjalankan Rector dengan versi target yang ditentukan; 
-\texttt{input/} tidak tersentuh. Setelah konversi, Scanner 
-menjalankan Semgrep kembali pada \texttt{output/} 
+
+\textit{File} PHP ditempatkan di \texttt{input/}. Scanner 
+menjalankan Semgrep pada \texttt{input/} untuk menetapkan 
+\textit{baseline} keamanan kode asli (\textit{pre-scan}). 
+Converter menyalin semua \textit{file} ke \texttt{output/} 
+lalu menjalankan Rector dengan versi target yang ditentukan; 
+\texttt{input/} tidak pernah disentuh. Setelah konversi, 
+Scanner menjalankan Semgrep kembali pada \texttt{output/} 
 (\textit{post-scan}) untuk mengukur perubahan postur keamanan 
-melalui nilai $\Delta F$. Composer Analyzer memeriksa kompatibilitas 
-dependensi \texttt{composer.json} terhadap PHP 8.x secara paralel, 
-atau dilewati otomatis jika berkas tidak ditemukan. Analyzer 
-menjalankan PHPStan level 5 pada \texttt{output/}. AI Engine 
-mengambil temuan Semgrep prioritas 1--3 dan mengirimkannya ke 
-model LLM. ISO Mapper mengumpulkan semua temuan dan memetakannya 
-ke kontrol ISO. \texttt{main.py} menggabungkan semuanya menjadi 
+melalui nilai $\Delta F$. Composer Analyzer memeriksa 
+kompatibilitas dependensi \texttt{composer.json} terhadap 
+PHP 8.x, atau dilewati otomatis jika berkas tidak ditemukan.
+\newpage
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{contents/chapter-3/alur-pipeline-output.png}
+    \caption{Alur data \textit{pipeline}: tahap keluaran: 
+    Analyzer, AI Engine, ISO Mapper, dan laporan akhir}
+    \label{fig:alur-pipeline-output}
+\end{figure}
+
+Analyzer menjalankan PHPStan level 5 pada \texttt{output/} 
+untuk memverifikasi kompatibilitas kode dengan versi PHP 
+target. AI Engine mengambil temuan Semgrep prioritas 1--3 
+dan mengirimkannya ke model LLM untuk analisis dan saran 
+perbaikan; modul ini dilewati otomatis jika tidak ada temuan. 
+ISO Mapper mengumpulkan semua temuan dari Scanner, Analyzer, 
+dan AI Engine lalu memetakannya ke enam kontrol ISO/IEC 
+27001:2022. \texttt{main.py} menggabungkan semuanya menjadi 
 laporan JSON dan menampilkan ringkasan di konsol.
+
+Teks lengkap \textit{prompt} Kondisi B untuk masing-masing model 
+disertakan pada Lampiran~\ref{app:prompt-kondisi-b}.
+
 \section{Desain Prompt LLM}
 
 \label{sec:prompt-design}
@@ -306,19 +305,19 @@ Desain \textit{prompt} adalah salah satu keputusan metodologis yang paling berpe
 
 {\small
 
-\begin{verbatim}
+\begin{lstlisting}[style=promptstyle]
 
 You are a PHP security expert and migration specialist. 
 You analyze PHP code for security vulnerabilities and provide 
 secure PHP 8.x replacements. 
 Always follow output format instructions exactly as given.
 
-\end{verbatim}
+\end{lstlisting}
 
 }
 \textit{User message} untuk setiap temuan:
 {\small
-\begin{verbatim}
+\begin{lstlisting}[style=promptstyle]
 
 TASK: Analyze the following PHP code for a [vulnerability_type]
 vulnerability and provide a secure PHP 8.x replacement.
@@ -336,7 +335,7 @@ After your explanation and code fix, write exactly this on the
 last line:
 CONFIDENCE: [number between 0 and 100]
 Example last line: CONFIDENCE: 85
-\end{verbatim}
+\end{lstlisting}
 
 }
 
@@ -348,7 +347,12 @@ Example last line: CONFIDENCE: 85
 
 \textbf{Parsing skor berlapis.} Karena tidak semua model mengikuti format yang diminta, \texttt{ai\_engine.py} menggunakan enam pola \textit{regex} berurutan untuk mengekstraksi skor: (0) tag XML \texttt{<confidence>}, (1) bilangan bulat dekat kata ``confidence'', (2) desimal 0.x dekat ``confidence'', (3) persentase dekat ``confidence'', (4) desimal \textit{bare} di mana saja, dan (5) frasa bahasa alami seperti ``not sure'' yang dipetakan ke nilai tetap. Jika semua gagal, dikembalikan nilai \textit{default} 0,0.
 
-\textbf{Temperature 0,1.} Dipilih untuk meminimalkan variasi acak antar percobaan. Setiap model dijalankan tiga kali per temuan dengan \textit{prompt} identik, sehingga perbedaan hasil antar \textit{run} mencerminkan variabilitas model yang sebenarnya.
+\textbf{Temperature 0,1.} Dipilih untuk meminimalkan variasi acak antar percobaan. Setiap model dijalankan tiga kali per temuan dengan \textit{prompt} identik, 
+sehingga perbedaan hasil antar \textit{run} mencerminkan variabilitas 
+model yang sebenarnya. Ollama tidak menyediakan pengaturan \textit{seed} inferensi yang 
+konsisten untuk seluruh model yang diuji, sehingga variasi kecil 
+antar \textit{run} tetap mungkin terjadi meskipun \textit{temperature} 
+dibuat rendah (0,1).
 
 \textbf{Zero-shot tanpa contoh.} Tidak ada contoh perbaikan kode disertakan karena penelitian ingin mengevaluasi kemampuan bawaan model dalam kondisi yang merepresentasikan penggunaan nyata. Ini juga memastikan semua model dibandingkan pada kondisi yang setara.
 
@@ -551,24 +555,30 @@ arsitektur AI dalam penelitian ini. Daripada menggunakan API LLM
 berbasis \textit{cloud}, penelitian ini menggunakan Ollama sebagai \textit{runtime} lokal sehingga seluruh 
 inferensi terjadi di mesin pengembangan.
 
-Tidak ada kode sumber yang dikirimkan ke \textit{server} eksternal. 
+Tidak ada potongan kode sumber aplikasi yang dikirimkan ke
+layanan inferensi eksternal atau API LLM berbasis cloud.
 Seluruh proses analisis berlangsung secara statis: tidak ada koneksi 
 ke basis data produksi FT UGM, tidak ada eksekusi kode PHP. 
 Satu-satunya koneksi eksternal yang terjadi adalah panggilan ke 
 Packagist API oleh modul \texttt{composer\_analyzer.py} untuk 
-memeriksa metadata versi dependensi — bukan kode sumber aplikasi. 
+memeriksa metadata versi dependensi, bukan kode sumber aplikasi. 
 Keputusan ini sejalan dengan ISO/IEC 27001:2022 
 yang mensyaratkan pemisahan lingkungan pengembangan dan pengendalian 
 akses terhadap aset informasi sensitif.
 \section{Metode Pengujian dan Evaluasi}
 
-Pengujian dilakukan dengan pendekatan \textit{black-box}, fokus pada \textit{output} setiap modul bukan detail implementasi internal. Ada lima metrik utama:
+Pengujian dilakukan dengan pendekatan berbasis keluaran 
+(\textit{output-oriented evaluation}), dengan fokus pada hasil 
+setiap modul dibanding detail implementasi internalnya.
+Terdapat lima metrik utama:
 
 \begin{enumerate}
 
     \item \textbf{Tingkat konversi Rector}: Persentase \textit{file} PHP yang berhasil dikonversi tanpa kesalahan fatal Rector, dihitung per \textit{file} dan secara keseluruhan.
 
-    \item \textbf{Validitas sintaks pasca-konversi}: Persentase \textit{file} hasil konversi yang lolos \texttt{php -l}. Diukur secara objektif.
+    \item \textbf{Validitas sintaks pasca-konversi}: Persentase \textit{file} hasil konversi yang lolos \texttt{php -l}. Diukur secara objektif. Validitas sintaks tidak menjamin kebenaran logika program atau 
+keamanan hasil transformasi, tetapi dipilih sebagai metrik primer 
+karena dapat diverifikasi secara objektif dan otomatis.
 
     \item \textbf{Perbedaan temuan keamanan}: Selisih jumlah temuan Semgrep antara \textit{pre-scan} dan \textit{post-scan}. Temuan baru setelah konversi tidak otomatis diinterpretasikan sebagai regresi keamanan; bisa jadi merupakan kerentanan laten yang sebelumnya tersembunyi dan baru terlihat setelah transformasi kode.
 
