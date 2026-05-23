@@ -14,16 +14,18 @@ telah ditetapkan.
 
 \textbf{Pertama}, platform yang mampu melakukan konversi otomatis aplikasi web 
 PHP lama ke versi PHP target yang dapat dikonfigurasi berhasil dikembangkan. 
-Rector mencatat tingkat konversi 97,6\% pada dataset FT UGM (239 dari 245 
-\textit{file}) dan 86,3\% pada dataset CBT DTI UGM (158 dari 183 \textit{file}), 
-dengan tingkat validitas sintaks pasca-konversi mencapai 100\% pada kedua studi 
-kasus. Dua \textit{file} yang gagal pada dataset FT UGM disebabkan oleh 
-\textit{bug} internal Rector pada \texttt{FiberNodeScopeResolver}, bukan 
-berasal dari kode sumber. \textit{Pipeline} terbukti mampu menangani kode dari 
-berbagai era PHP secara serentak melalui mekanisme \textit{ruleset} kumulatif 
+Rector mencatat tingkat konversi 97,6\% pada dataset FT UGM (239 dari 245
+\textit{file}) dan 91,7\% pada dataset CBT DTI UGM (299 dari 326 \textit{file}),
+dengan tingkat validitas sintaks pasca-konversi mencapai 100\% pada kedua studi
+kasus. Dua \textit{file} yang gagal pada kedua dataset
+(\texttt{captcha\_helper.php} dan \texttt{form\_helper.php}) disebabkan oleh
+\textit{bug} internal Rector pada \texttt{FiberNodeScopeResolver}, bukan
+berasal dari kode sumber. \textit{Pipeline} terbukti mampu menangani kode dari
+berbagai era PHP secara serentak melalui mekanisme \textit{ruleset} kumulatif
 Rector, dengan durasi eksekusi sekitar 41 menit untuk dataset FT UGM
-(termasuk eksperimen LLM terhadap 11 temuan) dan sekitar 50 detik untuk 
-dataset CBT DTI UGM (tanpa komponen AI karena tidak ada temuan Semgrep).
+(termasuk eksperimen komparasi LLM dengan 165 percobaan terhadap 11 temuan)
+dan lebih singkat untuk dataset CBT DTI UGM (AI Engine memproses 11 temuan
+Semgrep menggunakan satu model tanpa eksperimen multi-model).
 
 \textbf{Kedua}, mekanisme pemeriksaan \textit{secure coding} yang terhubung 
 dengan kontrol ISO/IEC 27001:2022 Annex A berhasil diimplementasikan. Semgrep 
@@ -38,13 +40,15 @@ remediasi manual dilakukan, bukan kegagalan \textit{pipeline}.
 
 \textbf{Ketiga}, sistem \textit{quality assurance} yang memeriksa hasil 
 konversi terhadap kebenaran fungsional dan kepatuhan keamanan berhasil 
-dibangun. PHPStan \textit{level} 5 mendeteksi 2.871 temuan pada dataset FT UGM 
-dan 2.037 temuan pada dataset CBT DTI UGM. Berdasarkan analisis kategoris 
-pada Subbab \ref{sec:phpstan-dti}, seluruh temuan ini merupakan \textit{false 
-positive} yang disebabkan oleh keterbatasan PHPStan dalam menelusuri 
-\textit{magic property} dan fungsi \textit{helper} yang diinjeksi secara 
-dinamis oleh arsitektur CodeIgniter 3.x pada saat \textit{runtime}, bukan 
-akibat proses konversi. Meskipun demikian, angka ini memperlihatkan manfaat 
+dibangun. PHPStan \textit{level} 5 mendeteksi 2.871 temuan pada dataset FT UGM
+dan 2.354 temuan pada dataset CBT DTI UGM. Sebagian besar temuan ini
+merupakan \textit{false positive} akibat keterbatasan PHPStan dalam
+menelusuri \textit{magic property} dan fungsi \textit{helper} yang
+diinjeksi secara dinamis oleh arsitektur CodeIgniter 3.x pada saat
+\textit{runtime}; sebagian lain mencerminkan akumulasi
+\textit{technical debt} yang sudah ada sebelum migrasi, yang baru
+terlihat karena sistem tipe PHP 8.3 lebih ketat dibanding versi
+sebelumnya. Dalam kedua kasus, temuan ini bukan akibat proses konversi. Meskipun demikian, angka ini memperlihatkan manfaat 
 nyata komponen validasi: tanpa PHPStan, ribuan potensi masalah kompatibilitas 
 tipe tidak akan terdeteksi sebelum kode dijalankan di lingkungan produksi, 
 sebagaimana ditemukan oleh Strobl et al.\ \cite{strobl2020automated}.

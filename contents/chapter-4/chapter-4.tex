@@ -146,8 +146,9 @@ Setelah proses konversi, seluruh \textit{file} pada direktori \texttt{\detokeniz
 \subsubsection{Pre-Scan: Baseline Keamanan Kode Asli}
 
 Pemindaian Semgrep terhadap 241 \textit{file} PHP pada direktori 
-\texttt{\detokenize{input/}} (dari total 245 \textit{file}, dengan 4 \textit{file} 
-yang dilewati oleh Rector) menghasilkan 11 temuan, yang terdiri atas 
+\texttt{\detokenize{input/}} (dari total 245 \textit{file}; 4 
+\textit{file} tidak disertakan karena tidak mengandung kode PHP yang 
+dapat dianalisis oleh \textit{ruleset} Semgrep) menghasilkan 11 temuan, yang terdiri atas 
 1 kerentanan SQL Injection dan 10 kerentanan SSRF (\textit{Server-Side Request Forgery}). 
 Seluruh temuan tersebut terlokalisasi pada satu \textit{file}, yaitu 
 \texttt{\detokenize{Output.php}}.
@@ -228,19 +229,29 @@ A.5.17 & \textit{Authentication Information} & Tidak ada temuan \textit{hardcode
 \hline
 A.8.24 & \textit{Use of Cryptography} & Tidak ada temuan penggunaan \texttt{md5()}/\texttt{sha1()} untuk kata sandi & \texttt{COMPLIANT} \\
 \hline
-A.8.25 & \textit{Secure Development Lifecycle} & 1.266 temuan PHPStan (masalah kompatibilitas dan kualitas kode) & \texttt{NON\_COMPLIANT} \\
+A.8.25 & \textit{Secure Development Lifecycle} & 
+1.266 temuan PHPStan kategori \textit{undefined}/\textit{not found} 
+yang dipetakan ke kontrol ini & \texttt{NON\_COMPLIANT} \\
 \hline
 A.8.26 & \textit{Application Security Requirements} & 1 temuan SQL Injection dari Semgrep & \texttt{NON\_COMPLIANT} \\
 \hline
 A.8.28 & \textit{Secure Coding} & Temuan Semgrep aktif dan 2.549 ERROR PHPStan & \texttt{NON\_COMPLIANT} \\
 \hline
-A.8.29 & \textit{Security Testing in Development} & 10 temuan SSRF dari Semgrep & \texttt{PARTIAL} \\
+A.8.29 & \textit{Security Testing in Development} & 10 temuan SSRF dari Semgrep masih terbuka & \texttt{NON\_COMPLIANT} \\
 \end{longtable}
 Status keseluruhan adalah \texttt{NON\_COMPLIANT}. Ini bukan hasil yang mengejutkan mengingat kondisi kode warisan yang dianalisis; justru ini adalah representasi nyata tentang postur keamanan aplikasi sebelum dilakukan remediasi manual.
 
 Dua kontrol yang berstatus \texttt{COMPLIANT}, yaitu A.5.17 dan A.8.24, perlu dipahami dalam konteks yang tepat. Status ini berarti \textit{ruleset} Semgrep yang digunakan tidak menghasilkan temuan yang dipetakan ke kedua kontrol tersebut, bukan berarti kode bebas dari masalah autentikasi atau kriptografi secara absolut.
 
-Kontrol A.8.29 berstatus \texttt{PARTIAL} karena \textit{pipeline} sudah menjalankan pengujian keamanan otomatis sebagai bagian dari proses, yang memenuhi sebagian persyaratan kontrol ini. Namun masih ada temuan terbuka, sehingga kontrol belum sepenuhnya terpenuhi. Laporan kepatuhan ini dihasilkan secara otomatis dan dapat langsung digunakan sebagai dokumentasi audit ISO/IEC 27001:2022 \cite{iso27001_2022}.
+Kontrol A.8.29 berstatus \texttt{NON\_COMPLIANT} karena terdapat 
+10 temuan SSRF aktif dari Semgrep yang dipetakan ke kontrol ini 
+dan belum diatasi. Berdasarkan mekanisme pemetaan berbasis aturan 
+yang didefinisikan dalam Subbab~\ref{sec:iso-mapping-design}, 
+keberadaan temuan Semgrep aktif pada kontrol mana pun menghasilkan 
+status \texttt{NON\_COMPLIANT}, terlepas dari apakah \textit{pipeline} 
+sudah menjalankan proses pengujian keamanan otomatis atau belum. 
+Laporan kepatuhan ini dihasilkan secara otomatis dan dapat 
+langsung digunakan sebagai dokumentasi audit ISO/IEC 27001:2022 \cite{iso27001_2022}.
 
 % ============================================================
 \subsection{Hasil Komparasi Lima Model LLM (Kondisi A)}
@@ -702,8 +713,10 @@ Untuk mengukur seberapa dekat hasil konversi Rector dengan
 konversi manual yang ideal, dilakukan validasi berbasis 
 \textit{sampling} terhadap 10\% dari total \textit{file} 
 valid. Sebanyak 24 \textit{file} dipilih secara acak 
-(seed=42) dari 244 \textit{file} valid menggunakan modul 
-\texttt{accuracy\_validator.py}.
+(seed=42) dari seluruh \textit{file} valid yang 
+lolos pemeriksaan \texttt{php -l} menggunakan modul 
+\texttt{accuracy\_validator.py}, merepresentasikan 
+10\% dari total populasi \textit{file} valid.
 
 Gambar~\ref{fig:validation-coverage} menunjukkan distribusi 
 cakupan 24 \textit{file} sampel tersebut.
@@ -830,7 +843,7 @@ otomatis untuk aplikasi berbasis CodeIgniter 3.x.
 
 \subsubsection{Keterbatasan Teknis Pipeline}
 
-AI Engine hanya memproses temuan dengan prioritas 1--3 dan membatasi potongan kode yang dikirim ke model pada 2.000 karakter pertama. Untuk \textit{file} PHP yang panjang, konteks yang diterima model terpotong sehingga saran perbaikan mungkin tidak mempertimbangkan keseluruhan logika fungsi. Sebagaimana terlihat pada contoh respons Qwen2.5-Coder, model dapat membuat inferensi yang tepat tentang konteks kode meski dengan informasi yang terbatas, namun tidak selalu bisa dipastikan.
+AI Engine hanya memproses temuan dengan prioritas 1--5 dan membatasi potongan kode yang dikirim ke model pada 2.000 karakter pertama. Untuk \textit{file} PHP yang panjang, konteks yang diterima model terpotong sehingga saran perbaikan mungkin tidak mempertimbangkan keseluruhan logika fungsi. Sebagaimana terlihat pada contoh respons Qwen2.5-Coder, model dapat membuat inferensi yang tepat tentang konteks kode meski dengan informasi yang terbatas, namun tidak selalu bisa dipastikan.
 
 Selain itu, validasi menggunakan \texttt{php -l} hanya memeriksa kebenaran sintaksis, bukan kebenaran semantik. Kode yang lolos \texttt{php -l} bisa saja masih mengandung kerentanan yang tidak tertangani atau logika yang tidak ekuivalen dengan kode aslinya. Pengujian fungsional terhadap kode hasil perbaikan AI bukan bagian dari cakupan penelitian ini.
 
@@ -1004,11 +1017,12 @@ seharusnya dimodifikasi secara langsung.
 
 PHPStan \textit{level} 5 dijalankan terhadap kode hasil 
 konversi di direktori \texttt{output/} dengan target PHP 8.3. 
-Hasilnya adalah 2.354 temuan, yang setelah penyaringan 318 
-\textit{false positive} dari \textit{framework} CodeIgniter 3 
-(\textit{CI3 noise}) menjadi 2.036 temuan bersih. Distribusi 
-temuan berdasarkan kontrol ISO/IEC 27001:2022 ditunjukkan pada 
-Gambar~\ref{fig:phpstan-iso-dti}.
+Hasilnya adalah 2.354 temuan. Di antara temuan tersebut, sekitar 318
+merupakan \textit{false positive} dari \textit{framework} CodeIgniter 3
+yang timbul karena PHPStan tidak dapat menelusuri \textit{magic property}
+dan fungsi \textit{helper} yang diinjeksi secara dinamis — kategori yang
+sama juga terdapat pada dataset FT UGM. Distribusi temuan berdasarkan
+kontrol ISO/IEC 27001:2022 ditunjukkan pada Gambar~\ref{fig:phpstan-iso-dti}.
 
 \begin{figure}[h]
     \centering
@@ -1081,7 +1095,7 @@ A.8.28 & \textit{Secure Coding} & 2.113 temuan PHPStan dan
 temuan Semgrep aktif & \texttt{NON\_COMPLIANT} \\
 \hline
 A.8.29 & \textit{Security Testing in Development} & 10 temuan 
-SSRF dari Semgrep masih terbuka & \texttt{PARTIAL} \\
+SSRF dari Semgrep masih terbuka & \texttt{NON\_COMPLIANT} \\
 \hline
 \end{tabularx}
 \end{table}
@@ -1197,9 +1211,12 @@ dan fungsi \textit{helper} yang diinjeksi saat \textit{runtime}.
 Di samping itu, sebagian \textit{error} mencerminkan masalah
 kompatibilitas dan kualitas kode aplikasi yang sesungguhnya,
 sebagaimana dibahas pada subbab sebelumnya.  
-Jumlah \textit{error} yang lebih tinggi pada FT UGM sebanding dengan 
-ukuran dataset yang lebih besar (245 vs 326 \textit{file}) dan penggunaan 
-dependensi pihak ketiga yang lebih beragam.
+Jumlah \textit{error} yang lebih tinggi pada FT UGM, 
+meskipun ukuran datasetnya lebih kecil (245 vs 326 \textit{file}), 
+disebabkan oleh penggunaan dependensi pihak ketiga yang lebih 
+beragam — PHPStan tidak dapat me-\textit{resolve} kelas-kelas 
+seperti \texttt{PhpOffice\textbackslash PhpSpreadsheet} dan 
+\texttt{Dotenv\textbackslash Dotenv} karena dependensi tidak diinstal secara penuh di lingkungan analisis.
 
 % ------------------------------------------------------------
 \subsection{Ringkasan Perbandingan dan Analisis Dependensi Composer}

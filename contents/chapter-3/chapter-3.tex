@@ -213,10 +213,11 @@ Setelah konversi, Analyzer menjalankan PHPStan pada direktori \texttt{output/} u
 \subsection{AI Engine (ai\_engine.py)}
 
 Modul ini menerima temuan dari Semgrep \textit{pre-scan} sebagai masukan, bukan dari PHPStan dan bukan dari \textit{post-scan}. 
-Hanya temuan dengan prioritas 1--3 yang dikirim ke AI Engine: SQL Injection (prioritas 1), XSS (prioritas 2), dan fungsi usang (prioritas 3). Temuan prioritas 4 ke atas seperti 
-\textit{hardcoded credentials} dan \textit{path traversal} tidak diproses. Prioritas ditentukan berdasarkan potensi dampak langsung terhadap 
-kerahasiaan dan integritas sistem serta frekuensi kemunculannya 
-pada aplikasi PHP warisan menurut OWASP Top 10. 
+Temuan dengan prioritas 1--5 dikirim ke AI Engine: SQL Injection (prioritas 1), XSS (prioritas 2), fungsi usang (prioritas 3), 
+\textit{hardcoded credentials} dan \textit{path traversal} (prioritas 4), 
+serta SSRF (prioritas 5). Temuan yang tidak terklasifikasi (prioritas 99) 
+tidak diproses. Prioritas ditentukan berdasarkan potensi dampak langsung 
+terhadap kerahasiaan dan integritas sistem serta frekuensi kemunculannya pada aplikasi PHP warisan menurut OWASP Top 10. 
 
 \begin{sloppypar}
 
@@ -275,7 +276,7 @@ PHP 8.x, atau dilewati otomatis jika berkas tidak ditemukan.
 
 Analyzer menjalankan PHPStan level 5 pada \texttt{output/} 
 untuk memverifikasi kompatibilitas kode dengan versi PHP 
-target. AI Engine mengambil temuan Semgrep prioritas 1--3 
+target. AI Engine mengambil temuan Semgrep prioritas 1--5
 dan mengirimkannya ke model LLM untuk analisis dan saran 
 perbaikan; modul ini dilewati otomatis jika tidak ada temuan. 
 ISO Mapper mengumpulkan semua temuan dari Scanner, Analyzer, 
@@ -392,8 +393,8 @@ A.8.28 & \textit{Secure Coding} & Semgrep (semua) + PHPStan ERROR \\
 
 \hline
 
-A.8.29 & \textit{Security Testing in Development} & PHPStan ERROR/WARNING \\
-
+A.8.29 & \textit{Security Testing in Development} & 
+Semgrep: \textit{Path Traversal}/SSRF + PHPStan ERROR/WARNING \\
 \hline
 
 \end{tabularx}
@@ -450,13 +451,18 @@ Kredensial Hardcoded & A.5.17, A.8.28 & 4 \\
 
 \hline
 
-\texttt{path}, \texttt{traversal}, \texttt{ssrf} &
-Path Traversal/SSRF & A.8.28, A.8.29 & 4 \\
+\texttt{path}, \texttt{traversal} &
+Path Traversal & A.8.28, A.8.29 & 4 \\
+
+\hline
+
+\texttt{ssrf}, \texttt{server-side-request-forgery} &
+SSRF & A.8.28, A.8.29 & 5 \\
 
 \hline
 
 \texttt{md5}, \texttt{sha1}, \texttt{weak.*crypt} &
-Kriptografi Lemah & A.8.24, A.8.28 & 5 \\
+Kriptografi Lemah & A.8.24, A.8.28 & 6 \\
 
 \hline
 

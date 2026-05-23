@@ -28,7 +28,7 @@ Kendala utamanya adalah privasi data. Model LLM berperforma tinggi seperti GPT-4
 
 Dari uraian di atas, ada dua masalah mendasar yang belum terpecahkan sekaligus. Pertama, migrasi kode PHP lama masih memerlukan intervensi manual besar untuk kasus yang butuh pemahaman semantik, dan alat yang ada tidak menyertakan pemeriksaan keamanan sebagai bagian dari alur migrasi. Kedua, organisasi yang harus memenuhi ISO/IEC 27001:2022 masih harus melakukan audit keamanan sebagai langkah terpisah setelah migrasi selesai. Belum ada platform yang menggabungkan keduanya dalam satu alur kerja \textit{open source} yang dapat dijalankan secara lokal, sebagaimana ditunjukkan oleh tinjauan literatur pada Bab II.
 
-Penelitian ini membangun \textit{platform} berbasis AI dan alat \textit{open source} yang dapat secara otomatis mengubah aplikasi web PHP lama ke versi PHP target yang dapat dikonfigurasi, dengan dukungan teknis dari PHP 5.2 hingga PHP 8.x, sekaligus menyertakan pemeriksaan \textit{secure coding} berbasis ISO/IEC 27001:2022. \textit{Platform} ini menggunakan Rector \cite{rector2024} untuk transformasi kode berbasis AST, Semgrep \cite{semgrep2024} untuk pemindaian keamanan, PHPStan \cite{phpstan2024} untuk validasi pasca-konversi, serta lima model LLM \textit{open source} yang dijalankan secara lokal melalui Ollama \cite{ollama2024}. Studi kasus dilakukan pada kode PHP milik FT UGM.
+Penelitian ini membangun \textit{platform} berbasis AI dan alat \textit{open source} yang dapat secara otomatis mengubah aplikasi web PHP lama ke versi PHP target yang dapat dikonfigurasi, dengan dukungan teknis dari PHP 5.2 hingga PHP 8.x, sekaligus menyertakan pemeriksaan \textit{secure coding} berbasis ISO/IEC 27001:2022. \textit{Platform} ini menggunakan Rector \cite{rector2024} untuk transformasi kode berbasis AST, Semgrep \cite{semgrep2024} untuk pemindaian keamanan, PHPStan \cite{phpstan2024} untuk validasi pasca-konversi, serta lima model LLM \textit{open source} yang dijalankan secara lokal melalui Ollama \cite{ollama2024}. Studi kasus dilakukan pada kode PHP milik FT UGM dan CBT DTI UGM.
 
 \section{Rumusan Masalah}
 
@@ -81,13 +81,13 @@ Penelitian ini memiliki batasan-batasan sebagai berikut:
 yang dibangun mendukung konversi dari PHP 5.2 ke atas, karena Rector 
 menggunakan rantai \textit{ruleset} kumulatif yang mencakup semua 
 perubahan dari PHP 5.2 hingga versi target yang dipilih 
-\cite{rector2024}. Namun studi kasus dalam penelitian ini menggunakan 
-kode sumber PHP 7.x milik FT UGM sebagai representasi kondisi yang 
-paling umum ditemukan saat ini \cite{w3techs2024php}. Versi target 
+\cite{rector2024}. Namun studi kasus dalam penelitian ini menggunakan kode sumber PHP 7.x
+milik FT UGM dan CBT DTI UGM sebagai representasi kondisi yang paling
+umum ditemukan saat ini \cite{w3techs2024php}. Versi target 
 yang dapat dikonfigurasi mencakup PHP 7.4 hingga PHP 8.3, yang 
 merupakan rentang versi paling relevan untuk kebutuhan modernisasi 
 institusi saat ini \cite{phpgroup2022supported}.
-	\item \textbf{Studi kasus:} Fokus utama studi kasus ini adalah aplikasi \textit{Dashboard} TCK (\textit{Target Capaian Kerja}) milik Fakultas Teknik (FT) Universitas Gadjah Mada, yang dibangun di atas \textit{framework} CodeIgniter 3 dengan versi PHP 7.4.9. \textit{Pipeline} yang dikembangkan bekerja pada kode \textit{backend} PHP di direktori \texttt{application/} dan tidak menyentuh komponen \textit{frontend} Vue 2 SPA. \textit{Pipeline} bekerja pada level \textit{file} PHP individual dan tidak bergantung pada \textit{framework} yang digunakan, sehingga secara teknis dapat diterapkan pada aplikasi berbasis \textit{framework} lain seperti Laravel atau Symfony maupun pada aplikasi PHP tanpa \textit{framework}. Pengujian terhadap \textit{framework} selain CodeIgniter 3 bukan bagian dari ruang lingkup penelitian ini.
+	\item \textbf{Studi kasus:} Penelitian ini menggunakan dua studi kasus: (1) aplikasi \textit{Dashboard} TCK (\textit{Target Capaian Kerja}) milik Fakultas Teknik (FT) Universitas Gadjah Mada, dibangun di atas \textit{framework} CodeIgniter 3 dengan versi PHP 7.4.9; dan (2) aplikasi \textit{Computer-Based Test} (CBT) milik Direktorat Teknologi Informasi (DTI) Universitas Gadjah Mada, dibangun di atas \textit{framework} CodeIgniter 3 dengan persyaratan PHP $\geq$ 7.0. \textit{Pipeline} bekerja pada level \textit{file} PHP individual dan tidak bergantung pada \textit{framework} yang digunakan, sehingga secara teknis dapat diterapkan pada aplikasi berbasis \textit{framework} lain seperti Laravel atau Symfony maupun pada aplikasi PHP tanpa \textit{framework}. Pengujian terhadap \textit{framework} selain CodeIgniter 3 bukan bagian dari ruang lingkup penelitian ini.
 	\item \textbf{Kontrol keamanan:} Pemeriksaan keamanan hanya dilakukan pada kontrol ISO/IEC 27001:2022 Annex A yang relevan dengan \textit{secure coding}: A.8.25, A.8.28, dan A.8.29, serta A.5.17 dan A.8.24 dan A.8.26 yang turut dipetakan oleh \textit{pipeline} \cite{iso27001_2022}.
 	\item \textbf{Model AI:} Penelitian ini mengevaluasi dan membandingkan lima model LLM \textit{open source} yang dijalankan secara lokal melalui Ollama \cite{ollama2024} dalam eksperimen komparasi \textit{zero-shot}: DeepSeek Coder 6.7b \cite{deepseek2024coder}, Qwen2.5-Coder 7b \cite{hui2024qwen}, CodeLlama 7b \cite{roziere2024codellama}, Mistral 7b \cite{jiang2023mistral}, dan Llama 3.1 8b \cite{dubey2024llama3}. Semua model digunakan tanpa \textit{fine-tuning}.
 	\item \textbf{Lingkungan validasi:} Pengujian dilakukan dalam pengaturan lokal menggunakan kode sumber dari lingkungan institusional. Pengujian dalam lingkungan produksi skala besar bukan bagian dari ruang lingkup penelitian ini.
@@ -120,6 +120,6 @@ Skripsi ini terdiri dari lima bab.
 
 \noindent \textbf{Bab III: Metodologi Penelitian} menjelaskan arsitektur sistem, tahapan penelitian, desain \textit{prompt} LLM, pemetaan kontrol ISO/IEC 27001:2022, rancangan eksperimen komparasi model, serta metode pengujian dan evaluasi.
 
-\noindent \textbf{Bab IV: Hasil dan Diskusi} menyajikan hasil implementasi pada studi kasus website PHP FT UGM, mencakup tingkat keberhasilan konversi, perbandingan temuan keamanan sebelum dan sesudah konversi, hasil komparasi lima model LLM, dan diskusi mengenai kekuatan dan keterbatasan sistem.
+\noindent \textbf{Bab IV: Hasil dan Diskusi} menyajikan hasil implementasi \textit{pipeline} pada dua studi kasus (FT UGM dan CBT DTI UGM), mencakup tingkat keberhasilan konversi, perbandingan temuan keamanan sebelum dan sesudah konversi, hasil komparasi lima model LLM, dan diskusi mengenai kekuatan dan keterbatasan sistem.
 
 \noindent \textbf{Bab V: Kesimpulan dan Rekomendasi} merangkum temuan berdasarkan tujuan yang ditetapkan dan memberikan saran untuk penelitian berikutnya.
