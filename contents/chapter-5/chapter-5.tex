@@ -22,10 +22,11 @@ kasus. Dua \textit{file} yang gagal pada kedua dataset
 \textit{bug} internal Rector pada \texttt{FiberNodeScopeResolver}, bukan
 berasal dari kode sumber. \textit{Pipeline} terbukti mampu menangani kode dari
 berbagai era PHP secara serentak melalui mekanisme \textit{ruleset} kumulatif
-Rector, dengan durasi eksekusi sekitar 41 menit untuk dataset FT UGM
-(termasuk eksperimen komparasi LLM dengan 165 percobaan terhadap 11 temuan)
-dan lebih singkat untuk dataset CBT DTI UGM (AI Engine memproses 11 temuan
-Semgrep menggunakan satu model tanpa eksperimen multi-model).
+Rector, dengan durasi eksekusi sekitar 3--4 menit untuk kedua dataset
+menggunakan Qwen2.5-Coder 7b sebagai AI Engine. Eksperimen komparasi
+multi-model (Kondisi A--C) yang dilakukan pada studi kasus FT UGM
+merupakan prosedur evaluasi terpisah dan tidak termasuk dalam pengukuran
+durasi \textit{pipeline}.
 
 \textbf{Kedua}, mekanisme pemeriksaan \textit{secure coding} yang terhubung 
 dengan kontrol ISO/IEC 27001:2022 Annex A berhasil diimplementasikan. Semgrep 
@@ -40,7 +41,7 @@ remediasi manual dilakukan, bukan kegagalan \textit{pipeline}.
 
 \textbf{Ketiga}, sistem \textit{quality assurance} yang memeriksa hasil 
 konversi terhadap kebenaran fungsional dan kepatuhan keamanan berhasil 
-dibangun. PHPStan \textit{level} 5 mendeteksi 2.871 temuan pada dataset FT UGM
+dibangun. PHPStan \textit{level} 5 mendeteksi 2.790 temuan pada dataset FT UGM
 dan 2.354 temuan pada dataset CBT DTI UGM. Sebagian besar temuan ini
 merupakan \textit{false positive} akibat keterbatasan PHPStan dalam
 menelusuri \textit{magic property} dan fungsi \textit{helper} yang
