@@ -17,7 +17,7 @@ PHP lama ke versi PHP target yang dapat dikonfigurasi berhasil dikembangkan.
 Rector mencatat tingkat konversi 97,6\% pada dataset FT UGM (239 dari 245
 \textit{file}) dan 91,7\% pada dataset CBT DTI UGM (299 dari 326 \textit{file}),
 dengan tingkat validitas sintaks pasca-konversi mencapai 100\% pada kedua studi
-kasus. Dua \textit{file} yang gagal pada kedua dataset
+kasus. Kegagalan konversi pada dua \textit{file} di kedua dataset
 (\texttt{captcha\_helper.php} dan \texttt{form\_helper.php}) disebabkan oleh
 \textit{bug} internal Rector pada \texttt{FiberNodeScopeResolver}, bukan
 berasal dari kode sumber. \textit{Pipeline} terbukti mampu menangani kode dari
@@ -34,7 +34,7 @@ dijalankan sebelum dan sesudah konversi untuk mengukur perubahan postur
 keamanan, sementara \texttt{iso\_mapper.py} memetakan setiap temuan ke kontrol 
 yang relevan secara deterministik dan dapat diaudit. Nilai $\Delta F = 0$ (selisih jumlah temuan keamanan antara 
 \textit{pre-scan} dan \textit{post-scan}) pada kedua studi kasus 
-mengkonfirmasi bahwa proses konversi tidak memperkenalkan 
+mengonfirmasi bahwa proses konversi tidak memperkenalkan 
 kerentanan baru. Status kepatuhan keseluruhan pada kedua dataset adalah 
 \texttt{NON\_COMPLIANT}, yang mencerminkan kondisi nyata kode warisan sebelum 
 remediasi manual dilakukan, bukan kegagalan \textit{pipeline}.
@@ -55,7 +55,7 @@ tipe tidak akan terdeteksi sebelum kode dijalankan di lingkungan produksi,
 sebagaimana ditemukan oleh Strobl et al.\ \cite{strobl2020automated}.
 
 \textbf{Keempat}, dokumentasi otomatis berupa laporan konversi dan pemetaan 
-kepatuhan ISO/IEC 27001:2022 berhasil dihasilkan. Laporan JSON yang dihasilkan 
+kepatuhan ISO/IEC 27001:2022 berhasil disusun. Laporan JSON yang dihasilkan 
 secara otomatis mencakup status konversi per \textit{file}, temuan keamanan 
 Semgrep, hasil validasi PHPStan, status per kontrol ISO, dan kompatibilitas 
 dependensi \textit{composer}. Laporan ini dapat langsung digunakan sebagai 
@@ -100,15 +100,14 @@ perbandingan model dapat digeneralisasi lebih luas.
 CodeIgniter 3.x perlu ditingkatkan. Penelitian selanjutnya dapat mengeksplorasi 
 penggunaan \textit{custom stubs} PHPStan untuk mendefinisikan \textit{magic 
 property} dan fungsi \textit{helper} CI3, atau menjalankan PHPStan dengan 
-konfigurasi \textit{baseline} sehingga hanya temuan baru yang diperkenalkan 
-oleh konversi yang dilaporkan. Pendekatan ini akan meningkatkan akurasi laporan 
+konfigurasi \textit{baseline} sehingga hanya temuan baru yang muncul akibat proses konversi yang dilaporkan. Pendekatan ini akan meningkatkan akurasi laporan 
 kepatuhan ISO pada aplikasi berbasis CodeIgniter.
 
 \textbf{Keempat}, integrasi \textit{pipeline} ke dalam alur kerja CI/CD dapat 
 dijajaki. Saat ini \textit{pipeline} dijalankan secara manual. Integrasi ke 
 GitHub Actions atau GitLab CI akan memungkinkan pemeriksaan keamanan dan 
 kepatuhan ISO dijalankan secara otomatis pada setiap \textit{commit}, 
-menjadikan \textit{pipeline} ini bagian permanen dari siklus pengembangan 
+sehingga \textit{pipeline} ini terintegrasi secara permanen dalam siklus pengembangan
 perangkat lunak yang berkelanjutan.
 
 \textbf{Kelima}, perbandingan dengan alat analisis keamanan komersial perlu 
@@ -122,7 +121,7 @@ yang dicapai oleh \textit{pipeline} ini.
 perlu dilakukan. Pemetaan dalam \texttt{iso\_mapper.py} dibangun berdasarkan 
 interpretasi peneliti terhadap dokumen standar. Keterlibatan auditor atau 
 praktisi bersertifikat ISO/IEC 27001 dalam mengevaluasi kesesuaian setiap 
-pemetaan akan meningkatkan validitas dan kepercayaan laporan kepatuhan yang 
+pemetaan akan meningkatkan validitas dan kredibilitas laporan kepatuhan yang
 dihasilkan.
 
 \textbf{Ketujuh}, eksplorasi \textit{fine-tuning} model LLM pada dataset 
@@ -140,9 +139,9 @@ penggantian komponen Rector dan Semgrep dengan alat setara untuk bahasa lain,
 sehingga pendekatan yang sama berpotensi diterapkan pada migrasi aplikasi 
 berbasis Python, JavaScript, atau bahasa lain yang menghadapi tantangan serupa.
 
-\textbf{Kesembilan}, pengujian \textit{pipeline} terhadap versi PHP 
-yang lebih baru seperti PHP 8.4 dan PHP 8.5 dapat dilakukan sebagai 
-kelanjutan penelitian. Eksperimen awal pada PHP 8.5 menunjukkan bahwa 
+\textbf{Kesembilan}, pengujian \textit{pipeline} terhadap versi PHP
+yang lebih baru seperti PHP 8.4 dan PHP 8.5 dapat dilakukan sebagai
+arah pengembangan lebih lanjut. Eksperimen awal pada PHP 8.5 menunjukkan bahwa 
 \textit{ruleset} Rector untuk versi tersebut masih bersifat 
 eksperimental dan belum stabil untuk basis kode CodeIgniter 3.x. 
 PHP 8.4 diprediksi lebih \textit{feasible} karena \textit{ruleset}-nya 

@@ -24,7 +24,7 @@ Seluruh proses pengembangan dan pengujian dalam penelitian ini dilakukan pada sa
 
 \end{itemize}
 
-Alasan penggunaan spesifikasi ini bukan sekadar ketersediaan. Model LLM yang dijalankan secara lokal melalui Ollama membutuhkan VRAM yang cukup agar inferensi bisa berjalan sepenuhnya di GPU. RTX 4060 dengan VRAM 8 GB memungkinkan kelima model yang dievaluasi (masing-masing 6--8 miliar parameter) dijalankan pada kuantisasi Q4\_0 tanpa harus memindahkan sebagian perhitungan ke RAM atau CPU. Spesifikasi ini juga merepresentasikan perangkat keras kelas menengah yang realistis dimiliki oleh institusi atau pengembang individual, sehingga hasil pengujian tidak hanya berlaku di lingkungan riset yang ideal.
+Spesifikasi ini dipilih karena alasan teknis yang konkret. Model LLM yang dijalankan secara lokal melalui Ollama membutuhkan VRAM yang cukup agar inferensi bisa berjalan sepenuhnya di GPU. RTX 4060 dengan VRAM 8 GB memungkinkan kelima model yang dievaluasi (masing-masing 6--8 miliar parameter) dijalankan pada kuantisasi Q4\_0 tanpa harus memindahkan sebagian perhitungan ke RAM atau CPU. Spesifikasi ini juga mencerminkan perangkat keras kelas menengah yang realistis dimiliki institusi atau pengembang individual, sehingga hasil pengujian tidak hanya berlaku di lingkungan riset yang ideal.
 \subsection{Perangkat Lunak}
 
 \begin{itemize}
@@ -100,7 +100,7 @@ privasi data yang sama dengan dataset FT UGM.
 
 Penelitian ini menggunakan metodologi Penelitian dan Pengembangan (\textit{Research and Development}, R\&D) dengan model prototipe. 
 Pendekatan ini dipilih karena penelitian menghasilkan produk perangkat lunak nyata, bukan hanya analisis teoritis. 
-Model prototipe dipilih karena memungkinkan penyesuaian keputusan desain secara iteratif berdasarkan observasi terhadap perilaku sistem secara aktual. Ini terutama berlaku untuk format \textit{prompt} AI dan cara menangani kode yang tidak bisa diotomatisasi sepenuhnya.
+Model prototipe dipilih karena memungkinkan penyesuaian keputusan desain secara iteratif berdasarkan observasi terhadap perilaku sistem secara aktual. Pendekatan ini sangat relevan pada format \textit{prompt} AI dan cara menangani kode yang tidak bisa diotomatisasi sepenuhnya.
 
 Gambar \ref{fig:alur-penelitian} menunjukkan alur penelitian yang terdiri dari tujuh tahapan.
 
@@ -108,7 +108,7 @@ Gambar \ref{fig:alur-penelitian} menunjukkan alur penelitian yang terdiri dari t
 
     \centering
 
-    \includegraphics[width=0.7\textwidth]{contents/chapter-3/alur-penelitian.png}
+    \includegraphics[width=.8\textwidth]{contents/chapter-3/alur-penelitian2.png}
 
     \caption{Alur penelitian dengan model prototipe}
 
@@ -148,7 +148,7 @@ Gambar \ref{fig:arsitektur-sistem} menunjukkan hubungan antar modul.
 
     \centering
 
-    \includegraphics[width=0.65\textwidth]{contents/chapter-3/arsitektur-sistem.png}
+    \includegraphics[width=0.8\textwidth]{contents/chapter-3/arsitektur-sistem.png}
 
     \caption{Arsitektur sistem \textit{pipeline} dengan enam modul fungsional dan satu orkestrator}
 
@@ -164,7 +164,7 @@ Modul pertama yang berjalan. Scanner menjalankan Semgrep pada direktori \texttt{
 
 \begin{sloppypar}
 
-Modul ini menggunakan Rector untuk transformasi kode PHP berbasis AST. Argumen CLI \texttt{--target-php} menentukan versi target; nilai yang diterima adalah \texttt{"7.4"}, \texttt{"8.0"}, \texttt{"8.1"}, \texttt{"8.2"}, atau \texttt{"8.3"}. Sebelum Rector dijalankan, seluruh \textit{file} PHP dari \texttt{input/} disalin dahulu ke \texttt{output/}. Rector kemudian memodifikasi \textit{file} di \texttt{output/} di tempat. \textit{File} yang gagal dikonversi tetap ada di \texttt{output/} sebagai salinan kode asli dan statusnya dicatat \texttt{FAILED} di laporan; direktori \texttt{input/} tidak pernah disentuh. Konfigurasi Rector dibuat sebagai \textit{tempfile} saat \textit{runtime} dan dihapus otomatis setelahnya.
+Modul ini menggunakan Rector untuk transformasi kode PHP berbasis AST. Argumen CLI \texttt{--target-php} menentukan versi target; nilai yang diterima adalah \texttt{"7.4"}, \texttt{"8.0"}, \texttt{"8.1"}, \texttt{"8.2"}, atau \texttt{"8.3"}. Sebelum Rector dijalankan, seluruh \textit{file} PHP dari \texttt{input/} disalin dahulu ke \texttt{output/}. Rector kemudian memodifikasi \textit{file} di \texttt{output/} langsung tanpa membuat salinan baru. \textit{File} yang gagal dikonversi tetap ada di \texttt{output/} sebagai salinan kode asli dan statusnya dicatat \texttt{FAILED} di laporan; direktori \texttt{input/} tidak dimodifikasi sama sekali. Konfigurasi Rector dibuat sebagai \textit{tempfile} saat \textit{runtime} dan dihapus otomatis setelahnya.
 
 \end{sloppypar}
 \begin{table}[htbp]
@@ -201,10 +201,10 @@ Modul ini menggunakan Rector untuk transformasi kode PHP berbasis AST. Argumen C
 
 \end{table}
 
-Karena \textit{ruleset}-nya kumulatif, kode PHP 5.x pun bisa diproses langsung menuju PHP 8.3 dalam satu langkah. 
-Jenis-jenis transformasi yang ditangani Rector dan 
-keterbatasannya pada pola semantik seperti \texttt{mysql\_*()} 
-telah dibahas pada Subbab~\ref{subsec:rector}.
+Mengingat \textit{ruleset} yang digunakan bersifat kumulatif, kode PHP 5.x dapat diproses langsung menuju PHP 8.3 dalam satu langkah. 
+Jenis-jenis transformasi yang ditangani Rector dan
+keterbatasan Rector terhadap pola semantik seperti \texttt{mysql\_*()}
+telah diuraikan pada Subbab~\ref{subsec:rector}.
 \subsection{Analyzer (analyzer.py)}
 
 Setelah konversi, Analyzer menjalankan PHPStan pada direktori \texttt{output/} untuk memverifikasi kompatibilitas kode dengan versi PHP target. Level 5 dipilih sebagai keseimbangan antara keketatan dan jumlah \textit{false positive} yang wajar untuk kode warisan. Setiap temuan PHPStan dikategorikan sebagai ERROR atau WARNING, lalu dikaitkan dengan kontrol ISO/IEC 27001:2022 yang relevan.
@@ -221,7 +221,7 @@ terhadap kerahasiaan dan integritas sistem serta frekuensi kemunculannya pada ap
 
 \begin{sloppypar}
 
-Untuk setiap temuan yang lolos filter, modul mengirimkan konteks dan potongan kode ke model LLM melalui endpoint \texttt{/api/chat} Ollama di \texttt{localhost:11434}. Kalau model tidak menghasilkan blok kode PHP sama sekali, respons tetap dicatat dengan \textit{placeholder} \texttt{// Manual review required} dan tidak dilewati (diabaikan). Jika Ollama tidak tersedia, \textit{pipeline} tetap berjalan tanpa komponen AI. Desain \textit{prompt} yang digunakan dibahas dalam Subbab \ref{sec:prompt-design}.
+Untuk setiap temuan yang lolos filter, modul mengirimkan konteks dan potongan kode ke model LLM melalui endpoint \texttt{/api/chat} Ollama di \texttt{localhost:11434}. Jika model tidak menghasilkan blok kode PHP sama sekali, respons tetap dicatat dengan \textit{placeholder} \texttt{// Manual review required} dan tidak dilewati (diabaikan). Jika Ollama tidak tersedia, \textit{pipeline} tetap berjalan tanpa komponen AI. Desain \textit{prompt} yang digunakan dibahas dalam Subbab \ref{sec:prompt-design}.
 
 \end{sloppypar}
 
@@ -259,7 +259,7 @@ menjalankan Semgrep pada \texttt{input/} untuk menetapkan
 \textit{baseline} keamanan kode asli (\textit{pre-scan}). 
 Converter menyalin semua \textit{file} ke \texttt{output/} 
 lalu menjalankan Rector dengan versi target yang ditentukan; 
-\texttt{input/} tidak pernah disentuh. Setelah konversi, 
+\texttt{input/} tidak dimodifikasi sama sekali. Setelah konversi, 
 Scanner menjalankan Semgrep kembali pada \texttt{output/} 
 (\textit{post-scan}) untuk mengukur perubahan postur keamanan 
 melalui nilai $\Delta F$. Composer Analyzer memeriksa 
@@ -291,7 +291,7 @@ disertakan pada Lampiran~\ref{app:prompt-kondisi-b}.
 
 \label{sec:prompt-design}
 
-Desain \textit{prompt} adalah salah satu keputusan metodologis yang paling berpengaruh terhadap kualitas respons model. Tiga tujuan harus dipenuhi sekaligus: menghasilkan kode perbaikan yang valid secara sintaksis, menghasilkan skor kepercayaan yang dapat dibaca otomatis oleh \textit{pipeline}, dan dapat dijalankan secara \textit{zero-shot} tanpa contoh mengingat tidak tersedianya \textit{dataset} berlabel.
+Desain \textit{prompt} adalah salah satu keputusan metodologis yang paling berpengaruh terhadap kualitas respons model. \textit{Prompt} dirancang untuk memenuhi tiga tujuan: menghasilkan kode perbaikan yang valid secara sintaksis, menghasilkan skor kepercayaan yang dapat dibaca otomatis oleh \textit{pipeline}, dan dapat dijalankan secara \textit{zero-shot} tanpa contoh mengingat tidak tersedianya \textit{dataset} berlabel.
 
 \subsection{Struktur Prompt}
 
@@ -333,11 +333,11 @@ Example last line: CONFIDENCE: 85
 
 \subsection{Keputusan Desain Prompt}
 
-\textbf{Penyertaan kontrol ISO/IEC 27001:2022.} Kontrol ISO yang relevan disertakan di setiap \textit{prompt}. Ini bukan konteks dekoratif; tujuannya mendorong model menghasilkan saran perbaikan yang mempertimbangkan kepatuhan standar, bukan sekadar memperbaiki sintaks.
+\textbf{Penyertaan kontrol ISO/IEC 27001:2022.} Kontrol ISO yang relevan disertakan di setiap \textit{prompt}. Informasi ini bertujuan untuk mendorong model menghasilkan saran perbaikan yang mempertimbangkan kepatuhan standar, bukan sekadar memperbaiki sintaks.
 
 \textbf{Instruksi format di akhir pesan.} Format \texttt{CONFIDENCE: [0-100]} diletakkan di bagian akhir dengan instruksi eksplisit termasuk contoh konkret. Model kecil cenderung lebih patuh pada instruksi yang dekat dengan akhir pesan.
 
-\textbf{Parsing skor berlapis.} Karena tidak semua model mengikuti format yang diminta, \texttt{ai\_engine.py} menggunakan enam pola \textit{regex} berurutan untuk mengekstraksi skor: (0) tag XML \texttt{<confidence>}, (1) bilangan bulat dekat kata ``confidence'', (2) desimal 0.x dekat ``confidence'', (3) persentase dekat ``confidence'', (4) desimal \textit{bare} di mana saja, dan (5) frasa bahasa alami seperti ``not sure'' yang dipetakan ke nilai tetap. Jika semua gagal, dikembalikan nilai \textit{default} 0,0.
+\textbf{Parsing skor berlapis.} Karena tidak semua model mengikuti format yang diminta, \texttt{ai\_engine.py} menggunakan enam pola \textit{regex} berurutan untuk mengekstraksi skor: (0) tag XML \texttt{<confidence>}, (1) bilangan bulat dekat kata ``confidence'', (2) desimal 0.x dekat ``confidence'', (3) persentase dekat ``confidence'', (4) desimal \textit{bare} di mana saja, dan (5) frasa bahasa alami seperti ``not sure'' yang dipetakan ke nilai tetap. Jika seluruh pola gagal diekstraksi, sistem akan mengembalikan nilai \textit{default} 0,0.
 
 \textbf{Temperature 0,1.} Dipilih untuk meminimalkan variasi acak antar percobaan. Setiap model dijalankan tiga kali per temuan dengan \textit{prompt} identik, 
 sehingga perbedaan hasil antar \textit{run} mencerminkan variabilitas 
@@ -346,7 +346,7 @@ konsisten untuk seluruh model yang diuji, sehingga variasi kecil
 antar \textit{run} tetap mungkin terjadi meskipun \textit{temperature} 
 dibuat rendah (0,1).
 
-\textbf{Zero-shot tanpa contoh.} Tidak ada contoh perbaikan kode disertakan karena penelitian ingin mengevaluasi kemampuan bawaan model dalam kondisi yang merepresentasikan penggunaan nyata. Ini juga memastikan semua model dibandingkan pada kondisi yang setara.
+\textbf{Zero-shot tanpa contoh.} Tidak ada contoh perbaikan kode disertakan karena penelitian ingin mengevaluasi kemampuan bawaan model dalam kondisi yang mencerminkan penggunaan nyata. Hal ini juga memastikan bahwa seluruh model dibandingkan pada kondisi yang setara.
 
 \textbf{Skor kepercayaan sebagai metrik sekunder.} Skor ini adalah penilaian mandiri dari model dan tidak bisa diverifikasi secara independen. Dalam analisis Bab IV, skor kepercayaan adalah metrik sekunder; metrik primer adalah validitas sintaks kode yang dihasilkan, diukur dengan \texttt{php -l}.
 
@@ -359,8 +359,7 @@ dibuat rendah (0,1).
 Pemetaan temuan ke kontrol ISO/IEC 27001:2022 dilakukan secara berbasis 
 aturan (\textit{rule-based}) di dalam \texttt{iso\_mapper.py}. 
 Data diterima langsung sebagai objek Python \textit{in-memory} dari \texttt{main.py}, 
-tidak dibaca dari \textit{file} JSON. Pilihan desain berbasis aturan ini disengaja 
-agar hasilnya deterministik dan bisa diaudit, berbeda dari pendekatan berbasis AI yang hasilnya bisa berubah antar inferensi. Ada enam kontrol yang dipetakan, sebagaimana ditunjukkan pada Tabel \ref{tab:iso-mapping}.
+tidak dibaca dari \textit{file} JSON. Pendekatan berbasis aturan ini dipilih agar hasilnya deterministik dan bisa diaudit, berbeda dari pendekatan berbasis AI yang hasilnya bisa berubah antar inferensi. Ada enam kontrol yang dipetakan, sebagaimana ditunjukkan pada Tabel \ref{tab:iso-mapping}.
 
 \end{sloppypar}
 \begin{table}[htbp]
@@ -401,7 +400,7 @@ Semgrep: \textit{Path Traversal}/SSRF + PHPStan ERROR/WARNING \\
 
 \end{table}
 
-Status akhir setiap kontrol ditentukan berdasarkan ada tidaknya temuan terbuka setelah \textit{pipeline} selesai. \texttt{COMPLIANT} berarti tidak ada temuan yang dipetakan ke kontrol tersebut. \texttt{NON\_COMPLIANT} berarti ada temuan Semgrep aktif. \texttt{PARTIAL} berarti hanya ada temuan PHPStan tanpa temuan Semgrep. Perlu dicatat bahwa \texttt{COMPLIANT} pada A.5.17 dan A.8.24 bukan berarti kode bebas masalah secara absolut, melainkan \textit{ruleset} yang digunakan tidak menghasilkan temuan yang dipetakan ke kedua kontrol itu pada dataset ini.
+Status akhir setiap kontrol ditentukan berdasarkan ada tidaknya temuan terbuka setelah \textit{pipeline} selesai. \texttt{COMPLIANT} berarti tidak ada temuan yang dipetakan ke kontrol tersebut. \texttt{NON\_COMPLIANT} berarti ada temuan Semgrep aktif. \texttt{PARTIAL} berarti hanya ada temuan PHPStan tanpa temuan Semgrep. Status COMPLIANT pada A.5.17 dan A.8.24 tidak menjamin bahwa kode telah terbebas dari kerentanan secara mutlak; status tersebut sekadar menunjukkan bahwa \textit{ruleset} yang digunakan tidak menghasilkan temuan yang dipetakan ke kedua kontrol itu pada dataset ini.
 
 \subsection{Mekanisme Klasifikasi Temuan}
 
@@ -472,8 +471,7 @@ Kriptografi Lemah & A.8.24, A.8.28 & 6 \\
 
 \end{table}
 
-Pendekatan \textit{keyword matching} ini dipilih secara sengaja
-dibandingkan pendekatan berbasis AI karena tiga alasan. Pertama,
+Pendekatan \textit{keyword matching} ini dipilih dibandingkan pendekatan berbasis AI karena tiga alasan. Pertama,
 hasilnya deterministik: temuan yang sama selalu menghasilkan
 pemetaan yang sama tanpa variasi antar inferensi. Kedua, dapat
 diaudit secara langsung karena seluruh logika pemetaan tersimpan
@@ -535,8 +533,7 @@ berbeda dan dibahas secara empiris di Bab IV.
 \label{sec:data-privacy}
 
 Kode PHP dari FT UGM dan DTI UGM adalah aset institusi yang tidak 
-boleh dikirimkan ke layanan eksternal. Kendala inilah yang menentukan 
-arsitektur AI dalam penelitian ini. Daripada menggunakan API LLM 
+boleh dikirimkan ke layanan eksternal. Batasan privasi data ini menjadi landasan dalam merancang arsitektur AI pada penelitian ini. Alih-alih menggunakan API LLM
 berbasis \textit{cloud}, penelitian ini menggunakan Ollama sebagai \textit{runtime} lokal sehingga seluruh 
 inferensi terjadi di mesin pengembangan.
 
@@ -553,8 +550,8 @@ akses terhadap aset informasi sensitif.
 \section{Metode Pengujian dan Evaluasi}
 
 Pengujian dilakukan dengan pendekatan berbasis keluaran 
-(\textit{output-oriented evaluation}), dengan fokus pada hasil 
-setiap modul dibanding detail implementasi internalnya.
+(\textit{output-oriented evaluation}), dengan fokus pada hasil
+setiap modul dibandingkan dengan detail implementasi internalnya.
 Terdapat lima metrik utama:
 
 \begin{enumerate}
@@ -565,7 +562,8 @@ Terdapat lima metrik utama:
 keamanan hasil transformasi, tetapi dipilih sebagai metrik primer 
 karena dapat diverifikasi secara objektif dan otomatis.
 
-    \item \textbf{Perbedaan temuan keamanan}: Selisih jumlah temuan Semgrep antara \textit{pre-scan} dan \textit{post-scan}. Temuan baru setelah konversi tidak otomatis diinterpretasikan sebagai regresi keamanan; bisa jadi merupakan kerentanan laten yang sebelumnya tersembunyi dan baru terlihat setelah transformasi kode.
+    \item \textbf{Perbedaan temuan keamanan}: Selisih jumlah temuan Semgrep antara \textit{pre-scan} dan \textit{post-scan}. Temuan baru setelah konversi tidak otomatis diinterpretasikan sebagai regresi keamanan, tetapi
+    hal tersebut dapat mencerminkan kerentanan laten yang sebelumnya tersembunyi.
 
     \item \textbf{Performa model LLM}: Diukur menggunakan \textit{format compliance rate} (sekunder) dan \textit{syntax validity rate} (primer) sebagaimana dijelaskan dalam Subbab \ref{sec:metrik-evaluasi}.
 
