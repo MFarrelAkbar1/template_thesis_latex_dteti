@@ -98,6 +98,25 @@ dengan campuran logika bisnis, akses basis data, dan presentasi
 dalam satu basis kode \textit{framework}.
 \end{enumerate}
 
+\section{Keamanan dan Privasi Data}
+\label{sec:data-privacy}
+
+Kode PHP dari FT UGM dan DTI UGM adalah aset institusi yang tidak
+boleh dikirimkan ke layanan eksternal. Batasan privasi data ini menjadi landasan dalam merancang arsitektur AI pada penelitian ini. Alih-alih menggunakan API LLM
+berbasis \textit{cloud}, penelitian ini menggunakan Ollama sebagai \textit{runtime} lokal sehingga seluruh
+inferensi terjadi di mesin pengembangan.
+
+Tidak ada potongan kode sumber aplikasi yang dikirimkan ke
+layanan inferensi eksternal atau API LLM berbasis cloud.
+Seluruh proses analisis berlangsung secara statis: tidak ada koneksi
+ke basis data produksi FT UGM, tidak ada eksekusi kode PHP.
+Satu-satunya koneksi eksternal yang terjadi adalah panggilan ke
+Packagist API oleh modul \texttt{composer\_analyzer.py} untuk
+memeriksa metadata versi dependensi, bukan kode sumber aplikasi.
+Keputusan ini sejalan dengan ISO/IEC 27001:2022
+yang mensyaratkan pemisahan lingkungan pengembangan dan pengendalian
+akses terhadap aset informasi sensitif.
+
 \section{Manfaat Penelitian}
 
 \subsection{Manfaat Akademis}
@@ -114,7 +133,7 @@ Desain modular \textit{platform} memungkinkan pengembangan lebih lanjut oleh pen
 
 Skripsi ini terdiri dari lima bab.
 
-\noindent \textbf{Bab I: Pendahuluan} memaparkan latar belakang masalah, rumusan masalah, tujuan penelitian, batasan penelitian, manfaat penelitian, dan sistematika penulisan.
+\noindent \textbf{Bab I: Pendahuluan} memaparkan latar belakang masalah, rumusan masalah, tujuan penelitian, batasan penelitian, keamanan dan privasi data, manfaat penelitian, dan sistematika penulisan.
 
 \noindent \textbf{Bab II: Tinjauan Pustaka dan Landasan Teoritis} membahas penelitian-penelitian sebelumnya yang relevan dan kerangka teoritis, mencakup perubahan versi PHP, standar ISO/IEC 27001:2022, metodologi \textit{secure coding}, analisis kode berbasis LLM, serta alat-alat yang digunakan: Rector, Semgrep, PHPStan, dan Ollama.
 

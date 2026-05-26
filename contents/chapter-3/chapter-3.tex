@@ -108,7 +108,7 @@ Gambar \ref{fig:alur-penelitian} menunjukkan alur penelitian yang terdiri dari t
 
     \centering
 
-    \includegraphics[width=.8\textwidth]{contents/chapter-3/alur-penelitian2.png}
+    \includegraphics[width=0.7\textwidth]{contents/chapter-3/alur-penelitian2.png}
 
     \caption{Alur penelitian dengan model prototipe}
 
@@ -174,33 +174,35 @@ Modul ini menggunakan Rector untuk transformasi kode PHP berbasis AST. Argumen C
 \label{tab:rector-levelset}
 \begin{tabularx}{\textwidth}{|l|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
 \hline
-\textbf{Nilai \texttt{--target-php}} & \textbf{LevelSetList yang diterapkan} & \textbf{Cakupan rule kumulatif} \\
+\textbf{Nilai \texttt{--target-php}} & \textbf{Chain \textit{LevelSetList} yang diterapkan} & \textbf{Cakupan \textit{rule} kumulatif} \\
 \hline \hline
 
-\texttt{7.4} & \texttt{UP\_TO\_PHP\_74} & PHP 5.2, 5.3, 5.4, 5.5, 5.6, 7.0, 7.1, 7.2, 7.3, 7.4 \\
+\texttt{7.4} & \texttt{UP\_TO\_PHP\_53} s.d.\ \texttt{UP\_TO\_PHP\_74} & PHP 5.3, 5.4, 5.5, 5.6, 7.0, 7.1, 7.2, 7.3, 7.4 \\
 
 \hline
 
-\texttt{8.0} & \texttt{UP\_TO\_PHP\_80} & Semua rule 7.4 + PHP 8.0 \\
+\texttt{8.0} & \texttt{UP\_TO\_PHP\_53} s.d.\ \texttt{UP\_TO\_PHP\_80} & Semua \textit{rule} 7.4 + PHP 8.0 \\
 
 \hline
 
-\texttt{8.1} & \texttt{UP\_TO\_PHP\_81} & Semua rule 8.0 + PHP 8.1 \\
+\texttt{8.1} & \texttt{UP\_TO\_PHP\_53} s.d.\ \texttt{UP\_TO\_PHP\_81} & Semua \textit{rule} 8.0 + PHP 8.1 \\
 
 \hline
 
-\texttt{8.2} & \texttt{UP\_TO\_PHP\_82} & Semua rule 8.1 + PHP 8.2 \\
+\texttt{8.2} & \texttt{UP\_TO\_PHP\_53} s.d.\ \texttt{UP\_TO\_PHP\_82} & Semua \textit{rule} 8.1 + PHP 8.2 \\
 
 \hline
 
-\texttt{8.3} & \texttt{UP\_TO\_PHP\_83} & Semua rule 8.2 + PHP 8.3 \\
+\texttt{8.3}$^{*}$ & \texttt{UP\_TO\_PHP\_53} s.d.\ \texttt{UP\_TO\_PHP\_83} & Semua \textit{rule} 8.2 + PHP 8.3 \\
 
 \hline
 
 \end{tabularx}
-
+\vspace{0.3em}
+\begin{minipage}{\textwidth}
+\end{minipage}
 \end{table}
-
+Target yang digunakan dalam penelitian ini. Selain \textit{level sets}, \textit{pipeline} menambahkan \texttt{SetList::CODE\_QUALITY}, \texttt{DEAD\_CODE}, \texttt{EARLY\_RETURN}, dan \texttt{TYPE\_DECLARATION} untuk semua nilai target.
 Mengingat \textit{ruleset} yang digunakan bersifat kumulatif, kode PHP 5.x dapat diproses langsung menuju PHP 8.3 dalam satu langkah. 
 Jenis-jenis transformasi yang ditangani Rector dan
 keterbatasan Rector terhadap pola semantik seperti \texttt{mysql\_*()}
@@ -243,7 +245,6 @@ tanpa menghentikan \textit{pipeline}. Setiap dependensi diklasifikasikan
 sebagai \texttt{SAFE} (versi yang dikonfigurasi mendukung PHP 8.x secara 
 deklaratif) atau \texttt{MANUAL REVIEW} (kompatibilitas tidak dapat 
 diverifikasi secara otomatis).
-\newpage
 \section{Alur Data Pipeline}
 
 \begin{figure}[htbp]
@@ -529,24 +530,6 @@ kualitas kode yang buruk. Sebaliknya, model dengan FCR rendah namun
 SVR tinggi mengabaikan instruksi format tetapi menghasilkan kode
 berkualitas baik. Kedua kondisi ini punya implikasi praktis yang
 berbeda dan dibahas secara empiris di Bab IV.
-\section{Keamanan dan Privasi Data}
-\label{sec:data-privacy}
-
-Kode PHP dari FT UGM dan DTI UGM adalah aset institusi yang tidak 
-boleh dikirimkan ke layanan eksternal. Batasan privasi data ini menjadi landasan dalam merancang arsitektur AI pada penelitian ini. Alih-alih menggunakan API LLM
-berbasis \textit{cloud}, penelitian ini menggunakan Ollama sebagai \textit{runtime} lokal sehingga seluruh 
-inferensi terjadi di mesin pengembangan.
-
-Tidak ada potongan kode sumber aplikasi yang dikirimkan ke
-layanan inferensi eksternal atau API LLM berbasis cloud.
-Seluruh proses analisis berlangsung secara statis: tidak ada koneksi 
-ke basis data produksi FT UGM, tidak ada eksekusi kode PHP. 
-Satu-satunya koneksi eksternal yang terjadi adalah panggilan ke 
-Packagist API oleh modul \texttt{composer\_analyzer.py} untuk 
-memeriksa metadata versi dependensi, bukan kode sumber aplikasi. 
-Keputusan ini sejalan dengan ISO/IEC 27001:2022 
-yang mensyaratkan pemisahan lingkungan pengembangan dan pengendalian 
-akses terhadap aset informasi sensitif.
 \section{Metode Pengujian dan Evaluasi}
 
 Pengujian dilakukan dengan pendekatan berbasis keluaran 

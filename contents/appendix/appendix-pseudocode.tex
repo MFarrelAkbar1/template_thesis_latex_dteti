@@ -192,15 +192,15 @@ DATA STRUCTURE ScanFinding:
     // Satu temuan kerentanan dari hasil Semgrep
     rule_id, file_path, line_start, line_end
     message, severity // ERROR | WARNING | INFO
-    code_snippet      // potongan kode yang bermasalah
-    vuln_type        // SQL Injection | XSS | Deprecated Function | ...
-    iso_controls     // kontrol ISO terkait, e.g. ["A.8.28", "A.8.26"]
-    priority         // 1..6 (1 = tertinggi / paling kritis)
+    code_snippet  // potongan kode yang bermasalah
+    vuln_type     // SQL Injection | XSS | Deprecated Function | ...
+    iso_controls  // kontrol ISO terkait, e.g. ["A.8.28", "A.8.26"]
+    priority      // 1..6 (1 = tertinggi / paling kritis)
 
 DATA STRUCTURE ScanResult:
-    findings   : list of ScanFinding // diurutkan berdasarkan prioritas
-    summary    : ScanSummary         // jumlah total per jenis/severity
-    raw_output : JSON dict           // keluaran mentah dari Semgrep
+  findings   : list of ScanFinding // diurutkan berdasarkan prioritas
+  summary    : ScanSummary         // jumlah total per jenis/severity
+  raw_output : JSON dict           // keluaran mentah dari Semgrep
 
 CONSTANT VULNERABILITY_RULES:
     // Pemetaan jenis kerentanan ke prioritas dan kontrol ISO
@@ -250,13 +250,15 @@ FUNCTION classify(rule_id, message):
 // Cocokkan ID aturan dan pesan ke dalam VULNERABILITY_RULES
   haystack <- lowercase(rule_id + message[:100])
 
-  FOR each (keywords, label, controls, priority) in VULNERABILITY_RULES DO
+  FOR each (keywords, label, controls, priority) in 
+            VULNERABILITY_RULES DO
         IF any keyword in haystack THEN
             RETURN (label, controls, priority)
         END IF
     END FOR
 
-    RETURN ("Other", ["A.8.28"], priority=99)  // kategori tidak dikenal
+    RETURN ("Other", ["A.8.28"], priority=99)  
+    // kategori tidak dikenal
 END FUNCTION
 \end{lstlisting}
 
@@ -305,13 +307,14 @@ CONSTANT QUALITY_SETS:
 FUNCTION run_conversion(input_path, output_path, target_version):
     php_files <- collect_all_php_files(input_path)
 
-    // Step 1: Deteksi versi PHP per file dari pola kode yang digunakan
+// Step 1: Deteksi versi PHP per file dari pola kode yang digunakan
     version_map <- {}
     FOR each file in php_files DO
         version_map[file] <- detect_php_version(file)
     END FOR
 
-    // Step 2: Pilih rantai aturan Rector sesuai versi PHP yang ditemukan
+// Step 2: Pilih rantai aturan Rector sesuai versi PHP yang 
+    ditemukan
     IF PHP5 in version_map.values() THEN
         level_sets <- LEVEL_SETS_PHP5 truncated at target_version
     ELSE
@@ -319,25 +322,28 @@ FUNCTION run_conversion(input_path, output_path, target_version):
     END IF
     all_sets <- level_sets + QUALITY_SETS
 
-    // Step 3: Salin input/ ke output/ agar input asli tidak pernah diubah
+// Step 3: Salin input/ ke output/ agar input asli tidak pernah 
+    diubah
     copy_tree(input_path, output_path)
 
-    // Step 4: Catat hash SHA-256 semua file SEBELUM Rector dijalankan
+// Step 4: Catat hash SHA-256 semua file SEBELUM Rector dijalankan
     pre_hashes <- snapshot_sha256(output_path)
 
-    // Step 5: Tulis konfigurasi Rector sementara ke direktori temp sistem
+// Step 5: Tulis konfigurasi Rector sementara ke direktori temp 
+    sistem
     config_path <- write_rector_config(output_path, all_sets)
 
-    // Step 6: Jalankan Rector sebagai subprocess
-    (exit_code, stdout, stderr) <- invoke_rector(config_path, timeout=600s)
+// Step 6: Jalankan Rector sebagai subprocess
+    (exit_code, stdout, stderr) <- invoke_rector(config_path, 
+    timeout=600s)
 
-    // Step 7: Catat hash SHA-256 semua file SESUDAH Rector
+// Step 7: Catat hash SHA-256 semua file SESUDAH Rector
     post_hashes <- snapshot_sha256(output_path)
 
-    // Step 8: Hapus konfigurasi sementara
+// Step 8: Hapus konfigurasi sementara
     delete(config_path)
 
-    // Step 9: Tentukan status tiap file dengan membandingkan hash
+// Step 9: Tentukan status tiap file dengan membandingkan hash
     rector_data <- parse_rector_json(stdout)
     FOR each source_file in php_files DO
         pre  <- pre_hashes[output_copy_of(source_file)]
@@ -348,7 +354,8 @@ FUNCTION run_conversion(input_path, output_path, target_version):
         ELSE IF pre != post THEN
             status <- CONVERTED  // file berhasil dikonversi
         ELSE
-            status <- SKIPPED    // tidak ada perubahan yang perlu diterapkan
+            status <- SKIPPED    // tidak ada perubahan yang perlu 
+            diterapkan
         END IF
 
         files.append(ConversionFile(source_file, status, ...))
@@ -401,7 +408,8 @@ DATA STRUCTURE AnalysisError:
     iso_controls        // kontrol ISO yang relevan
 
 DATA STRUCTURE AnalysisResult:
-    errors     : list of AnalysisError  // diurutkan per file lalu per baris
+    errors     : list of AnalysisError  // diurutkan per file lalu 
+                 per baris
     summary    : AnalysisSummary
     raw_output : JSON dict
 
@@ -418,7 +426,7 @@ FUNCTION run_analysis(target_path, level, php_version):
     phpstan_exe <- find_phpstan(vendor/bin/ OR global PATH)
 
     cmd <- build_phpstan_command(target_path, level, php_version,
-                                 "--error-format=json", "--no-progress")
+                            "--error-format=json", "--no-progress")
     (exit_code, stdout, stderr) <- invoke_subprocess(cmd, timeout=300s)
 
     raw_json <- parse_phpstan_json(stdout)
@@ -455,7 +463,8 @@ FUNCTION classify_error(message):
     lower_msg <- lowercase(message)
 
     // Kode mati atau jalur eksekusi yang tidak dapat dicapai
-    IF "dead code" OR "unreachable" OR "never returns" in lower_msg THEN
+    IF "dead code" OR "unreachable" OR "never returns" 
+        in lower_msg THEN
         RETURN ("WARNING", ["A.8.25"])
     END IF
 
@@ -465,11 +474,12 @@ FUNCTION classify_error(message):
     END IF
 
     // Ketidakcocokan tipe data atau nilai null yang tidak ditangani
-    IF "type" OR "null" OR "incompatible" OR "expects" in lower_msg THEN
+  IF "type" OR "null" OR "incompatible" OR "expects" in lower_msg THEN
         RETURN ("ERROR", ["A.8.28"])
     END IF
 
-    RETURN ("ERROR", ["A.8.28"])   // fallback untuk pesan yang tidak dikenal
+    RETURN ("ERROR", ["A.8.28"])   
+    // fallback untuk pesan yang tidak dikenal
 END FUNCTION
 \end{lstlisting}
 
@@ -508,7 +518,8 @@ CONSTANT MAX_CODE_CHARS: 2000
 
 FUNCTION run_ai_analysis(findings, model):
     // Saring hanya temuan yang cukup kritis untuk dianalisis AI
-    eligible <- [f for f in findings WHERE f.priority <= PRIORITY_THRESHOLD]
+    eligible <- [f for f in findings WHERE f.priority <= 
+    PRIORITY_THRESHOLD]
 
     // Pastikan server Ollama lokal sedang berjalan
     IF Ollama NOT reachable at localhost:11434 THEN
@@ -536,11 +547,11 @@ FUNCTION analyze_snippet(code, vuln_type, iso_controls,
     // Kode pendek (<= 3 baris): gunakan Fill-in-Middle (FIM) prompt
     // Kode lebih panjang: gunakan chat biasa
     IF lines(truncated) <= 3 THEN
-        prompt   <- build_fim_prompt(truncated, vuln_type, iso_controls)
-        fim_used <- TRUE
+      prompt   <- build_fim_prompt(truncated, vuln_type, iso_controls)
+      fim_used <- TRUE
     ELSE
-        messages <- build_chat_messages(truncated, vuln_type, iso_controls)
-        fim_used <- FALSE
+    messages <- build_chat_messages(truncated, vuln_type, iso_controls)
+    fim_used <- FALSE
     END IF
 
     // temperature=0.1: output deterministik, minim variasi acak
@@ -553,7 +564,8 @@ END FUNCTION
 
 FUNCTION build_chat_messages(code, vuln_type, iso_controls):
     // Kondisi A (standar): prompt identik untuk semua model
-    system_msg <- "You are a PHP security expert and migration specialist..."
+   system_msg <- "You are a PHP security and migration expert
+                   controls [{iso_controls}]."
     user_msg   <- "TASK: Analyze [{vuln_type}] vulnerability...
                    VULNERABLE CODE: (kode PHP disisipkan di sini)
                    1. Explain the vulnerability.
@@ -563,7 +575,8 @@ FUNCTION build_chat_messages(code, vuln_type, iso_controls):
 END FUNCTION
 
 
-FUNCTION build_optimized_chat_messages(code, vuln_type, iso_controls, model):
+FUNCTION build_optimized_chat_messages(code, vuln_type, iso_controls, 
+model):
     // Kondisi B: prompt dioptimalkan khusus per model
     IF model == "qwen2.5-coder:7b" THEN
         // format diperlunak; CONFIDENCE tidak diwajibkan
@@ -588,10 +601,12 @@ FUNCTION parse_response(raw_text, original_code, iso_controls, ...):
     END IF
 
     // --- Ekstraksi penjelasan ---
-    // Coba tag XML <explanation>, lalu "1. EXPLANATION:", lalu teks bebas
+    // Coba tag XML <explanation>, lalu "1. EXPLANATION:", lalu 
+       teks bebas
 
     // --- Ekstraksi kode perbaikan ---
-    // Coba tag XML <fix>, lalu "2. FIXED CODE:", lalu blok ```php ... ```
+    // Coba tag XML <fix>, 
+    // lalu "2. FIXED CODE:", lalu blok ```php ... ```
 
     // --- Ekstraksi skor kepercayaan (confidence) ---
     // Coba tag <confidence>N</confidence>
@@ -609,9 +624,11 @@ END FUNCTION
 FUNCTION run_llm_comparison(findings, models, runs_per_finding,
                              prompt_mode, reports_dir):
     // Saring temuan yang memenuhi ambang prioritas
-    eligible <- [f for f in findings WHERE f.priority <= PRIORITY_THRESHOLD]
+    eligible <- [f for f in findings WHERE 
+                f.priority <= PRIORITY_THRESHOLD]
 
-    report <- {models_compared, runs_per_finding, prompt_mode, findings: []}
+    report <- {models_compared, runs_per_finding, prompt_mode, 
+               findings: []}
 
     FOR each model in models DO
         IF Ollama NOT reachable THEN
@@ -621,16 +638,19 @@ FUNCTION run_llm_comparison(findings, models, runs_per_finding,
 
         FOR each finding in eligible DO
             IF prompt_mode == "standard" THEN
-                messages <- build_chat_messages(finding)   // Kondisi A
+             // Kondisi A: prompt identik untuk semua model
+                messages <- build_chat_messages(finding)
             ELSE
-                // Kondisi B: prompt dioptimalkan per model
-                messages <- build_optimized_chat_messages(finding, model)
+               // Kondisi B: prompt dioptimalkan per model
+               messages <- build_optimized_chat_messages
+                           (finding, model)
             END IF
 
             confidences <- []
             times       <- []
             FOR run_index = 1 to runs_per_finding DO
-                (raw_text, elapsed) <- call_ollama_chat_timed(messages, model)
+                (raw_text, elapsed) <- call_ollama_chat_timed
+                                       (messages, model)
                 confidence <- extract_confidence(raw_text)
                 format_ok  <- check_format_valid(raw_text)
                 confidences.append(confidence)
@@ -639,11 +659,11 @@ FUNCTION run_llm_comparison(findings, models, runs_per_finding,
 
             // Statistik agregat per temuan per model
             finding_result <- {
-                confidence_mean          : mean(confidences),
-                confidence_variance      : variance(confidences),
-                confidence_stdev         : stdev(confidences),
-                format_compliance_rate   : count(format_ok) / runs_per_finding,
-                mean_inference_time_sec  : mean(times)
+            confidence_mean       : mean(confidences),
+            confidence_variance   : variance(confidences),
+            confidence_stdev      : stdev(confidences),
+            format_compliance_rate: count(format_ok)/runs_per_finding,
+            mean_inference_time_sec: mean(times)
             }
             report.append(finding_result)
         END FOR
@@ -686,11 +706,12 @@ DATA STRUCTURE ISOReport:
     generated_at      : waktu laporan dibuat
 
 CONSTANT CONTROL_REGISTRY:
-    A.5.17  Authentication Information       (pengelolaan kredensial)
-    A.8.24  Use of Cryptography              (penggunaan enkripsi)
-    A.8.25  Secure Development Lifecycle     (siklus pengembangan aman)
-    A.8.26  Application Security Requirements (persyaratan keamanan aplikasi)
-    A.8.28  Secure Coding                    (praktik penulisan kode aman)
+    A.5.17  Authentication Information (pengelolaan kredensial)
+    A.8.24  Use of Cryptography (penggunaan enkripsi)
+    A.8.25  Secure Development Lifecycle (siklus pengembangan aman)
+    A.8.26  Application Security Requirements 
+            (persyaratan keamanan aplikasi)
+    A.8.28  Secure Coding (praktik penulisan kode aman)
     A.8.29  Security Testing in Development  (pengujian keamanan)
 
 STATUS RULES:
@@ -699,7 +720,8 @@ STATUS RULES:
     COMPLIANT     : tidak ada temuan sama sekali pada kontrol ini
 
 
-FUNCTION run_iso_mapping(scan_result, analysis_result, ai_recs, output_path):
+FUNCTION run_iso_mapping(scan_result, analysis_result, ai_recs, 
+                         output_path):
     // Step 1: Inisialisasi wadah temuan untuk setiap kontrol
     findings_map <- {}
     FOR each control in CONTROL_REGISTRY DO
@@ -709,7 +731,8 @@ FUNCTION run_iso_mapping(scan_result, analysis_result, ai_recs, output_path):
     // Step 2: Masukkan temuan Semgrep ke peta kontrol
     IF scan_result != NULL THEN
         FOR each finding in scan_result.findings DO
-            // INFO dinaikkan ke WARNING agar tidak ada status COMPLIANT palsu
+            // INFO dinaikkan ke WARNING agar tidak ada status 
+            // COMPLIANT palsu
             severity <- normalize(finding.severity)
             evidence <- "[Semgrep][vuln_type] file:baris -- pesan"
             FOR each ctrl in finding.iso_controls DO
@@ -732,7 +755,8 @@ FUNCTION run_iso_mapping(scan_result, analysis_result, ai_recs, output_path):
     // Step 4: Kumpulkan bukti rekomendasi AI (hanya informatif)
     ai_evidence_map <- {}
     FOR each rec in ai_recs DO
-        evidence <- "[AI/model][vuln_type] file:baris -- fix (confidence)"
+        evidence <- "[AI/model][vuln_type] file:baris -- fix 
+                     (confidence)"
         FOR each ctrl in rec.iso_controls DO
             ai_evidence_map[ctrl].append(evidence)
         END FOR
@@ -747,10 +771,11 @@ FUNCTION run_iso_mapping(scan_result, analysis_result, ai_recs, output_path):
         // Gabungkan bukti ERROR + WARNING + AI, batasi 30 entri
         evidence <- (ERROR entries + WARNING entries + ai_evs)[:30]
         controls[ctrl_id] <- ISOControl(ctrl_id, title, description,
-                                        status, count(entries), evidence)
+                                status, count(entries), evidence)
     END FOR
 
-    // Step 6: Status keseluruhan = status terburuk di antara semua kontrol
+    // Step 6: Status keseluruhan = status terburuk di 
+    // antara semua kontrol
     overall_status <- max(ctrl.status for ctrl in controls)
 
     report <- ISOReport(controls, overall_status,
@@ -787,7 +812,7 @@ secara manual karena datanya belum tersedia (\textit{manual\_review}).
 PROGRAM: ComposerAnalyzer
 
 DATA STRUCTURE DependencyRecommendation:
-    package                     // nama library, e.g. "guzzlehttp/guzzle"
+    package                // nama library, e.g. "guzzlehttp/guzzle"
     current_version_constraint  // versi yang digunakan, e.g. "^6.0"
     status    // "safe" | "upgrade" | "replace" | "manual_review"
     suggestion  // teks rekomendasi aksi yang harus dilakukan
@@ -844,13 +869,13 @@ FUNCTION evaluate_package(package, version, target_php):
         (action, suggestion, php8_safe) <- KNOWN_PACKAGES[package]
         status <- "safe" IF php8_safe ELSE action
     ELSE
-        // Library tidak ada dalam basis data: minta pemeriksaan manual
+    // Library tidak ada dalam basis data: minta pemeriksaan manual
         status     <- "manual_review"
         suggestion <- "Tidak ada data PHP 8.x untuk paket ini. "
                     + "Periksa secara manual."
     END IF
 
-    RETURN DependencyRecommendation(package, version, status, suggestion)
+RETURN DependencyRecommendation(package, version, status, suggestion)
 END FUNCTION
 \end{lstlisting}
 

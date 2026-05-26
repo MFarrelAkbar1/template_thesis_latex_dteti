@@ -52,7 +52,7 @@ Rector dijalankan terhadap 245 \textit{file} PHP dari dataset FT UGM dengan targ
     \caption{Ringkasan hasil konversi Rector terhadap 245 \textit{file} PHP dataset FT UGM}
     \label{fig:rector-conversion}
 \end{figure}
-
+\newpage
 Karena dataset mengandung campuran kode PHP 5.x dan PHP 7.x, Rector menerapkan rantai \textit{ruleset} kumulatif dari \texttt{UP\_TO\_PHP\_53} hingga \texttt{UP\_TO\_PHP\_83} secara otomatis dalam satu proses. Hal ini membuktikan bahwa \textit{pipeline} dapat menangani kode dari berbagai era PHP sekaligus tanpa konfigurasi tambahan.
 
 \subsubsection{Contoh Transformasi Rector}
@@ -206,7 +206,7 @@ Angka PHPStan yang tinggi justru menunjukkan manfaat nyata dari komponen validas
 
 Berdasarkan pemetaan yang dilakukan oleh \texttt{iso\_mapper.py}, status kepatuhan terhadap enam kontrol ISO/IEC 27001:2022 yang dipetakan adalah sebagaimana ditunjukkan pada Tabel \ref{tab:iso-status}.
 % Use fixed column widths to avoid "Column widths have changed" warnings from longtable
-\begin{longtable}{|l|p{3.5cm}|p{6cm}|p{2.5cm}|}
+\begin{longtable}{|l|p{2.5cm}|p{6cm}|p{3cm}|}
 \caption{Status kepatuhan ISO/IEC 27001:2022 hasil \textit{pipeline} pada dataset FT UGM}
 \label{tab:iso-status} \\
 \hline
@@ -240,22 +240,22 @@ Tidak ada temuan penggunaan \texttt{md5()}/\texttt{sha1()} untuk kata sandi &
 A.8.25 & \textit{Secure Development Lifecycle} &
 1.185 temuan PHPStan kategori \textit{undefined}/\textit{not found}
 yang dipetakan ke kontrol ini &
-{\footnotesize \texttt{NON\_COMPLIANT}} \\
+{\footnotesize\ttfamily NON\_COMPLIANT} \\
 \hline
 
 A.8.26 & \textit{Application Security Requirements} &
 1 temuan SQL Injection dari Semgrep &
-{\footnotesize \texttt{NON\_COMPLIANT}} \\
+{\footnotesize\ttfamily NON\_COMPLIANT} \\
 \hline
 
 A.8.28 & \textit{Secure Coding} &
 Temuan Semgrep aktif dan 2.469 ERROR PHPStan &
-{\footnotesize \texttt{NON\_COMPLIANT}} \\
+{\footnotesize\ttfamily NON\_COMPLIANT} \\
 \hline
 
 A.8.29 & \textit{Security Testing in Development} &
-10 temuan SSRF dari Semgrep masih terbuka &
-{\footnotesize \texttt{NON\_COMPLIANT}} \\
+\begin{minipage}[t]{6cm}10 temuan SSRF dari Semgrep masih terbuka\end{minipage} &
+{\footnotesize\ttfamily NON\_COMPLIANT} \\
 \end{longtable}
 Status keseluruhan adalah \texttt{NON\_COMPLIANT}. Angka temuan per kontrol pada tabel ini dapat melebihi total temuan unik (2.790) karena satu temuan PHPStan dapat dipetakan ke lebih dari satu kontrol ISO sekaligus. Hasil ini sejalan dengan kondisi kode warisan yang dianalisis, serta secara objektif merepresentasikan postur keamanan aplikasi sebelum tahap remediasi manual.
 
@@ -302,7 +302,7 @@ Gambar \ref{fig:syntax-validity-a} menunjukkan \textit{syntax validity rate} dan
 Hasilnya memperlihatkan gambaran yang berlawanan dengan metrik format. CodeLlama yang memiliki \textit{format compliance} 100\% ternyata hanya menghasilkan kode PHP yang \textit{valid} secara sintaksis pada 
 9 dari 33 blok kode yang berhasil diekstraksi 
 ($SVR = 27{,}3\%$). Hal tersebut berarti 24 dari 33 blok kode CodeLlama mengandung \textit{parse error}.
-
+\newpage
 Sebaliknya, Qwen2.5-Coder yang memiliki \textit{format compliance} 0\% berhasil mengekstraksi blok kode PHP dari 32 dari 33 percobaan (97\%), dan seluruh 32 blok kode tersebut lolos pemeriksaan \texttt{php -l} 
 ($SVR = 100\%$). Model ini mengabaikan instruksi format sepenuhnya, tetapi secara konsisten menghasilkan kode yang berkualitas baik.
 
@@ -346,7 +346,7 @@ Khusus untuk Qwen2.5-Coder, ketiadaan skor ini tidak mengindikasikan ketidakmamp
 melainkan mencerminkan karakteristik respons model yang 
 mengabaikan instruksi format sambil tetap mengerjakan tugas utama
 dengan baik. Waktu inferensi Qwen2.5-Coder (10,0 detik) adalah 
-yang tertinggi ddibandingkan model lain, selaras dengan respons yang 
+yang tertinggi dibandingkan model lain, selaras dengan respons yang 
 lebih panjang dan detail yang dihasilkannya.
 
 \begin{lstlisting}[style=promptstyle]
@@ -464,7 +464,6 @@ kelima model pada Kondisi B.
     \caption{Statistik lengkap komparasi kelima model LLM pada Kondisi B}
     \label{fig:stats-table-b}
 \end{figure}
-\newpage
 DeepSeek Coder mencatat peningkatan \textit{mean confidence} yang 
 paling mencolok, dari $\bar{C}_m = 0{,}132$ pada Kondisi A menjadi 
 $\bar{C}_m = 0{,}588$ pada Kondisi B. 
@@ -778,7 +777,7 @@ pada 12 \textit{file} tersebut.
     dari \texttt{application/}}
     \label{fig:validation-sampling}
 \end{figure}
-
+\newpage
 Pada kedua metrik biner, keluaran Rector dan referensi LLM 
 mencapai hasil yang identik: \textit{syntax validity} 100\% 
 dan \textit{deprecated removed} 100\%. Hasil ini mengkonfirmasi 
@@ -792,13 +791,12 @@ Rector dan referensi LLM.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.67\textwidth]{contents/chapter-4/validation/validation_accuracy_qwen_2_similarity.png}
+    \includegraphics[width=0.65\textwidth]{contents/chapter-4/validation/validation_accuracy_qwen_2_similarity.png}
     \caption{Distribusi \textit{similarity score} antara 
     keluaran Rector dan referensi LLM pada 12 \textit{file} 
     sampel (\textit{line-level SequenceMatcher})}
     \label{fig:validation-similarity}
 \end{figure}
-
 \textit{Similarity score} dihitung menggunakan 
 \textit{line-level SequenceMatcher} yang mengukur proporsi 
 baris yang identik antara dua versi kode. Rata-rata 
@@ -892,9 +890,8 @@ kegunaan praktis model dalam konteks ini.
 
 Studi kasus kedua menggunakan kode sumber aplikasi 
 \textit{Computer-Based Test} (CBT) milik Direktorat Teknologi 
-Informasi (DTI) Universitas Gadjah Mada. Aplikasi ini dibangun 
-di atas \textit{framework} CodeIgniter 3 dengan persyaratan 
-versi PHP $\geq$ 7.0. \textit{Pipeline} dijalankan terhadap 
+Informasi (DTI) Universitas Gadjah Mada. Aplikasi ini dibangun di atas framework CodeIgniter 3 
+dengan basis kode PHP 5.6/7.x. \textit{Pipeline} dijalankan terhadap 
 seluruh direktori repositori secara penuh (\textit{full scope}), 
 mencakup direktori \texttt{application/} untuk kode aplikasi 
 kustom maupun direktori \texttt{system/} untuk kode 
@@ -919,25 +916,15 @@ versi PHP 8.3. Dari jumlah tersebut, 299 \textit{file} berhasil
 dikonversi, 25 \textit{file} dilewati (\textit{skipped}), dan 
 2 \textit{file} gagal diproses. Tingkat konversi keseluruhan 
 ($CR = 91{,}7\%$), sebagaimana ditunjukkan pada 
-Gambar~\ref{fig:rector-bar-dti} dan 
-Gambar~\ref{fig:rector-pie-dti}.
+Gambar~\ref{fig:rector-bar-pie-dti}.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.65\textwidth]{contents/chapter-4/dti/pipeline_chart_cbt_qwen_2a_rector_bar.png}
-    \caption{Ringkasan hasil konversi Rector terhadap 326 
-    \textit{file} PHP dataset CBT DTI UGM (diagram batang)}
-    \label{fig:rector-bar-dti}
+    \includegraphics[width=1\textwidth]{contents/chapter-4/dti/pipeline_chart_cbt_qwen_2_rector_combined.png}
+    \caption{Ringkasan hasil konversi Rector terhadap 326 \textit{file} PHP dataset CBT DTI UGM dan Proporsi hasil konversi Rector (diagram lingkaran) berdasarkan jumlah \textit{file} yang berhasil dikonversi, dilewati, dan gagal}
+    \label{fig:rector-bar-pie-dti}
 \end{figure}
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.5\textwidth]{contents/chapter-4/dti/pipeline_chart_cbt_qwen_2b_rector_pie.png}
-    \caption{Proporsi hasil konversi Rector dataset CBT DTI UGM 
-    (diagram lingkaran)}
-    \label{fig:rector-pie-dti}
-\end{figure}
-\newpage
 Tingkat konversi yang lebih rendah dibandingkan dengan studi kasus FT UGM 
 (91,7\% vs 97,6\%) disebabkan oleh proporsi \textit{file} yang 
 dilewati yang lebih besar: 25 dari 326 \textit{file} (7,7\%) 
@@ -1051,7 +1038,7 @@ konversi di direktori \texttt{output/} dengan target PHP 8.3.
 Hasilnya adalah 2.354 temuan. Di antara temuan tersebut, sekitar 318
 merupakan \textit{false positive} dari \textit{framework} CodeIgniter 3
 yang timbul karena PHPStan tidak dapat menelusuri \textit{magic property}
-dan fungsi \textit{helper} yang diinjeksi secara dinamis — konsisten dengan
+dan fungsi \textit{helper} yang diinjeksi secara dinamis, konsisten dengan
 354 \textit{noise} CI3 yang teridentifikasi pada dataset FT UGM. Distribusi temuan berdasarkan
 kontrol ISO/IEC 27001:2022 ditunjukkan pada Gambar~\ref{fig:phpstan-iso-dti}.
 
@@ -1062,7 +1049,6 @@ kontrol ISO/IEC 27001:2022 ditunjukkan pada Gambar~\ref{fig:phpstan-iso-dti}.
     ISO/IEC 27001:2022 Annex A pada dataset CBT DTI UGM}
     \label{fig:phpstan-iso-dti}
 \end{figure}
-\newpage
 Sebagaimana pada studi kasus FT UGM, mayoritas temuan PHPStan 
 pada dataset CBT DTI bersumber dari keterbatasan PHPStan dalam 
 memahami arsitektur CodeIgniter 3.x. PHPStan tidak dapat 
@@ -1095,7 +1081,7 @@ Berdasarkan pemetaan yang dilakukan oleh \texttt{iso\_mapper.py},
 status kepatuhan terhadap enam kontrol ISO/IEC 27001:2022 yang 
 dipetakan adalah sebagaimana ditunjukkan pada 
 Tabel~\ref{tab:iso-status-dti}.
-\begin{longtable}{|l|p{3.5cm}|p{6cm}|p{2.5cm}|}
+\begin{longtable}{|l|p{3cm}|p{6cm}|p{3cm}|}
 \caption{Status kepatuhan ISO/IEC 27001:2022 hasil 
 \textit{pipeline} pada dataset CBT DTI UGM}
 \label{tab:iso-status-dti} \\
@@ -1263,7 +1249,7 @@ sebagaimana dibahas pada subbab sebelumnya.
 Jumlah \textit{error} yang lebih tinggi pada FT UGM, 
 meskipun ukuran datasetnya lebih kecil (245 vs 326 \textit{file}), 
 disebabkan oleh penggunaan dependensi pihak ketiga yang lebih 
-beragam — PHPStan tidak dapat me-\textit{resolve} kelas-kelas 
+beragam, PHPStan tidak dapat me-\textit{resolve} kelas-kelas 
 seperti \texttt{PhpOffice\textbackslash PhpSpreadsheet} dan 
 \texttt{Dotenv\textbackslash Dotenv} karena dependensi tidak diinstal secara penuh di lingkungan analisis.
 
