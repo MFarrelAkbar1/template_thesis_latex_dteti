@@ -307,10 +307,10 @@ Sebaliknya, Qwen2.5-Coder yang memiliki \textit{format compliance} 0\% berhasil 
 ($SVR = 100\%$). Model ini mengabaikan instruksi format sepenuhnya, tetapi secara konsisten menghasilkan kode yang berkualitas baik.
 
 Mistral berhasil mengekstraksi 1 blok kode dari 33 percobaan, tetapi blok tersebut tidak lolos \texttt{php -l} (0\% validitas). DeepSeek Coder dan Llama 3.1 masing-masing mengekstraksi 3 dan 1 blok dengan validitas 100\%, namun jumlah sampel yang terlalu kecil membuat angka ini tidak representatif secara statistik.
-
 \subsubsection{Statistik Ringkasan}
 
-Gambar \ref{fig:stats-table-a} merangkum statistik lengkap untuk kelima model pada Kondisi A.
+Gambar \ref{fig:stats-table-a} merangkum statistik lengkap untuk 
+kelima model pada Kondisi A.
 
 \begin{figure}[h]
     \centering
@@ -319,36 +319,42 @@ Gambar \ref{fig:stats-table-a} merangkum statistik lengkap untuk kelima model pa
     \label{fig:stats-table-a}
 \end{figure}
 
-CodeLlama memiliki \textit{confidence score} rata-rata 
-$\bar{C}_m = 0{,}909$ dengan standar deviasi $\sigma_m = 0{,}054$, 
-mencerminkan konsistensi yang tinggi di rentang sempit 
-$[0{,}85;\ 1{,}00]$. Namun konsistensi ini tidak berkorelasi 
-dengan kualitas kode: 72,7\% kode CodeLlama tidak \textit{valid} 
-secara sintaksis, mengkonfirmasi bahwa \textit{confidence score 
+Statistik berikut dihitung dari 33 inferensi per model (11 temuan 
+$\times$ 3 \textit{run} independen, \textit{temperature} = 0,1).
+
+CodeLlama memiliki \textit{confidence score} rata-rata
+$\bar{C}_m = 0{,}909$ dengan standar deviasi $\sigma_m = 0{,}054$,
+mencerminkan konsistensi yang tinggi di rentang sempit
+$[0{,}85;\ 1{,}00]$. Namun konsistensi ini tidak berkorelasi
+dengan kualitas kode: 72,7\% kode CodeLlama tidak \textit{valid}
+secara sintaksis, mengkonfirmasi bahwa \textit{confidence score
 self-reported} bukan ukuran kualitas kode.
 
-DeepSeek Coder mencatat $\bar{C}_m = 0{,}132$ dengan standar 
-deviasi yang jauh lebih besar ($\sigma_m = 0{,}310$) dan rentang 
-$[0{,}00;\ 0{,}90]$. Variansi tinggi ini konsisten dengan 
-\textit{format compliance} 15\%: hanya sebagian kecil 
-\textit{run} yang benar-benar menghasilkan baris 
+DeepSeek Coder mencatat $\bar{C}_m = 0{,}132$ dengan standar
+deviasi yang jauh lebih besar ($\sigma_m = 0{,}310$) dan rentang
+$[0{,}00;\ 0{,}90]$. Variansi tinggi ini konsisten dengan
+\textit{format compliance} 15\%: hanya sebagian kecil
+\textit{run} yang benar-benar menghasilkan baris
 \texttt{CONFIDENCE:}, sementara sisanya menghasilkan nilai 0,0.
 
-Mistral mencatat $\bar{C}_m = 0{,}060$ dengan $\sigma_m = 0{,}230$ 
-dan rentang $[0{,}00;\ 0{,}95]$, pola yang serupa dengan 
-DeepSeek: variansi besar akibat jarangnya respons yang mengikuti 
+Mistral mencatat $\bar{C}_m = 0{,}060$ dengan $\sigma_m = 0{,}230$
+dan rentang $[0{,}00;\ 0{,}95]$, pola yang serupa dengan
+DeepSeek: variansi besar akibat jarangnya respons yang mengikuti
 format.
 
-Qwen2.5-Coder dan Llama 3.1 keduanya mencatat $\bar{C}_m = 0{,}000$ 
-dengan $\sigma_m = 0{,}000$, karena tidak satu pun respons 
-menghasilkan baris \texttt{CONFIDENCE:} yang dapat di-\textit{parse}. 
-Khusus untuk Qwen2.5-Coder, ketiadaan skor ini tidak mengindikasikan ketidakmampuan, 
-melainkan mencerminkan karakteristik respons model yang 
-mengabaikan instruksi format sambil tetap mengerjakan tugas utama
-dengan baik. Waktu inferensi Qwen2.5-Coder (10,0 detik) adalah 
-yang tertinggi dibandingkan model lain, selaras dengan respons yang 
-lebih panjang dan detail yang dihasilkannya.
-
+Qwen2.5-Coder dan Llama 3.1 keduanya mencatat $\bar{C}_m = 0{,}000$
+dengan $\sigma_m = 0{,}000$. Nilai 0,0 muncul ketika respons tidak
+mengandung pola apa pun yang dapat di-\textit{parse} oleh keenam
+pola ekstraksi yang diterapkan secara berurutan — baik baris
+\texttt{CONFIDENCE:}, ekspresi numerik, maupun frasa bahasa alami
+seperti \textit{"confident"} atau \textit{"not sure"}.
+Khusus untuk Qwen2.5-Coder, ketiadaan skor ini tidak
+mengindikasikan ketidakmampuan, melainkan mencerminkan
+karakteristik respons model yang mengabaikan instruksi format
+sambil tetap mengerjakan tugas utama dengan baik. Waktu inferensi
+Qwen2.5-Coder (10,0 detik) adalah yang tertinggi dibandingkan
+model lain, selaras dengan respons yang lebih panjang dan detail
+yang dihasilkannya.
 \begin{lstlisting}[style=promptstyle]
 $uri .= '?'.$_SERVER['QUERY_STRING'];
 $cache_path .= md5(

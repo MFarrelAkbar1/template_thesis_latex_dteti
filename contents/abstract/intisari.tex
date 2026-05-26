@@ -1,46 +1,7 @@
-Intisari ditulis menggunakan bahasa Indonesia dengan jarak antar baris 1 spasi dan maksimal 1 halaman. Intisari sekurang-kurangnya berisi tentang latar belakang dan tujuan penelitian, metodologi yang digunakan, hasil penelitian, kesimpulan dan implikasi, dan Kata kunci yang berhubungan dengan penelitian.
+Sebagian besar situs web masih menjalankan aplikasi PHP pada versi 7.x atau lebih lama yang sudah tidak mendapatkan pembaruan keamanan resmi, sehingga sistem menghadapi akumulasi kerentanan yang terus bertambah tanpa kemungkinan diperbaiki. Migrasi manual pada ratusan \textit{file} kode tidak realistis, dan alat transformasi yang tersedia saat ini tidak menyertakan pemeriksaan keamanan sebagai bagian terintegrasi dari alur migrasi. Organisasi yang beroperasi di bawah standar ISO/IEC 27001:2022 juga harus melakukan audit keamanan sebagai langkah terpisah setelah migrasi selesai, sehingga menambah beban operasional.
 
-Kata Kunci ditulis maksimal 5 kata yang paling berhubungan dengan isi skripsi. Silakan mengacu pada ACM / IEEE \textit{Computing classification} jika Anda adalah mahasiswa Sarjana TI \textcolor{blue}{http://www.acm.org/about/class/} atau mengacu kepada IEEE keywords \textcolor{blue}{http://www.ieee.org/documents/taxonomy\_v101.pdf} jika Anda berasal dari Prodi Sarjana TE.
+\hspace{1cm} Penelitian ini membangun \textit{platform} berbasis Python yang mengintegrasikan konversi otomatis aplikasi web PHP lama ke versi PHP target yang dapat dikonfigurasi dengan pemeriksaan kepatuhan \textit{secure coding} berbasis ISO/IEC 27001:2022 dalam satu alur kerja \textit{open source} yang dapat dijalankan secara lokal. \textit{Platform} menggunakan Rector untuk transformasi kode berbasis AST, Semgrep untuk pemindaian keamanan, PHPStan untuk validasi pasca-konversi, serta lima model LLM \textit{open source} yang dijalankan secara lokal melalui Ollama---DeepSeek Coder 6.7b, Qwen2.5-Coder 7b, CodeLlama 7b, Mistral 7b, dan Llama 3.1 8b---untuk analisis semantik dan saran perbaikan kerentanan. Studi kasus dilakukan pada kode PHP milik FT UGM (Dashboard TCK, 245 \textit{file}) dan CBT DTI UGM (326 \textit{file}).
 
-\noindent{Kata kunci} : Kata kunci 1, Kata kunci 2, Kata kunci 3, Kata kunci 4, Kata kunci 5
+\hspace{1cm} Rector mencatat tingkat konversi 97,6\% pada dataset FT UGM dan 91,7\% pada dataset CBT DTI UGM, dengan tingkat validitas sintaks pasca-konversi 100\% pada kedua studi kasus. Nilai $\Delta F = 0$ mengonfirmasi bahwa proses konversi tidak memperkenalkan kerentanan baru. Laporan JSON yang dihasilkan secara otomatis mencakup pemetaan per temuan ke kontrol ISO/IEC 27001:2022 Annex A yang relevan dan dapat langsung digunakan sebagai dokumentasi audit. Dari eksperimen komparasi lima model LLM, Qwen2.5-Coder 7b direkomendasikan untuk integrasi ke dalam sistem otomatis karena menghasilkan \textit{Syntax Validity Rate} (SVR) 100\% secara konsisten di semua kondisi eksperimen. \textit{Platform} ini membuktikan bahwa integrasi antara konversi kode otomatis dan pemeriksaan kepatuhan ISO/IEC 27001:2022 dapat dijalankan sepenuhnya secara lokal tanpa mengirimkan kode sumber ke layanan eksternal.
 
-\vspace{1cm}
-
-%HAPUS YANG TIDAK PERLU
-%-------------------------------------------------
-\noindent\fbox{%
-	\parbox{\textwidth}{%
-\textbf{Contoh Abstrak Teknik Elektro:} \\
-
-\hspace{1cm} "Penelitian ini bertujuan untuk mengembangkan sistem pengendalian suhu ruangan dengan menggunakan microcontroller. Metodologi yang digunakan adalah desain sirkuit, implementasi sistem pengendalian, dan pengujian performa. Hasil penelitian menunjukkan 
-bahwa sistem pengendalian suhu ruangan yang dikembangkan mampu mengendalikan suhu ruangan dengan akurasi sebesar ±0,5°C. Kesimpulan dari penelitian ini adalah sistem pengendalian suhu ruangan yang dikembangkan efektif dan efisien. \\
-
-Kata kunci: microcontroller, sistem pengendalian suhu, akurasi."
-\vspace{5mm}
-
-\textbf{Contoh Abstrak Teknik Biomedis:} \\
-
-\hspace{1cm} "Penelitian ini bertujuan untuk mengevaluasi keefektifan prototipe alat pemantau denyut jantung berbasis elektrokardiogram (ECG) untuk pasien jantung. Metodologi yang digunakan meliputi desain dan pembuatan prototipe, pengujian dengan pasien, dan analisis data. Hasil penelitian menunjukkan bahwa prototipe alat pemantau denyut jantung berbasis ECG memiliki 
-akurasi yang baik dan mampu memantau denyut jantung pasien secara efektif. Kesimpulan dari penelitian ini adalah prototipe alat pemantau denyut jantung berbasis ECG merupakan solusi 
-yang efektif dan efisien untuk memantau pasien jantung. \\
-
-Kata kunci: elektrokardiogram, alat pemantau denyut jantung, akurasi."
-\vspace{5mm}
-
-	}%
-}
-
-%-------------------------------------------------
-
-\noindent\fbox{%
-	\parbox{\textwidth}{%
-		\textbf{Contoh Abstrak Teknologi Informasi:} \\
-		
-\hspace{1cm} "Penelitian ini bertujuan untuk mengevaluasi keamanan dan privasi pengguna aplikasi media sosial terpopuler. Metodologi yang digunakan meliputi analisis kebijakan privasi dan pengaturan keamanan, pengujian penetrasi, dan survei pengguna. Hasil penelitian 
-menunjukkan bahwa beberapa aplikasi media sosial memiliki kebijakan privasi yang kurang jelas dan rendahnya tingkat keamanan. Kesimpulan dari penelitian ini adalah pentingnya meningkatkan kebijakan privasi dan tingkat keamanan pada aplikasi media sosial untuk melindungi privasi dan data pengguna. \\
-		
-Kata kunci: media sosial, keamanan, privasi, pengguna."
-\vspace{5mm}
-		
-	}%
-}
+\noindent{Kata kunci} : migrasi PHP, \textit{secure coding}, ISO/IEC 27001:2022, \textit{large language model}, transformasi kode AST
