@@ -63,8 +63,7 @@ Spesifikasi ini dipilih karena alasan teknis yang konkret. Model LLM yang dijala
     \item \textbf{Composer}: Manajer dependensi PHP untuk 
     instalasi Rector dan PHPStan.
 
-    \item \textbf{Visual Studio Code} dengan ekstensi Claude Code 
-    sebagai IDE utama selama pengembangan.
+    \item \textbf{Visual Studio Code}: Sebagai IDE utama selama pengembangan.
 
 \end{itemize}
 \subsection{Model LLM yang Dievaluasi}
@@ -102,13 +101,15 @@ Penelitian ini menggunakan metodologi Penelitian dan Pengembangan (\textit{Resea
 Pendekatan ini dipilih karena penelitian menghasilkan produk perangkat lunak nyata, bukan hanya analisis teoritis. 
 Model prototipe dipilih karena memungkinkan penyesuaian keputusan desain secara iteratif berdasarkan observasi terhadap perilaku sistem secara aktual. Pendekatan ini sangat relevan pada format \textit{prompt} AI dan cara menangani kode yang tidak bisa diotomatisasi sepenuhnya.
 
+\textit{Pipeline} otomasi yang dirancang dalam penelitian ini merupakan wujud konkret dari manajemen perangkat lunak dalam skala basis kode nyata: Rector menangani pembaruan versi PHP secara sistematis, sementara komponen AI Engine berbasis LLM merekomendasikan perbaikan kerentanan yang teridentifikasi. Kedua fungsi ini berjalan dalam satu alur terpadu yang dapat diterapkan ulang pada basis kode lain.
+
 Gambar \ref{fig:alur-penelitian} menunjukkan alur penelitian yang terdiri dari tujuh tahapan.
 
 \begin{figure}[htbp]
 
     \centering
 
-    \includegraphics[width=0.7\textwidth]{contents/chapter-3/alur-penelitian2.png}
+    \includegraphics[width=0.8\textwidth]{contents/chapter-3/alur-penelitian2.png}
 
     \caption{Alur penelitian dengan model prototipe}
 
@@ -127,8 +128,11 @@ Gambar \ref{fig:alur-penelitian} menunjukkan alur penelitian yang terdiri dari t
     \item \textbf{Implementasi}: Membangun enam modul fungsional Python satu per satu, 
 dikoordinasikan oleh \texttt{main.py} sebagai orkestrator. Setiap modul diuji secara terpisah sebelum diintegrasikan.
 
-    \item \textbf{Pengujian}: Menguji prototipe dengan \textit{file} PHP sampel. Jika ditemukan masalah, proses kembali ke tahap implementasi (iterasi).
-
+    \item \textbf{Pengujian}: Menguji prototipe menggunakan 
+\textit{file} PHP buatan sendiri dan potongan kode 
+representatif untuk memverifikasi setiap modul sebelum 
+dijalankan pada dataset studi kasus. Jika ditemukan 
+masalah, proses kembali ke tahap implementasi (iterasi).
     \item \textbf{Validasi studi kasus}: Pengujian akhir menggunakan kode sumber FT UGM dan DTI UGM setelah prototipe stabil.
 
     \item \textbf{Evaluasi dan dokumentasi}: Menganalisis hasil dan menyusun laporan penelitian.
@@ -143,12 +147,12 @@ yang masing-masing menangani satu langkah dalam proses konversi dan analisis kea
 Arsitektur modular memungkinkan setiap bagian diuji, diperbaiki, atau diganti secara independen.
 
 Gambar \ref{fig:arsitektur-sistem} menunjukkan hubungan antar modul.
-
+\newpage
 \begin{figure}[htbp]
 
     \centering
 
-    \includegraphics[width=0.8\textwidth]{contents/chapter-3/arsitektur-sistem.png}
+    \includegraphics[width=0.9\textwidth]{contents/chapter-3/arsitektur-sistem.png}
 
     \caption{Arsitektur sistem \textit{pipeline} dengan enam modul fungsional dan satu orkestrator}
 
@@ -200,9 +204,13 @@ Modul ini menggunakan Rector untuk transformasi kode PHP berbasis AST. Argumen C
 \end{tabularx}
 \vspace{0.3em}
 \begin{minipage}{\textwidth}
+\footnotesize $^{*}$Target yang digunakan dalam penelitian ini. 
+Selain \textit{level sets}, \textit{pipeline} menambahkan 
+\texttt{SetList::CODE\_QUALITY}, \texttt{DEAD\_CODE}, 
+\texttt{EARLY\_RETURN}, dan \texttt{TYPE\_DECLARATION} 
+untuk semua nilai target.
 \end{minipage}
 \end{table}
-Target yang digunakan dalam penelitian ini. Selain \textit{level sets}, \textit{pipeline} menambahkan \texttt{SetList::CODE\_QUALITY}, \texttt{DEAD\_CODE}, \texttt{EARLY\_RETURN}, dan \texttt{TYPE\_DECLARATION} untuk semua nilai target.
 Mengingat \textit{ruleset} yang digunakan bersifat kumulatif, kode PHP 5.x dapat diproses langsung menuju PHP 8.3 dalam satu langkah. 
 Jenis-jenis transformasi yang ditangani Rector dan
 keterbatasan Rector terhadap pola semantik seperti \texttt{mysql\_*()}
@@ -234,7 +242,28 @@ Modul ini menerima semua hasil dari Scanner, Analyzer, dan AI Engine sebagai obj
 \subsection{Main (main.py)}
 
 File main adalah orkestrator yang mengontrol seluruh \textit{pipeline}. Menerima direktori \textit{input} dan versi PHP target sebagai argumen CLI, menjalankan keenam modul secara berurutan, dan menghasilkan laporan JSON di direktori \texttt{reports/}. Ringkasan hasil ditampilkan di konsol menggunakan pustaka Rich.
+Contoh kerangka laporan JSON yang dihasilkan:
 
+\begin{lstlisting}[style=promptstyle]
+{
+  "overall_status": "NON_COMPLIANT",
+  "duration_seconds": 228.4,
+  "conversion": {
+    "total_files": 245,
+    "converted": 239,
+    "conversion_rate": 97.6
+  },
+  "iso_controls": {
+    "A.5.17": {"status": "COMPLIANT", "findings": 0},
+    "A.8.28": {"status": "NON_COMPLIANT", "findings": 2790}
+  },
+  "semgrep": {
+    "pre_scan_findings": 11,
+    "post_scan_findings": 11,
+    "delta_f": 0
+  }
+}
+\end{lstlisting}
 \subsection{Composer Analyzer (composer\_analyzer.py)}
 
 Modul ini membaca berkas \texttt{composer.json} pada direktori 
@@ -245,16 +274,16 @@ tanpa menghentikan \textit{pipeline}. Setiap dependensi diklasifikasikan
 sebagai \texttt{SAFE} (versi yang dikonfigurasi mendukung PHP 8.x secara 
 deklaratif) atau \texttt{MANUAL REVIEW} (kompatibilitas tidak dapat 
 diverifikasi secara otomatis).
+
 \section{Alur Data Pipeline}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.7\textwidth]{contents/chapter-3/alur-pipeline-input.png}
+    \includegraphics[width=0.6\textwidth]{contents/chapter-3/alur-pipeline-input.png}
     \caption{Alur data \textit{pipeline}: tahap masukan: 
     Scanner, Converter, dan Composer Analyzer}
     \label{fig:alur-pipeline-input}
 \end{figure}
-
 \textit{File} PHP ditempatkan di \texttt{input/}. Scanner 
 menjalankan Semgrep pada \texttt{input/} untuk menetapkan 
 \textit{baseline} keamanan kode asli (\textit{pre-scan}). 
@@ -269,7 +298,7 @@ PHP 8.x, atau dilewati otomatis jika berkas tidak ditemukan.
 \newpage
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.7\textwidth]{contents/chapter-3/alur-pipeline-output.png}
+    \includegraphics[width=0.6\textwidth]{contents/chapter-3/alur-pipeline-output.png}
     \caption{Alur data \textit{pipeline}: tahap keluaran: 
     Analyzer, AI Engine, ISO Mapper, dan laporan akhir}
     \label{fig:alur-pipeline-output}
@@ -285,14 +314,14 @@ dan AI Engine lalu memetakannya ke enam kontrol ISO/IEC
 27001:2022. \texttt{main.py} menggabungkan semuanya menjadi 
 laporan JSON dan menampilkan ringkasan di konsol.
 
-Teks lengkap \textit{prompt} Kondisi B untuk masing-masing model 
-disertakan pada Lampiran~\ref{app:prompt-kondisi-b}.
 
 \section{Desain Prompt LLM}
 
 \label{sec:prompt-design}
 
 Desain \textit{prompt} adalah salah satu keputusan metodologis yang paling berpengaruh terhadap kualitas respons model. \textit{Prompt} dirancang untuk memenuhi tiga tujuan: menghasilkan kode perbaikan yang valid secara sintaksis, menghasilkan skor kepercayaan yang dapat dibaca otomatis oleh \textit{pipeline}, dan dapat dijalankan secara \textit{zero-shot} tanpa contoh mengingat tidak tersedianya \textit{dataset} berlabel.
+
+\textit{Prompt} yang dijelaskan pada subbab ini adalah \textit{prompt} standar Kondisi A yang digunakan secara identik untuk semua model.
 
 \subsection{Struktur Prompt}
 
@@ -331,25 +360,92 @@ CONFIDENCE: [number between 0 and 100]
 Example last line: CONFIDENCE: 85
 \end{lstlisting}
 
+Sebagai ilustrasi, berikut contoh pengisian \textit{placeholder} di atas untuk temuan SQL Injection pada \texttt{Output.php} baris 768 (\textit{rule}: \texttt{tainted-sql-string}, kontrol A.8.26 dan A.8.28):
+
+\begin{lstlisting}[style=promptstyle]
+
+TASK: Analyze the following PHP code for a SQL Injection
+vulnerability and provide a secure PHP 8.x replacement.
+ISO/IEC 27001:2022 Controls: A.8.26, A.8.28
+Context: File: Output.php, line 768,
+         Semgrep rule: tainted-sql-string,
+         Finding: $_SERVER['QUERY_STRING'] used directly in
+                  cache path construction without sanitization
+VULNERABLE CODE:
+```php
+$uri .= '?'.$_SERVER['QUERY_STRING'];
+$cache_path .= md5(
+    $CI->config->item('base_url')
+    .$CI->config->item('index_page')
+    .ltrim($uri, '/'));
+
+if ( ! @unlink($cache_path)) {
+    log_message('error',
+        'Unable to delete cache file for '.$uri);
+    return FALSE;
+}
+```
+Respond in English:
+1. Explain the vulnerability and its security risk.
+2. Provide the corrected PHP 8.x code in a ```php code block.
+After your explanation and code fix, write exactly this on the
+last line:
+CONFIDENCE: [number between 0 and 100]
+Example last line: CONFIDENCE: 85
+\end{lstlisting}
+
+Contoh keluaran yang diharapkan dari model untuk temuan di atas:
+
+\begin{lstlisting}[style=promptstyle]
+### Explanation of Vulnerability
+The code uses $_SERVER['QUERY_STRING'] directly in cache
+path construction without sanitization, allowing path
+traversal or cache poisoning attacks.
+
+Here's the corrected PHP 8.x code:
+```php
+$uri .= '?' . urlencode($_SERVER['QUERY_STRING']);
+$cache_path .= md5(
+    $CI->config->item('base_url')
+    . $CI->config->item('index_page')
+    . ltrim($uri, '/'));
+
+if (!@unlink($cache_path)) {
+    log_message('error',
+        'Unable to delete cache file for '
+        . urlencode($uri));
+    return FALSE;
+}
+```
+CONFIDENCE: 78
+\end{lstlisting}
+
+Tiga elemen yang harus hadir sekaligus agar respons dihitung
+patuh format: penjelasan kerentanan, blok kode PHP yang valid,
+dan baris \texttt{CONFIDENCE:} di akhir.
+
+Teks lengkap \textit{prompt} Kondisi B untuk masing-masing model
+disertakan pada Lampiran~\ref{app:prompt-kondisi-b}.
 
 \subsection{Keputusan Desain Prompt}
 
-\textbf{Penyertaan kontrol ISO/IEC 27001:2022.} Kontrol ISO yang relevan disertakan di setiap \textit{prompt}. Informasi ini bertujuan untuk mendorong model menghasilkan saran perbaikan yang mempertimbangkan kepatuhan standar, bukan sekadar memperbaiki sintaks.
+\textbf{Penyertaan kontrol ISO/IEC 27001:2022:} Kontrol ISO yang relevan disertakan di setiap \textit{prompt}. Informasi ini bertujuan untuk mendorong model menghasilkan saran perbaikan yang mempertimbangkan kepatuhan standar, bukan sekadar memperbaiki sintaks.
 
-\textbf{Instruksi format di akhir pesan.} Format \texttt{CONFIDENCE: [0-100]} diletakkan di bagian akhir dengan instruksi eksplisit termasuk contoh konkret. Model kecil cenderung lebih patuh pada instruksi yang dekat dengan akhir pesan.
+\textbf{Instruksi format di akhir pesan:} Format \texttt{CONFIDENCE: [0-100]} diletakkan di bagian akhir dengan instruksi eksplisit termasuk contoh konkret. Model kecil cenderung lebih patuh pada instruksi yang dekat dengan akhir pesan.
 
-\textbf{Parsing skor berlapis.} Karena tidak semua model mengikuti format yang diminta, \texttt{ai\_engine.py} menggunakan enam pola \textit{regex} berurutan untuk mengekstraksi skor: (0) tag XML \texttt{<confidence>}, (1) bilangan bulat dekat kata ``confidence'', (2) desimal 0.x dekat ``confidence'', (3) persentase dekat ``confidence'', (4) desimal \textit{bare} di mana saja, dan (5) frasa bahasa alami seperti ``not sure'' yang dipetakan ke nilai tetap. Jika seluruh pola gagal diekstraksi, sistem akan mengembalikan nilai \textit{default} 0,0.
+\textbf{Parsing skor berlapis:} Karena tidak semua model mengikuti format yang diminta, \texttt{ai\_engine.py} menggunakan enam pola \textit{regex} berurutan untuk mengekstraksi skor: (0) tag XML \texttt{<confidence>}, (1) bilangan bulat dekat kata ``confidence'', (2) desimal 0.x dekat ``confidence'', (3) persentase dekat ``confidence'', (4) desimal \textit{bare} di mana saja, dan (5) frasa bahasa alami seperti ``not sure'' yang dipetakan ke nilai tetap. Jika seluruh pola gagal diekstraksi, sistem akan mengembalikan nilai \textit{default} 0,0.
 
-\textbf{Temperature 0,1.} Dipilih untuk meminimalkan variasi acak antar percobaan. Setiap model dijalankan tiga kali per temuan dengan \textit{prompt} identik, 
+\textbf{Temperature 0,1:} Dipilih untuk meminimalkan variasi acak antar percobaan. Setiap model dijalankan tiga kali per temuan dengan \textit{prompt} identik, 
 sehingga perbedaan hasil antar \textit{run} mencerminkan variabilitas 
 model yang sebenarnya. Ollama tidak menyediakan pengaturan \textit{seed} inferensi yang 
 konsisten untuk seluruh model yang diuji, sehingga variasi kecil 
 antar \textit{run} tetap mungkin terjadi meskipun \textit{temperature} 
 dibuat rendah (0,1).
 
-\textbf{Zero-shot tanpa contoh.} Tidak ada contoh perbaikan kode disertakan karena penelitian ingin mengevaluasi kemampuan bawaan model dalam kondisi yang mencerminkan penggunaan nyata. Hal ini juga memastikan bahwa seluruh model dibandingkan pada kondisi yang setara.
+\textbf{Zero-shot tanpa contoh:} Tidak ada contoh perbaikan kode disertakan karena penelitian ingin mengevaluasi kemampuan bawaan model dalam kondisi yang mencerminkan penggunaan nyata. Hal ini juga memastikan bahwa seluruh model dibandingkan pada kondisi yang setara.
 
-\textbf{Skor kepercayaan sebagai metrik sekunder.} Skor ini adalah penilaian mandiri dari model dan tidak bisa diverifikasi secara independen. Dalam analisis Bab IV, skor kepercayaan adalah metrik sekunder; metrik primer adalah validitas sintaks kode yang dihasilkan, diukur dengan \texttt{php -l}.
+\textbf{Skor kepercayaan sebagai metrik sekunder:} Skor ini adalah penilaian mandiri dari model dan tidak bisa diverifikasi secara independen. Dalam analisis Bab IV, skor kepercayaan adalah metrik sekunder; metrik primer adalah validitas sintaks kode yang dihasilkan, diukur dengan \texttt{php -l}.
+
 
 \section{Desain Pemetaan ISO/IEC 27001:2022}
 
@@ -485,6 +581,8 @@ dalam Subbab \ref{sec:data-privacy}.
 
 Eksperimen komparasi dirancang dengan kondisi yang sepenuhnya terkontrol dan dilakukan terpisah dari pengujian \textit{pipeline} utama menggunakan skrip evaluasi khusus.
 
+Eksperimen ini mencakup tiga kondisi yang dirancang secara bertahap. \textbf{Kondisi A} adalah \textit{baseline}: semua model menerima \textit{prompt} yang identik secara \textit{zero-shot} tanpa optimasi apa pun. \textbf{Kondisi B} mengoptimasi \textit{prompt} per model berdasarkan pola kegagalan yang terobservasi pada Kondisi A, untuk mengetahui sejauh mana performa model bisa ditingkatkan melalui penyesuaian \textit{prompt}. \textbf{Kondisi C} mengeksplorasi variasi parameter \textit{temperature} dan \textit{context window} pada model terbaik hasil Kondisi A dan B.
+
 \subsection{Kondisi Eksperimen}
 
 \begin{itemize}
@@ -495,8 +593,9 @@ Eksperimen komparasi dirancang dengan kondisi yang sepenuhnya terkontrol dan dil
 
     \item \textbf{Temperature}: 0,1 untuk semua model
 
-    \item \textbf{Prompt}: identik untuk semua model dan semua percobaan (\textit{zero-shot})
-
+    \item \textbf{Prompt}: identik untuk semua model pada 
+Kondisi A (\textit{zero-shot}); dioptimasi per model 
+pada Kondisi B
     \item \textbf{Model}: dijalankan lokal melalui Ollama tanpa modifikasi
 
 \end{itemize}
