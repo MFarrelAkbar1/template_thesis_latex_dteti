@@ -59,6 +59,7 @@ Karena dataset mengandung campuran kode PHP 5.x dan PHP 7.x, Rector menerapkan r
 
 Sebagai gambaran nyata mengenai jenis-jenis perubahan yang dilakukan Rector, berikut tiga contoh transformasi yang ditemukan pada dataset FT UGM.
 
+\noindent\begin{minipage}{\linewidth}
 \textbf{Transformasi 1: Array sintaks pendek (\texttt{ArrayShortSyntaxRector})}
 
 Pada \texttt{system/core/Security.php}, deklarasi \textit{array} menggunakan sintaks lama diubah ke sintaks pendek PHP 5.4:
@@ -84,7 +85,9 @@ protected $_never_allowed_str = [
     'document.write'  => '',
 ];
 \end{lstlisting}
+\end{minipage}
 
+\noindent\begin{minipage}{\linewidth}
 \textbf{Transformasi 2: Operator \textit{null coalescing} (\texttt{NullCoalescingRector})}
 
 Pada \texttt{system/helpers/url\_helper.php}, pola pengecekan tiga bagian \texttt{isset()} diubah ke operator \texttt{??} yang lebih ringkas:
@@ -97,7 +100,9 @@ $atts[$key] = isset($attributes[$key])
 // Sesudah (PHP 8.3)
 $atts[$key] = $attributes[$key] ?? $val;
 \end{lstlisting}
+\end{minipage}
 
+\noindent\begin{minipage}{\linewidth}
 \textbf{Transformasi 3: Fungsi \texttt{str\_contains()} (\texttt{StrContainsRector})}
 
 Pada \texttt{system/helpers/url\_helper.php}, pola pencarian substring dengan \texttt{strpos()} diubah ke fungsi \texttt{str\_contains()} yang dikenalkan di PHP 8.0. Rector juga menambahkan \textit{cast} \texttt{(string)} karena hasil dari \texttt{\$\_SERVER['SERVER\_SOFTWARE']} bertipe \texttt{mixed} di PHP 8.x:
@@ -116,7 +121,7 @@ if ($method === 'auto'
         (string) $_SERVER['SERVER_SOFTWARE'],
         'Microsoft-IIS'))
 \end{lstlisting}
-
+\end{minipage}
 Ketiga transformasi ini mencerminkan kategori perubahan yang paling umum dilakukan Rector: modernisasi sintaks, penggunaan API PHP yang lebih baru, dan penambahan informasi tipe yang dibutuhkan PHP 8.x.
 
 \subsubsection{File yang Gagal Dikonversi}
@@ -283,7 +288,7 @@ Gambar \ref{fig:format-compliance-a} menunjukkan \textit{format compliance rate}
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\textwidth]{contents/chapter-4/llm_chart_20260425_212836_2_format_compliance.png}
+    \includegraphics[width=1\textwidth]{contents/chapter-4/llm_chart_20260425_212836_2_format_compliance.png}
     \caption{\textit{Format compliance rate} kelima model LLM pada Kondisi A (\textit{zero-shot}, \textit{prompt} identik)}
     \label{fig:format-compliance-a}
 \end{figure}
@@ -294,7 +299,7 @@ Gambar \ref{fig:syntax-validity-a} menunjukkan \textit{syntax validity rate} dan
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.85\textwidth]{contents/chapter-4/llm_quality_chart_20260425_122619.png}
+    \includegraphics[width=1\textwidth]{contents/chapter-4/llm_quality_chart_20260425_122619.png}
     \caption{\textit{Syntax validity rate} dan \textit{code block extraction rate} kelima model LLM pada Kondisi A}
     \label{fig:syntax-validity-a}
 \end{figure}
@@ -302,7 +307,6 @@ Gambar \ref{fig:syntax-validity-a} menunjukkan \textit{syntax validity rate} dan
 Hasilnya memperlihatkan gambaran yang berlawanan dengan metrik format. CodeLlama yang memiliki \textit{format compliance} 100\% ternyata hanya menghasilkan kode PHP yang \textit{valid} secara sintaksis pada 
 9 dari 33 blok kode yang berhasil diekstraksi 
 ($SVR = 27{,}3\%$). Hal tersebut berarti 24 dari 33 blok kode CodeLlama mengandung \textit{parse error}.
-\newpage
 Sebaliknya, Qwen2.5-Coder yang memiliki \textit{format compliance} 0\% berhasil mengekstraksi blok kode PHP dari 32 dari 33 percobaan (97\%), dan seluruh 32 blok kode tersebut lolos pemeriksaan \texttt{php -l} 
 ($SVR = 100\%$). Model ini mengabaikan instruksi format sepenuhnya, tetapi secara konsisten menghasilkan kode yang berkualitas baik.
 
@@ -314,7 +318,7 @@ kelima model pada Kondisi A.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\textwidth]{contents/chapter-4/llm_chart_20260425_212836_4_stats_table.png}
+    \includegraphics[width=\textwidth]{contents/chapter-4/llm_chart_20260427_140238_4_stats_tables.png}
     \caption{Statistik lengkap komparasi kelima model LLM pada Kondisi A}
     \label{fig:stats-table-a}
 \end{figure}
@@ -355,6 +359,7 @@ sambil tetap mengerjakan tugas utama dengan baik. Waktu inferensi
 Qwen2.5-Coder (10,0 detik) adalah yang tertinggi dibandingkan
 model lain, selaras dengan respons yang lebih panjang dan detail
 yang dihasilkannya.
+\newpage
 \begin{lstlisting}[style=promptstyle]
 $uri .= '?'.$_SERVER['QUERY_STRING'];
 $cache_path .= md5(
@@ -368,7 +373,6 @@ if ( ! @unlink($cache_path)) {
     return FALSE;
 }
 \end{lstlisting}
-
 \textbf{Respons CodeLlama:}
 
 \begin{lstlisting}[style=promptstyle]
@@ -392,9 +396,8 @@ if ( ! @unlink($cache_path)) {
 }
 % (blok kode tidak ditutup, php -l gagal)
 \end{lstlisting}
-
+\newpage
 \textbf{Respons Qwen2.5-Coder:}
-
 \begin{lstlisting}[style=promptstyle]
 ### Explanation of Vulnerability
 ...
@@ -437,6 +440,8 @@ Strategi optimasi per model dirumuskan berdasarkan pola kegagalan Kondisi A. Qwe
 
 \subsubsection{Format Compliance Rate}
 
+DeepSeek Coder mencatat peningkatan yang paling signifikan, dari 15\% pada Kondisi A menjadi 61\% pada Kondisi B. Hal ini mengkonfirmasi bahwa model ini sangat sensitif terhadap kompleksitas instruksi: \textit{prompt} yang lebih pendek dan langsung secara substansial meningkatkan kemampuannya mengikuti format. CodeLlama mempertahankan \textit{format compliance} 100\% seperti pada Kondisi A. Sebaliknya, Mistral mengalami regresi dari 6\% menjadi 0\%, dan Llama 3.1 hanya naik tipis dari 0\% menjadi 3\% (1 dari 33 \textit{run}).
+
 Gambar \ref{fig:format-compliance-b} menunjukkan \textit{format compliance rate} untuk masing-masing model pada Kondisi B.
 
 \begin{figure}[h]
@@ -445,8 +450,8 @@ Gambar \ref{fig:format-compliance-b} menunjukkan \textit{format compliance rate}
     \caption{\textit{Format compliance rate} kelima model LLM pada Kondisi B (\textit{prompt} dioptimasi per model)}
     \label{fig:format-compliance-b}
 \end{figure}
-DeepSeek Coder mencatat peningkatan yang paling signifikan, dari 15\% pada Kondisi A menjadi 61\% pada Kondisi B. Hal ini mengkonfirmasi bahwa model ini sangat sensitif terhadap kompleksitas instruksi: \textit{prompt} yang lebih pendek dan langsung secara substansial meningkatkan kemampuannya mengikuti format. CodeLlama mempertahankan \textit{format compliance} 100\% seperti pada Kondisi A. Sebaliknya, Mistral mengalami regresi dari 6\% menjadi 0\%, dan Llama 3.1 hanya naik tipis dari 0\% menjadi 3\% (1 dari 33 \textit{run}).
 
+\newpage
 \subsubsection{Syntax Validity Rate}
 
 Gambar \ref{fig:syntax-validity-b} menunjukkan \textit{syntax validity rate} dan \textit{code block extraction rate} pada Kondisi B.
@@ -457,7 +462,6 @@ Gambar \ref{fig:syntax-validity-b} menunjukkan \textit{syntax validity rate} dan
     \caption{\textit{Syntax validity rate} dan \textit{code block extraction rate} kelima model LLM pada Kondisi B}
     \label{fig:syntax-validity-b}
 \end{figure}
-\newpage
 Qwen2.5-Coder mempertahankan posisinya sebagai model dengan kualitas kode terbaik: \textit{extraction rate} naik dari 97\% menjadi 100\% dan \textit{syntax validity} tetap 100\%. CodeLlama menunjukkan perbaikan parsial pada \textit{syntax validity}, dari 27,3\% menjadi 39,4\%, meskipun masih jauh dari ambang batas yang dapat diandalkan. DeepSeek Coder mengalami penurunan \textit{extraction rate} dari 9\% menjadi 3\% meskipun \textit{format compliance}-nya meningkat, yang menunjukkan adanya \textit{trade-off} antara kepatuhan format dan kemampuan menghasilkan blok kode. Mistral dan Llama 3.1 secara efektif tidak menghasilkan kode yang dapat digunakan pada Kondisi B.
 \subsubsection{Statistik Ringkasan}
 
@@ -586,7 +590,7 @@ utama di semua variasi parameter.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\textwidth]{contents/chapter-4/llm_chart_kondisi_c_parameter_comparison.png}
+    \includegraphics[width=1\textwidth]{contents/chapter-4/llm_chart_kondisi_c_parameter_comparison.png}
     \caption{Perbandingan metrik Qwen2.5-Coder pada variasi 
     \textit{temperature} dan \textit{context window} (Kondisi C)}
     \label{fig:kondisi-c}
@@ -783,7 +787,6 @@ pada 12 \textit{file} tersebut.
     dari \texttt{application/}}
     \label{fig:validation-sampling}
 \end{figure}
-\newpage
 Pada kedua metrik biner, keluaran Rector dan referensi LLM 
 mencapai hasil yang identik: \textit{syntax validity} 100\% 
 dan \textit{deprecated removed} 100\%. Hasil ini mengkonfirmasi 
@@ -922,13 +925,20 @@ versi PHP 8.3. Dari jumlah tersebut, 299 \textit{file} berhasil
 dikonversi, 25 \textit{file} dilewati (\textit{skipped}), dan 
 2 \textit{file} gagal diproses. Tingkat konversi keseluruhan 
 ($CR = 91{,}7\%$), sebagaimana ditunjukkan pada 
-Gambar~\ref{fig:rector-bar-pie-dti}.
+Gambar~\ref{fig:rector-bar-dti} dan Gambar~\ref{fig:rector-pie-dti}.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=1\textwidth]{contents/chapter-4/dti/pipeline_chart_cbt_qwen_2_rector_combined.png}
-    \caption{Ringkasan hasil konversi Rector terhadap 326 \textit{file} PHP dataset CBT DTI UGM dan Proporsi hasil konversi Rector (diagram lingkaran) berdasarkan jumlah \textit{file} yang berhasil dikonversi, dilewati, dan gagal}
-    \label{fig:rector-bar-pie-dti}
+    \includegraphics[width=\textwidth]{contents/chapter-4/dti/pipeline_chart_cbt_qwen_2a_rector_bar.png}
+    \caption{Ringkasan hasil konversi Rector terhadap 326 \textit{file} PHP dataset CBT DTI UGM}
+    \label{fig:rector-bar-dti}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{contents/chapter-4/dti/pipeline_chart_cbt_qwen_2b_rector_pie.png}
+    \caption{Proporsi hasil konversi Rector dataset CBT DTI UGM (diagram lingkaran)}
+    \label{fig:rector-pie-dti}
 \end{figure}
 
 Tingkat konversi yang lebih rendah dibandingkan dengan studi kasus FT UGM 
@@ -1210,7 +1220,7 @@ Rector pada kedua dataset.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.98\textwidth]{contents/chapter-4/comparison/comparison_qwen_2_rector_conversion.png}
+    \includegraphics[width=1.0\textwidth]{contents/chapter-4/comparison/comparison_qwen_2_rector_conversion.png}
     \caption{Perbandingan hasil konversi Rector pada kedua studi kasus}
     \label{fig:comparison-rector}
 \end{figure}
@@ -1263,15 +1273,49 @@ seperti \texttt{PhpOffice\textbackslash PhpSpreadsheet} dan
 \subsection{Ringkasan Perbandingan dan Analisis Dependensi Composer}
 % ------------------------------------------------------------
 
-Gambar \ref{fig:comparison-summary} merangkum seluruh metrik utama kedua 
-studi kasus dalam satu tampilan, termasuk status dependensi \textit{composer} 
+Tabel \ref{tab:comparison-summary} merangkum seluruh metrik utama kedua
+studi kasus dalam satu tampilan, termasuk status dependensi \textit{composer}
 FT UGM.
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=\textwidth]{contents/chapter-4/comparison/comparison_qwen_4_summary.png}
-    \caption{Ringkasan perbandingan metrik \textit{pipeline} dan status dependensi \textit{composer} kedua studi kasus}
-    \label{fig:comparison-summary}
-\end{figure}
+\newpage
+\begin{table}[h]
+\caption{Ringkasan perbandingan metrik \textit{pipeline} dan status dependensi \textit{composer} kedua studi kasus}
+\vspace{0.5em}
+\centering
+\label{tab:comparison-summary}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|>{\centering\arraybackslash}p{3.6cm}|>{\centering\arraybackslash}p{3.6cm}|}
+\hline
+\textbf{Metrik} & \textbf{FT UGM / SK1 (mck\_qwen)} & \textbf{CBT DTI / SK2 (cbt\_qwen)} \\
+\hline \hline
+File PHP dianalisis & 245 & 326 \\
+\hline
+Semgrep \textit{findings} (pre) & 11 & 11 \\
+\hline
+\hspace*{1em}-- SQL Injection & 1 & 1 (CI3 core) \\
+\hline
+\hspace*{1em}-- SSRF & 10 & 10 (CI3 core) \\
+\hline
+Semgrep delta (post--pre) & +0 (stabil) & +0 (stabil) \\
+\hline
+Rector \textit{converted} & 239 (97.6\%) & 299 (91.7\%) \\
+\hline
+Rector \textit{skipped} & 4 & 25 \\
+\hline
+Rector \textit{failed} & 2 (\textit{Fiber bug}) & 2 (\textit{Fiber bug}) \\
+\hline
+PHPStan total \textit{errors} & 2,790 & 2,354 \\
+\hline
+\hspace*{1em}CI3 \textit{noise filtered} & 354 & 318 \\
+\hline
+AI \textit{recommendations} & 11 (Qwen2.5-Coder:7b) & 11 (Qwen2.5-Coder:7b) \\
+\hline
+ISO \textit{overall status} & NON-COMPLIANT & NON-COMPLIANT \\
+\hline
+Kode aplikasi \textit{custom} (Semgrep) & 0 \textit{findings} & 0 \textit{findings} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\noindent PHPStan \textit{errors} pada kedua studi kasus mayoritas merupakan \textit{false positive} dari CI3 \textit{framework} (magic props, runtime constants). Delta Semgrep bernilai 0 untuk kedua SK karena Rector tidak memperkenalkan maupun menghilangkan \textit{vulnerability}. Seluruh Semgrep \textit{findings} yang terdeteksi berasal dari \texttt{CI3 system/core/Output.php} dan bukan merupakan bagian dari kode aplikasi \textit{custom}.
 
 Secara keseluruhan, kedua studi kasus menunjukkan pola yang konsisten: 
 \textit{pipeline} berhasil menjalankan seluruh tahapan secara otomatis, 
