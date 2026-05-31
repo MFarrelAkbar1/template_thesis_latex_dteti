@@ -36,7 +36,7 @@ luar lingkungan lokal.
 
 \begin{itemize}
 
-    \item \textbf{Python 3.x}: Bahasa pemrograman utama untuk 
+    \item \textbf{Python 3.11+}: Bahasa pemrograman utama untuk 
     membangun \textit{pipeline} yang menghubungkan semua modul. 
     Dipilih karena kemudahannya memanggil perintah eksternal via 
     \textit{subprocess} dan ketersediaan pustaka \texttt{requests} 
@@ -233,8 +233,8 @@ Setelah konversi, Analyzer menjalankan PHPStan pada direktori \texttt{output/} u
 
 Modul ini menerima temuan dari Semgrep \textit{pre-scan} sebagai masukan, bukan dari PHPStan dan bukan dari \textit{post-scan}. 
 Temuan dengan prioritas 1--5 dikirim ke AI Engine: SQL Injection (prioritas 1), XSS (prioritas 2), fungsi usang (prioritas 3), 
-\textit{hardcoded credentials} dan \textit{path traversal} (prioritas 4), 
-serta SSRF (prioritas 5). Temuan yang tidak terklasifikasi (prioritas 99) 
+\textit{hardcoded credentials} (prioritas 4),
+serta \textit{path traversal} dan SSRF (prioritas 5). Temuan yang tidak terklasifikasi (prioritas 99) 
 tidak diproses. Prioritas ditentukan berdasarkan potensi dampak langsung 
 terhadap kerahasiaan dan integritas sistem serta frekuensi kemunculannya pada aplikasi PHP warisan menurut OWASP Top 10. 
 
@@ -367,7 +367,6 @@ CONFIDENCE: [number between 0 and 100]
 Example last line: CONFIDENCE: 85
 \end{lstlisting}
 
-Sebagai ilustrasi, berikut contoh pengisian \textit{placeholder} di atas untuk temuan SQL Injection pada \texttt{Output.php} baris 768 (\textit{rule}: \texttt{tainted-sql-string}, kontrol A.8.26 dan A.8.28):
 Potongan kode yang disisipkan pada \textit{placeholder} \texttt{[code\_snippet]} 
 dibatasi pada 2.000 karakter pertama dari \textit{file} sumber. Pembatasan ini 
 diterapkan untuk menjaga agar ukuran \textit{prompt} tetap dalam batas 
@@ -376,6 +375,9 @@ akibat token yang melebihi kapasitas model. Konsekuensinya, untuk \textit{file}
 PHP yang panjang, model hanya menerima bagian awal kode dan tidak selalu 
 memiliki konteks lengkap untuk menganalisis kerentanan secara menyeluruh. 
 Keterbatasan ini dibahas lebih lanjut dalam Subbab~\ref{sec:keterbatasan}.
+Sebagai ilustrasi, berikut contoh pengisian \textit{placeholder} di atas 
+untuk temuan SQL Injection pada \texttt{Output.php} baris 768 
+(\textit{rule}: \texttt{tainted-sql-string}, kontrol A.8.26 dan A.8.28):
 \newpage
 \begin{lstlisting}[style=promptstyle]
 TASK: Analyze the following PHP code for a SQL Injection
@@ -546,12 +548,12 @@ Fungsi Usang & A.8.25, A.8.28 & 3 \\
 Kredensial Hardcoded & A.5.17, A.8.28 & 4 \\
 \hline
 \texttt{path}, \texttt{traversal} &
-Path Traversal & A.8.28, A.8.29 & 4 \\
+Path Traversal & A.8.28, A.8.29 & 5 \\
 \hline
 \texttt{ssrf}, \texttt{server-side-request-forgery} &
 SSRF & A.8.28, A.8.29 & 5 \\
 \hline
-\texttt{md5}, \texttt{sha1}, \texttt{weak.*crypt} &
+\texttt{md5}, \texttt{sha1}, \texttt{weak-crypto}, \texttt{weak-hash} &
 Kriptografi Lemah & A.8.24, A.8.28 & 6 \\
 \hline
 \end{tabularx}

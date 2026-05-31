@@ -88,7 +88,7 @@ yang dapat dikonfigurasi mencakup PHP 7.4 hingga PHP 8.3, yang
 merupakan rentang versi paling relevan untuk kebutuhan modernisasi 
 institusi saat ini \cite{phpgroup2022supported}.
 	\item \textbf{Studi kasus:} Penelitian ini menggunakan dua studi kasus: (1) aplikasi \textit{Dashboard} TCK (\textit{Target Capaian Kerja}) milik Fakultas Teknik (FT) Universitas Gadjah Mada, dibangun di atas \textit{framework} CodeIgniter 3 dengan versi PHP 7.4.9; dan (2) aplikasi \textit{Computer-Based Test} (CBT) milik Direktorat Teknologi Informasi (DTI) Universitas Gadjah Mada, dibangun di atas \textit{framework} CodeIgniter 3 dengan persyaratan PHP $\geq$ 7.0. \textit{Pipeline} bekerja pada level \textit{file} PHP individual dan tidak bergantung pada \textit{framework} yang digunakan, sehingga secara teknis dapat diterapkan pada aplikasi berbasis \textit{framework} lain seperti Laravel atau Symfony maupun pada aplikasi PHP tanpa \textit{framework}. Pengujian terhadap \textit{framework} selain CodeIgniter 3 bukan bagian dari ruang lingkup penelitian ini.
-	\item \textbf{Kontrol keamanan:} Pemeriksaan keamanan hanya dilakukan pada kontrol ISO/IEC 27001:2022 Annex A yang relevan dengan \textit{secure coding}: A.8.25, A.8.28, dan A.8.29, serta A.5.17 dan A.8.24 dan A.8.26 yang turut dipetakan oleh \textit{pipeline} \cite{iso27001_2022}.
+	\item \textbf{Kontrol keamanan:} Pemeriksaan keamanan hanya dilakukan pada kontrol ISO/IEC 27001:2022 Annex A yang relevan dengan \textit{secure coding}: A.8.25, A.8.28, dan A.8.29, serta A.5.17, A.8.24, dan A.8.26 yang turut dipetakan oleh \textit{pipeline} \cite{iso27001_2022}.
 	\item \textbf{Model AI:} Penelitian ini mengevaluasi dan membandingkan lima model LLM \textit{open source} yang dijalankan secara lokal melalui Ollama \cite{ollama2024} dalam eksperimen komparasi \textit{zero-shot}: DeepSeek Coder 6.7b \cite{deepseek2024coder}, Qwen2.5-Coder 7b \cite{hui2024qwen}, CodeLlama 7b \cite{roziere2024codellama}, Mistral 7b \cite{jiang2023mistral}, dan Llama 3.1 8b \cite{dubey2024llama3}. Semua model digunakan tanpa \textit{fine-tuning}.
 	\item \textbf{Lingkungan validasi:} Pengujian dilakukan dalam pengaturan lokal menggunakan kode sumber dari lingkungan institusional. Pengujian dalam lingkungan produksi skala besar bukan bagian dari ruang lingkup penelitian ini.
 	\item \textbf{Bahasa pemrograman:} Penelitian ini terbatas pada aplikasi PHP. Bahasa lain tidak dicakup.
@@ -135,10 +135,10 @@ Skripsi ini terdiri dari lima bab.
 
 \noindent \textbf{Bab I: Pendahuluan} memaparkan latar belakang masalah, rumusan masalah, tujuan penelitian, batasan penelitian, keamanan dan privasi data, manfaat penelitian, dan sistematika penulisan.
 
-\noindent \textbf{Bab II: Tinjauan Pustaka dan Landasan Teoritis} membahas penelitian-penelitian sebelumnya yang relevan dan kerangka teoritis, mencakup perubahan versi PHP, standar ISO/IEC 27001:2022, metodologi \textit{secure coding}, analisis kode berbasis LLM, serta alat-alat yang digunakan: Rector, Semgrep, PHPStan, dan Ollama.
+\noindent \textbf{Bab II: Tinjauan Pustaka dan Dasar Teori} membahas penelitian-penelitian sebelumnya yang relevan dan kerangka teoritis, mencakup perubahan versi PHP, standar ISO/IEC 27001:2022, metodologi \textit{secure coding}, analisis kode berbasis LLM, serta alat-alat yang digunakan: Rector, Semgrep, PHPStan, dan Ollama.
 
 \noindent \textbf{Bab III: Metodologi Penelitian} menjelaskan arsitektur sistem, tahapan penelitian, desain \textit{prompt} LLM, pemetaan kontrol ISO/IEC 27001:2022, rancangan eksperimen komparasi model, serta metode pengujian dan evaluasi.
 
 \noindent \textbf{Bab IV: Hasil dan Diskusi} menyajikan hasil implementasi \textit{pipeline} pada dua studi kasus (FT UGM dan CBT DTI UGM), mencakup tingkat keberhasilan konversi, perbandingan temuan keamanan sebelum dan sesudah konversi, hasil komparasi lima model LLM, dan diskusi mengenai kekuatan dan keterbatasan sistem.
 
-\noindent \textbf{Bab V: Kesimpulan dan Rekomendasi} merangkum temuan berdasarkan tujuan yang ditetapkan dan memberikan saran untuk penelitian berikutnya.
+\noindent \textbf{Bab V: Kesimpulan dan Saran} merangkum temuan berdasarkan tujuan yang ditetapkan dan memberikan saran untuk penelitian berikutnya.

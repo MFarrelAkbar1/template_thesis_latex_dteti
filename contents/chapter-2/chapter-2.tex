@@ -93,7 +93,7 @@ Cai et al. \cite{cai2015pattern} & Java & Tidak ada & \textit{Cloud migration} \
 \hline
 Chen et al. \cite{chen2022ast} & TypeScript & Tidak ada & \textit{Code migration} (AST) \\
 \hline
-\textbf{Penelitian ini} & PHP & Membandingkan 5 LLM lokal dan memilih AI terbaik untuk migrasi PHP & Migrasi versi + \textit{security compliance} \\
+\textbf{Penelitian ini} & PHP & Membandingkan 5 LLM lokal dan memilih AI terbaik untuk migrasi PHP & \textit{Version migration} + \textit{security compliance} \\
 \hline
 \end{longtable}
 
@@ -225,7 +225,7 @@ Dalam penelitian ini, Semgrep digunakan dua kali: sebelum konversi untuk menetap
 
 LLM (\textit{Large Language Model}) adalah model bahasa neural berbasis \textit{transformer} yang dilatih pada data teks dan kode dalam jumlah besar. LLM yang dilatih pada kode bisa memahami semantik kode, mengidentifikasi pola kerentanan, menyarankan perbaikan, dan menghasilkan kode baru \cite{akuthota2023vulnerability}. Kemampuan ini berbeda dari analisis berbasis aturan: LLM mempertimbangkan konteks dan tujuan kode, bukan hanya strukturnya.
 
-Penelitian ini mengevaluasi lima model LLM \textit{open source} yang dijalankan secara lokal. Kriteria pemilihan ada dua: model harus bisa dijalankan di GPU dengan VRAM 8 GB menggunakan kuantisasi Q4, dan harus memiliki kemampuan pemahaman kode yang terdokumentasi dalam literatur ilmiah.
+Penelitian ini mengevaluasi lima model LLM \textit{open source} yang dijalankan secara lokal. Kriteria pemilihan ada dua: model harus bisa dijalankan di GPU dengan VRAM 8 GB menggunakan kuantisasi Q4\_0, dan harus memiliki kemampuan pemahaman kode yang terdokumentasi dalam literatur ilmiah.
 
 \textbf{DeepSeek Coder 6.7b} \cite{deepseek2024coder} memiliki 6,7 miliar parameter dan dilatih pada 2 triliun token dengan komposisi 87\% kode sumber dari lebih dari 80 bahasa pemrograman.
 
@@ -263,7 +263,7 @@ instruksi yang dapat diverifikasi terpenuhi sekaligus. Pendekatan ini
 bersifat \textit{all-or-nothing}: respons yang hanya memenuhi sebagian
 instruksi tidak dihitung sebagai patuh.
 
-Penelitian ini mengadaptasi kedua konsep tersebut ke dalam empat metrik
+Penelitian ini mengadaptasi kedua konsep tersebut ke dalam lima metrik
 formal yang disesuaikan dengan konteks migrasi PHP dan analisis keamanan.
 
 \textbf{Tingkat Konversi Rector} (\textit{Conversion Rate}, CR) mengukur

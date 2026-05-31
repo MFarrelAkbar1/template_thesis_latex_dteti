@@ -211,7 +211,7 @@ Angka PHPStan yang tinggi justru menunjukkan manfaat nyata dari komponen validas
 
 Berdasarkan pemetaan yang dilakukan oleh \texttt{iso\_mapper.py}, status kepatuhan terhadap enam kontrol ISO/IEC 27001:2022 yang dipetakan adalah sebagaimana ditunjukkan pada Tabel \ref{tab:iso-status}.
 % Use fixed column widths to avoid "Column widths have changed" warnings from longtable
-\begin{longtable}{|l|p{2.5cm}|p{6cm}|p{3cm}|}
+\begin{longtable}{|l|>{\raggedright\arraybackslash}p{2.5cm}|p{6cm}|p{3cm}|}
 \caption{Status kepatuhan ISO/IEC 27001:2022 hasil \textit{pipeline} pada dataset FT UGM}
 \label{tab:iso-status} \\
 \hline
@@ -877,6 +877,7 @@ target dalam penelitian ini sebagai pilihan yang dapat dicapai secara
 otomatis untuk aplikasi berbasis CodeIgniter 3.x.
 
 \subsubsection{Keterbatasan Teknis Pipeline}
+\label{sec:keterbatasan}
 
 AI Engine hanya memproses temuan dengan prioritas 1--5 dan membatasi potongan kode yang dikirim ke model pada 2.000 karakter pertama. Untuk \textit{file} PHP yang panjang, konteks yang diterima model terpotong sehingga saran perbaikan mungkin tidak mempertimbangkan keseluruhan logika fungsi. Sebagaimana terlihat pada contoh respons Qwen2.5-Coder, model dapat membuat inferensi yang tepat tentang konteks kode meski dengan informasi yang terbatas, namun tidak selalu bisa dipastikan.
 
@@ -924,23 +925,14 @@ Rector dijalankan terhadap 326 \textit{file} PHP dengan target
 versi PHP 8.3. Dari jumlah tersebut, 299 \textit{file} berhasil 
 dikonversi, 25 \textit{file} dilewati (\textit{skipped}), dan 
 2 \textit{file} gagal diproses. Tingkat konversi keseluruhan 
-($CR = 91{,}7\%$), sebagaimana ditunjukkan pada 
-Gambar~\ref{fig:rector-bar-dti} dan Gambar~\ref{fig:rector-pie-dti}.
-
+($CR = 91{,}7\%$), sebagaimana ditunjukkan pada Gambar~\ref{fig:rector-bar-dti}.
+\newpage
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\textwidth]{contents/chapter-4/dti/pipeline_chart_cbt_qwen_2a_rector_bar.png}
+    \includegraphics[width=0.8\textwidth]{contents/chapter-4/dti/pipeline_chart_cbt_qwen_2a_rector_bar.png}
     \caption{Ringkasan hasil konversi Rector terhadap 326 \textit{file} PHP dataset CBT DTI UGM}
     \label{fig:rector-bar-dti}
 \end{figure}
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.7\textwidth]{contents/chapter-4/dti/pipeline_chart_cbt_qwen_2b_rector_pie.png}
-    \caption{Proporsi hasil konversi Rector dataset CBT DTI UGM (diagram lingkaran)}
-    \label{fig:rector-pie-dti}
-\end{figure}
-
 Tingkat konversi yang lebih rendah dibandingkan dengan studi kasus FT UGM 
 (91,7\% vs 97,6\%) disebabkan oleh proporsi \textit{file} yang 
 dilewati yang lebih besar: 25 dari 326 \textit{file} (7,7\%) 
@@ -1051,7 +1043,7 @@ seharusnya dimodifikasi secara langsung.
 
 PHPStan \textit{level} 5 dijalankan terhadap kode hasil 
 konversi di direktori \texttt{output/} dengan target PHP 8.3. 
-Hasilnya adalah 2.354 temuan. Di antara temuan tersebut, sekitar 318
+Hasilnya adalah 2.354 temuan. Di antara temuan tersebut, 318
 merupakan \textit{false positive} dari \textit{framework} CodeIgniter 3
 yang timbul karena PHPStan tidak dapat menelusuri \textit{magic property}
 dan fungsi \textit{helper} yang diinjeksi secara dinamis, konsisten dengan
@@ -1097,7 +1089,8 @@ Berdasarkan pemetaan yang dilakukan oleh \texttt{iso\_mapper.py},
 status kepatuhan terhadap enam kontrol ISO/IEC 27001:2022 yang 
 dipetakan adalah sebagaimana ditunjukkan pada 
 Tabel~\ref{tab:iso-status-dti}.
-\begin{longtable}{|l|p{3cm}|p{6cm}|p{3cm}|}
+\newpage
+\begin{longtable}{|l|>{\raggedright\arraybackslash}p{2.5cm}|p{6cm}|p{3cm}|}
 \caption{Status kepatuhan ISO/IEC 27001:2022 hasil 
 \textit{pipeline} pada dataset CBT DTI UGM}
 \label{tab:iso-status-dti} \\
@@ -1134,11 +1127,11 @@ untuk kata sandi &
 
 A.8.25 & \textit{Secure Development Lifecycle} & 
 1.140 temuan PHPStan (mayoritas \textit{false positive} CI3) & 
-{\footnotesize \texttt{NON\_COMPLIANT}} \\
+{\footnotesize\ttfamily NON\_COMPLIANT} \\
 \hline
 
-A.8.26 & \textit{Application Security Requirements} & 
-1 temuan SQL Injection dari Semgrep (\texttt{Output.php}, 
+A.8.26 & \textit{Application Security Requirements} &
+1 temuan SQL Injection dari Semgrep (\texttt{Output.php},
 CI3 \textit{framework}) & 
 {\footnotesize \texttt{NON\_COMPLIANT}} \\
 \hline
@@ -1152,10 +1145,8 @@ A.8.29 & \textit{Security Testing in Development} &
 10 temuan SSRF dari Semgrep masih terbuka & 
 {\footnotesize \texttt{NON\_COMPLIANT}} \\
 \end{longtable}
-
-Status keseluruhan adalah \texttt{NON\_COMPLIANT}. 
-Temuan pada A.8.26 dan A.8.29 bersumber dari 
-\texttt{system/core/Output.php} milik \textit{framework} 
+Status \texttt{NON\_COMPLIANT} ditemukan pada A.8.26 dan A.8.29
+dari \texttt{system/core/\allowbreak Output.php} \textit{framework} 
 CodeIgniter 3, bukan dari kode aplikasi kustom CBT DTI. 
 Hasil ini konsisten dengan cakupan analisis \textit{full scope} 
 yang diterapkan pada kedua studi kasus.
@@ -1247,7 +1238,7 @@ dataset.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.98\textwidth]{contents/chapter-4/comparison/comparison_qwen_3_phpstan_iso.png}
+    \includegraphics[width=0.9\textwidth]{contents/chapter-4/comparison/comparison_qwen_3_phpstan_iso.png}
     \caption{Perbandingan \textit{error} PHPStan berdasarkan kontrol ISO/IEC 27001:2022 pada kedua studi kasus}
     \label{fig:comparison-phpstan}
 \end{figure}
@@ -1276,7 +1267,6 @@ seperti \texttt{PhpOffice\textbackslash PhpSpreadsheet} dan
 Tabel \ref{tab:comparison-summary} merangkum seluruh metrik utama kedua
 studi kasus dalam satu tampilan, termasuk status dependensi \textit{composer}
 FT UGM.
-\newpage
 \begin{table}[h]
 \caption{Ringkasan perbandingan metrik \textit{pipeline} dan status dependensi \textit{composer} kedua studi kasus}
 \vspace{0.5em}
@@ -1296,13 +1286,13 @@ Semgrep \textit{findings} (pre) & 11 & 11 \\
 \hline
 Semgrep delta (post--pre) & +0 (stabil) & +0 (stabil) \\
 \hline
-Rector \textit{converted} & 239 (97.6\%) & 299 (91.7\%) \\
+Rector \textit{converted} & 239 (97{,}6\%) & 299 (91{,}7\%) \\
 \hline
 Rector \textit{skipped} & 4 & 25 \\
 \hline
 Rector \textit{failed} & 2 (\textit{Fiber bug}) & 2 (\textit{Fiber bug}) \\
 \hline
-PHPStan total \textit{errors} & 2,790 & 2,354 \\
+PHPStan total \textit{errors} & 2.790 & 2.354 \\
 \hline
 \hspace*{1em}CI3 \textit{noise filtered} & 354 & 318 \\
 \hline
@@ -1321,10 +1311,13 @@ Secara keseluruhan, kedua studi kasus menunjukkan pola yang konsisten:
 \textit{pipeline} berhasil menjalankan seluruh tahapan secara otomatis, 
 konversi Rector menghasilkan kode yang valid secara sintaksis di kedua 
 dataset, dan status ISO/IEC 27001:2022 keduanya adalah \texttt{NON\_COMPLIANT} 
-yang disebabkan oleh \textit{error} PHPStan. Perbedaan utama terletak pada keberadaan temuan Semgrep pada kode
-kustom: FT UGM memiliki kerentanan aktif yang memerlukan remediasi
-manual, sementara CBT DTI tidak menghasilkan temuan Semgrep di luar
-kode \textit{framework}. Dari sisi durasi eksekusi, kedua studi kasus
+yang disebabkan oleh \textit{error} PHPStan. Perbedaan utama terletak pada tingkat konversi Rector (97{,}6\% vs
+91{,}7\%), jumlah \textit{error} PHPStan (2.790 vs 2.354), dan
+ketersediaan analisis dependensi \textit{composer}---FT UGM memiliki
+berkas \texttt{composer.json} dengan lima dependensi yang diperiksa
+(tiga \texttt{SAFE}, dua \texttt{MANUAL REVIEW}), sementara CBT DTI
+tidak memiliki berkas tersebut sehingga langkah analisis dependensi
+dilewati secara otomatis. Dari sisi durasi eksekusi, kedua studi kasus
 sebanding, sekitar 3--4 menit, karena keduanya menggunakan
 Qwen2.5-Coder 7b sebagai AI Engine dengan satu kali inferensi
 per temuan; eksperimen komparasi multi-model (Kondisi A--C) pada
