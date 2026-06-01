@@ -318,7 +318,7 @@ kelima model pada Kondisi A.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\textwidth]{contents/chapter-4/llm_chart_20260427_140238_4_stats_tables.png}
+    \includegraphics[width=1\textwidth]{contents/chapter-4/llm_chart_20260425_203514_4_stats_table.png}
     \caption{Statistik lengkap komparasi kelima model LLM pada Kondisi A}
     \label{fig:stats-table-a}
 \end{figure}
@@ -470,7 +470,7 @@ kelima model pada Kondisi B.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\textwidth]{contents/chapter-4/llm_chart_20260427_130844_4_stats_table.png}
+    \includegraphics[width=1\textwidth]{contents/chapter-4/llm_chart_20260427_140238_4_stats_tables.png}
     \caption{Statistik lengkap komparasi kelima model LLM pada Kondisi B}
     \label{fig:stats-table-b}
 \end{figure}
@@ -735,7 +735,7 @@ ditransformasi oleh Rector (100\%).
 
 Dari sisi durasi, total eksekusi \textit{pipeline} adalah
 sekitar 3,8 menit menggunakan Qwen2.5-Coder 7b via Ollama
-sebagai AI Engine. Durasi ini tidak mencakup eksperimen
+sebagai \textit{AI Engine}. Durasi ini tidak mencakup eksperimen
 komparasi multi-model (Kondisi A--C) yang merupakan prosedur
 evaluasi terpisah. Tahap konversi Rector dan analisis
 PHPStan secara gabungan mendominasi waktu eksekusi.
@@ -879,7 +879,7 @@ otomatis untuk aplikasi berbasis CodeIgniter 3.x.
 \subsubsection{Keterbatasan Teknis Pipeline}
 \label{sec:keterbatasan}
 
-AI Engine hanya memproses temuan dengan prioritas 1--5 dan membatasi potongan kode yang dikirim ke model pada 2.000 karakter pertama. Untuk \textit{file} PHP yang panjang, konteks yang diterima model terpotong sehingga saran perbaikan mungkin tidak mempertimbangkan keseluruhan logika fungsi. Sebagaimana terlihat pada contoh respons Qwen2.5-Coder, model dapat membuat inferensi yang tepat tentang konteks kode meski dengan informasi yang terbatas, namun tidak selalu bisa dipastikan.
+\textit{AI Engine} hanya memproses temuan dengan prioritas 1--5 dan membatasi potongan kode yang dikirim ke model pada 2.000 karakter pertama. Untuk \textit{file} PHP yang panjang, konteks yang diterima model terpotong sehingga saran perbaikan mungkin tidak mempertimbangkan keseluruhan logika fungsi. Sebagaimana terlihat pada contoh respons Qwen2.5-Coder, model dapat membuat inferensi yang tepat tentang konteks kode meski dengan informasi yang terbatas, namun tidak selalu bisa dipastikan.
 
 Selain itu, validasi menggunakan \texttt{php -l} hanya memeriksa kebenaran sintaksis, bukan kebenaran semantik. Kode yang lolos \texttt{php -l} bisa saja masih mengandung kerentanan yang tidak tertangani atau logika yang tidak ekuivalen dengan kode aslinya. Pengujian fungsional terhadap kode hasil perbaikan AI bukan bagian dari cakupan penelitian ini.
 
@@ -1007,7 +1007,7 @@ pengguna dalam operasi \textit{file system}. Kode aplikasi
 kustom CBT DTI di luar direktori \texttt{system/} tidak 
 mengandung temuan Semgrep.
 
-\subsubsection{Post-Scan dan AI Engine}
+\subsubsection{\textit{Post-Scan} dan \textit{AI Engine}}
 
 Pemindaian Semgrep terhadap direktori \texttt{output/} setelah 
 konversi menghasilkan jumlah temuan yang identik dengan tahap 
@@ -1020,7 +1020,7 @@ menghilangkan kerentanan yang sudah ada, konsisten dengan
 karakteristik transformasi berbasis AST yang hanya memodifikasi 
 sintaks tanpa mengubah logika program.
 
-Karena terdapat 11 temuan Semgrep, modul AI Engine diaktifkan
+Karena terdapat 11 temuan Semgrep, modul \textit{AI Engine} diaktifkan
 secara otomatis oleh \textit{pipeline}. Model
 \textit{qwen2.5-coder:7b} melalui Ollama memproses seluruh
 11 temuan dan menghasilkan saran perbaikan dengan rata-rata
@@ -1032,7 +1032,7 @@ temuan SQL Injection pada \texttt{Output.php} baris 768 yang
 mendapat \textit{confidence} 0\%, karena potongan kode yang
 dikirim ke model tidak menyertakan konteks yang cukup untuk
 menganalisis konstruksi internal \textit{framework}. Seluruh 
-saran perbaikan dari AI Engine bersifat informatif dan 
+saran perbaikan dari \textit{AI Engine} bersifat informatif dan 
 memerlukan tinjauan manual sebelum diterapkan, karena seluruh 
 temuan berasal dari kode \textit{framework} yang tidak 
 seharusnya dimodifikasi secara langsung.
@@ -1319,7 +1319,7 @@ berkas \texttt{composer.json} dengan lima dependensi yang diperiksa
 tidak memiliki berkas tersebut sehingga langkah analisis dependensi
 dilewati secara otomatis. Dari sisi durasi eksekusi, kedua studi kasus
 sebanding, sekitar 3--4 menit, karena keduanya menggunakan
-Qwen2.5-Coder 7b sebagai AI Engine dengan satu kali inferensi
+Qwen2.5-Coder 7b sebagai \textit{AI Engine} dengan satu kali inferensi
 per temuan; eksperimen komparasi multi-model (Kondisi A--C) pada
 studi kasus FT UGM merupakan prosedur evaluasi terpisah dan tidak
 termasuk dalam pengukuran durasi \textit{pipeline}.
