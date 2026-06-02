@@ -1,0 +1,118 @@
+\chapter*{Lampiran}
+\label{app:github-repository}
+
+\section*{C.1 Tautan Repositori GitHub}
+
+Kode sumber alat \textit{pipeline} migrasi PHP yang dikembangkan dalam
+penelitian ini tersedia secara publik di repositori GitHub berikut:
+
+\begin{center}
+  \url{https://github.com/MFarrelAkbar1/skripsi-php-migration}
+\end{center}
+
+Repositori ini memuat seluruh modul Python (\texttt{pipeline/}), konfigurasi
+Rector dan PHPStan, \textit{ruleset} Semgrep lokal (\texttt{rules/}),
+berkas contoh pengujian (\texttt{tests/}), serta dokumentasi pendukung
+(\texttt{docs/}) yang digunakan selama proses penelitian.
+
+% --------------------------------------------------------
+\section*{C.2 Struktur Folder Proyek}
+% --------------------------------------------------------
+
+Berikut adalah struktur direktori lengkap dari repositori
+\textit{pipeline} migrasi PHP.
+
+\begin{lstlisting}[style=pseudocodestyle]
+skripsi-php-migration/
+|-- README.md                           <- Dokumentasi utama
+|-- requirements.txt                    <- Dependensi Python
+|-- composer.json                       <- Dependensi PHP (Rector, 
+                                          PHPStan)
+|
+|-- pipeline/                           <- Semua modul Python
+|   |-- main.py                         <- Entry point & orkestrator 
+                                           6 step
+|   |-- scanner.py                      <- Semgrep security scanning
+|   |-- converter.py                    <- Rector PHP conversion
+|   |-- analyzer.py                     <- PHPStan static analysis
+|   |-- ai_engine.py                    <- Ollama / LLM integration
+|   |-- iso_mapper.py                   <- Pemetaan ISO/IEC 27001:2022
+|   |-- composer_analyzer.py            <- Analisis kompatibilitas 
+                                            composer.json
+|   |-- llm_quality_checker.py          <- Syntax validity rate 
+                                           per model
+|   |-- accuracy_checker.py             <- Metrik akurasi pipeline
+|   |-- accuracy_validator.py           <- Validasi hasil migrasi
+|   |-- capture_responses.py            <- Capture raw LLM responses
+|   |-- llm_comparison_chart.py         <- Chart perbandingan LLM
+|   |-- generate_condition_a_charts.py  <- Chart eksperimen kondisi A
+|   |-- generate_condition_b_charts.py  <- Chart eksperimen kondisi B
+|   `-- pipeline_result_chart.py        <- Chart hasil pipeline 
+                                           keseluruhan
+|
+|-- input/                              <- PHP 7.4 asli 
+                                           (tidak dimodifikasi)
+|-- output/                           <- PHP 8.x hasil konversi Rector
+|-- reports/                            <- JSON reports + PNG charts
+|-- rules/                              <- Semgrep rules lokal (pinned)
+
+|-- tests/
+|   `-- sample_php74/                   <- Sample PHP untuk 
+                                           pengujian cepat
+|       |-- sample_login.php
+|       |-- sample_realistic.php
+|       `-- sample_upload.php
+|
+|-- docs/
+|   |-- architecture.md
+|   |-- iso_controls.md
+|   `-- pseudocode_appendix.md
+|
+`-- vendor/                              <- Paket Composer
+\end{lstlisting}
+
+\bigskip
+
+Keterangan singkat setiap direktori utama:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|p{3.5cm}|p{11cm}|}
+\hline
+\textbf{Direktori / Berkas} & \textbf{Keterangan} \\
+\hline
+\texttt{pipeline/} &
+  Seluruh modul Python yang mengimplementasikan enam tahap pipeline:
+  pra-pindai, konversi, pasca-pindai, analisis statis, rekomendasi AI,
+  dan pemetaan ISO. \\
+\hline
+\texttt{input/} &
+  Folder tempat file PHP 7.4 asli ditempatkan sebelum diproses.
+  Isi folder ini \textbf{tidak pernah dimodifikasi} oleh pipeline. \\
+\hline
+\texttt{output/} &
+  Hasil konversi Rector: file PHP 8.x yang sudah diperbarui sintaksnya. \\
+\hline
+\texttt{reports/} &
+  Laporan JSON dan grafik PNG yang dihasilkan setelah pipeline selesai,
+  termasuk laporan kepatuhan ISO dan perbandingan model LLM. \\
+\hline
+\texttt{rules/} &
+  \textit{Ruleset} Semgrep yang telah di-\textit{pin} secara lokal agar
+  hasil eksperimen dapat direproduksi tanpa bergantung pada versi
+  \textit{ruleset} online. \\
+\hline
+\texttt{tests/
+        sample\_php74/} &
+  Tiga berkas PHP sampel untuk pengujian cepat tanpa harus menyiapkan
+  seluruh dataset studi kasus. \\
+\hline
+\texttt{docs/} &
+  Dokumentasi arsitektur sistem, daftar kontrol ISO yang dipetakan,
+  dan pseudocode dalam format Markdown. \\
+\hline
+\texttt{vendor/} &
+  Paket PHP yang diinstall oleh Composer (Rector, PHPStan). \\
+\hline
+\end{tabular}
+\end{center}

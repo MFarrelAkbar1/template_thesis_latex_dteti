@@ -26,13 +26,12 @@ mengubah perilaku kode secara tidak terduga. Status
 \texttt{NON\_COMPLIANT} yang dihasilkan bukan cerminan kegagalan
 \textit{pipeline}, melainkan potret kondisi nyata kode warisan yang
 memang sudah mengandung permasalahan keamanan sebelum dilakukan
-remediasi. Seluruh hasil analisis ini disatukan dalam laporan JSON
-yang dibuat secara otomatis pada setiap eksekusi \textit{pipeline}
-sehingga dapat langsung digunakan sebagai dokumentasi audit tanpa
-pekerjaan manual tambahan, menjawab kebutuhan nyata organisasi yang
-sedang dalam proses sertifikasi dan memerlukan bukti tertulis bahwa
-migrasi kode dilakukan dengan memperhatikan standar keamanan yang
-berlaku.
+remediasi. Seluruh hasil analisis ini disatukan dalam laporan JSON 
+yang dibuat secara otomatis pada setiap eksekusi \textit{pipeline}. 
+Laporan ini dapat langsung digunakan sebagai dokumentasi audit tanpa 
+pekerjaan manual tambahan. Hal ini secara langsung menjawab kebutuhan 
+organisasi yang sedang dalam proses sertifikasi, di mana bukti tertulis 
+mengenai migrasi kode yang mematuhi standar keamanan sangat diperlukan.
 
 \textbf{Ketiga}, komponen validasi PHPStan memberikan manfaat konkret
 dengan mengekspos ribuan potensi masalah kompatibilitas tipe yang
@@ -42,14 +41,14 @@ debt} yang sudah ada jauh sebelum migrasi dilakukan dan baru terlihat
 karena sistem tipe PHP 8.3 jauh lebih ketat dibanding versi
 sebelumnya. Fakta ini justru memperjelas nilai tambah
 \textit{pipeline}: bukan sekadar mengonversi sintaksis, tetapi juga
-memberi gambaran menyeluruh tentang kondisi aktual basis kode yang
-selama ini tersembunyi di balik kelenturan sistem tipe pada PHP versi
-lama.
+memberi gambaran menyeluruh tentang kondisi aktual basis kode yang 
+selama ini tersembunyi di balik sifat permisif sistem tipe 
+pada PHP versi lama
 
 \textbf{Keempat}, komparasi performa lima model LLM \textit{open
-source} dalam konteks analisis keamanan kode PHP menghasilkan temuan
-empiris yang relevan bagi siapa pun yang ingin menerapkan pendekatan
-serupa. \textit{Format Compliance Rate} dan \textit{Syntax Validity
+source} dalam konteks analisis keamanan kode PHP menghasilkan temuan 
+empiris yang relevan sebagai landasan untuk implementasi maupun 
+penelitian lanjutan. \textit{Format Compliance Rate} dan \textit{Syntax Validity
 Rate} terbukti sebagai dua dimensi yang independen dan tidak
 berkorelasi satu sama lain: model yang disiplin mengikuti instruksi
 format belum tentu menghasilkan kode yang valid secara sintaksis, dan
@@ -78,8 +77,8 @@ pengembangan yang disarankan untuk penelitian selanjutnya.
     lebih tinggi agar kesimpulan perbandingan model dapat 
     digeneralisasi lebih luas. Sebagai kelanjutan jangka 
     panjang, eksplorasi \textit{fine-tuning} dengan LoRA atau 
-    QLoRA dapat dilakukan menggunakan penelitian ini sebagai 
-    \textit{baseline}.
+    QLoRA dapat dilakukan menjadikan penelitian ini 
+    sebagai \textit{baseline}.
 
     \item Akurasi laporan PHPStan pada basis kode 
     CodeIgniter 3.x dapat ditingkatkan melalui \textit{custom 
@@ -91,7 +90,7 @@ pengembangan yang disarankan untuk penelitian selanjutnya.
     meningkatkan kredibilitas laporan kepatuhan yang dihasilkan.
 
     \item Integrasi ke CI/CD dan perluasan ke bahasa 
-    pemrograman lain dapat dijajaki. Arsitektur modular 
+    pemrograman lain dapat dieksplorasi lebih lanjut. Arsitektur modular 
     \textit{pipeline} memudahkan penggantian komponen Rector dan 
     Semgrep dengan alat setara untuk Python, JavaScript, atau 
     bahasa lain, sekaligus membuka kemungkinan integrasi ke 

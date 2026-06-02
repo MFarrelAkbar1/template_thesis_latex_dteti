@@ -177,8 +177,7 @@ Gambar \ref{fig:arsitektur-sistem} menunjukkan hubungan antar modul.
 
 \subsection{Scanner (scanner.py)}
 
-Modul pertama yang berjalan. Scanner menjalankan Semgrep pada direktori \texttt{input/} sebelum konversi dimulai untuk menetapkan \textit{baseline} keamanan kode asli. Hasil pemindaian dikelompokkan berdasarkan jenis kerentanan (injeksi SQL, XSS, \textit{path traversal}, injeksi perintah, fungsi usang, kriptografi lemah) dan diberi tingkat prioritas. Data ini menjadi pembanding untuk mengukur perubahan keamanan setelah konversi.
-
+Scanner merupakan modul pertama yang dieksekusi dalam \textit{pipeline}. Modul ini menjalankan Semgrep pada direktori
 \subsection{Converter (converter.py)}
 
 \begin{sloppypar}
@@ -240,7 +239,7 @@ terhadap kerahasiaan dan integritas sistem serta frekuensi kemunculannya pada ap
 
 \begin{sloppypar}
 
-Untuk setiap temuan yang lolos filter, modul mengirimkan konteks dan potongan kode ke model LLM melalui endpoint \texttt{/api/chat} Ollama di \texttt{localhost:11434}. Jika model tidak menghasilkan blok kode PHP sama sekali, respons tetap dicatat dengan \textit{placeholder} \texttt{// Manual review required} dan tidak dilewati (diabaikan). Jika Ollama tidak tersedia, \textit{pipeline} tetap berjalan tanpa komponen AI. Desain \textit{prompt} yang digunakan dibahas dalam Subbab \ref{sec:prompt-design}.
+Untuk setiap temuan yang lolos filter, modul mengirimkan konteks dan potongan kode ke model LLM melalui endpoint \texttt{/api/chat} Ollama di \texttt{localhost:11434}. Jika model tidak menghasilkan blok kode PHP sama sekali, respons tetap dicatat dengan \textit{placeholder} // Manual review required dan tidak diabaikan begitu saja. Jika Ollama tidak tersedia, \textit{pipeline} tetap berjalan tanpa komponen AI. Desain \textit{prompt} yang digunakan dibahas dalam Subbab \ref{sec:prompt-design}.
 
 \end{sloppypar}
 
@@ -250,7 +249,7 @@ Modul ini menerima semua hasil dari Scanner, Analyzer, dan AI Engine sebagai obj
 
 \subsection{Main (main.py)}
 
-File main adalah orkestrator yang mengontrol seluruh \textit{pipeline}. Menerima direktori \textit{input} dan versi PHP target sebagai argumen CLI, menjalankan keenam modul secara berurutan, dan menghasilkan laporan JSON di direktori \texttt{reports/}. Ringkasan hasil ditampilkan di konsol menggunakan pustaka Rich.
+Modul \texttt{main.py} bertindak sebagai orkestrator yang mengontrol seluruh \textit{pipeline}. Menerima direktori \textit{input} dan versi PHP target sebagai argumen CLI, menjalankan keenam modul secara berurutan, dan menghasilkan laporan JSON di direktori \texttt{reports/}. Ringkasan hasil ditampilkan di konsol menggunakan pustaka Rich.
 Contoh kerangka laporan JSON yang dihasilkan:
 
 \begin{lstlisting}[style=promptstyle]
@@ -288,7 +287,7 @@ diverifikasi secara otomatis).
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.6\textwidth]{contents/chapter-3/alur-pipeline-input.png}
+    \includegraphics[width=0.82\textwidth]{contents/chapter-3/alur-data-pipeline.png}
     \caption{Alur data \textit{pipeline}: tahap masukan: 
     Scanner, Converter, dan Composer Analyzer}
     \label{fig:alur-pipeline-input}
@@ -304,25 +303,17 @@ Scanner menjalankan Semgrep kembali pada \texttt{output/}
 melalui nilai $\Delta F$. Composer Analyzer memeriksa 
 kompatibilitas dependensi \texttt{composer.json} terhadap 
 PHP 8.x, atau dilewati otomatis jika berkas tidak ditemukan.
-\newpage
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.6\textwidth]{contents/chapter-3/alur-pipeline-output.png}
-    \caption{Alur data \textit{pipeline}: tahap keluaran: 
-    Analyzer, AI Engine, ISO Mapper, dan laporan akhir}
-    \label{fig:alur-pipeline-output}
-\end{figure}
 
-Analyzer menjalankan PHPStan level 5 pada \texttt{output/} 
+
+Selanjutnya, Analyzer menjalankan PHPStan level 5 pada \texttt{output/} 
 untuk memverifikasi kompatibilitas kode dengan versi PHP 
-target. AI Engine mengambil temuan Semgrep prioritas 1--5
+target. Sementara itu, AI Engine mengambil temuan Semgrep prioritas 1--5
 dan mengirimkannya ke model LLM untuk analisis dan saran 
 perbaikan; modul ini dilewati otomatis jika tidak ada temuan. 
-ISO Mapper mengumpulkan semua temuan dari Scanner, Analyzer, 
+Pada tahap akhir, ISO Mapper mengumpulkan semua temuan dari Scanner, Analyzer, 
 dan AI Engine lalu memetakannya ke enam kontrol ISO/IEC 
-27001:2022. \texttt{main.py} menggabungkan semuanya menjadi 
-laporan JSON dan menampilkan ringkasan di konsol.
-
+27001:2022. Sebagai penutup, \texttt{main.py} menggabungkan seluruh 
+data tersebut menjadi laporan JSON dan menampilkan ringkasannya di konsol.
 
 \section{Desain Prompt LLM}
 
@@ -344,7 +335,7 @@ You analyze PHP code for security vulnerabilities and provide
 secure PHP 8.x replacements. 
 Always follow output format instructions exactly as given.
 \end{lstlisting}
-
+\newpage
 \textit{User message} untuk setiap temuan:
 
 \begin{lstlisting}[style=promptstyle]
@@ -560,16 +551,16 @@ Kriptografi Lemah & A.8.24, A.8.28 & 6 \\
 \end{table}
 Pendekatan \textit{keyword matching} ini dipilih dibandingkan pendekatan berbasis AI karena tiga alasan. Pertama,
 hasilnya deterministik: temuan yang sama selalu menghasilkan
-pemetaan yang sama tanpa variasi antar inferensi. Kedua, dapat
-diaudit secara langsung karena seluruh logika pemetaan tersimpan
-sebagai kode Python yang bisa diperiksa dan diverifikasi.
+pemetaan yang sama tanpa variasi antar inferensi. Kedua, pendekatan ini 
+sepenuhnya dapat diaudit karena seluruh logika pemetaannya tersimpan 
+dalam bentuk kode Python yang mudah diperiksa dan diverifikasi.
 Ketiga, tidak memerlukan koneksi eksternal atau model tambahan,
 sehingga konsisten dengan persyaratan privasi data yang ditetapkan
 dalam Subbab \ref{sec:data-privacy}.
 \newpage
 \section{Rancangan Eksperimen Komparasi Model LLM}
 
-Eksperimen komparasi dirancang dengan kondisi yang sepenuhnya terkontrol dan dilakukan terpisah dari pengujian \textit{pipeline} utama menggunakan skrip evaluasi khusus.
+Eksperimen komparasi dirancang dengan kondisi yang dikontrol ketat dan dilakukan terpisah dari pengujian \textit{pipeline} utama menggunakan skrip evaluasi khusus.
 
 Eksperimen ini mencakup tiga kondisi yang dirancang secara bertahap. \textbf{Kondisi A} adalah \textit{baseline}: semua model menerima \textit{prompt} yang identik secara \textit{zero-shot} tanpa optimasi apa pun. \textbf{Kondisi B} mengoptimasi \textit{prompt} per model berdasarkan pola kegagalan yang terobservasi pada Kondisi A, untuk mengetahui sejauh mana performa model bisa ditingkatkan melalui penyesuaian \textit{prompt}. \textbf{Kondisi C} mengeksplorasi variasi parameter \textit{temperature} dan \textit{context window} pada model terbaik hasil Kondisi A dan B.
 

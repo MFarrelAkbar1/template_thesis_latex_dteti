@@ -18,7 +18,7 @@
 
     Li et al. \cite{li2025software} mengambil pendekatan yang lebih terstruktur. Mereka menggabungkan analisis \textit{patch} historis dengan analisis statis, lalu menambahkan tabel fitur kerentanan dan templat penganalisis untuk membuat klasifikasi LLM lebih akurat, terutama pada kerentanan yang membutuhkan pemahaman aliran data lintas fungsi. Evaluasi pada basis kode Linux kernel berhasil menemukan 44 bug baru, 37 di antaranya dikonfirmasi dan 30 diperbaiki, dengan hasil yang lebih baik dibandingkan analisis statis saja.
 
-    Terdapat dua temuan penting yang dapat ditarik dari kedua studi tersebut. LLM tujuan umum sudah bisa menemukan pola kerentanan hanya dengan \textit{prompt engineering}, dan penggabungan LLM dengan analisis statis terstruktur memberikan hasil yang lebih akurat untuk kasus yang kompleks. Hambatan yang sama muncul di keduanya: model dijalankan via API \textit{cloud}, yang menjadi kendala nyata ketika kode yang dianalisis bersifat rahasia. Penelitian ini mengatasi kendala tersebut dengan menjalankan semua model secara lokal melalui Ollama, sehingga tidak ada kode sumber yang keluar dari lingkungan organisasi.
+    Terdapat dua temuan penting yang dapat ditarik dari kedua studi tersebut. LLM tujuan umum sudah bisa menemukan pola kerentanan hanya dengan \textit{prompt engineering}, dan penggabungan LLM dengan analisis statis terstruktur memberikan hasil yang lebih akurat untuk kasus yang kompleks. Namun, hambatan yang sama muncul di keduanya: model dijalankan via API \textit{cloud}, yang menjadi kendala nyata ketika kode yang dianalisis bersifat rahasia. Penelitian ini mengatasi kendala tersebut dengan menjalankan semua model secara lokal melalui Ollama, sehingga tidak ada kode sumber yang keluar dari lingkungan organisasi.
 
     \subsection{Transformasi Kode dengan Bantuan LLM}
 
@@ -38,7 +38,7 @@
 
     Strobl dkk. \cite{strobl2020automated} menganalisis tiga kasus transformasi kode otomatis skala besar di sebuah organisasi pemerintah, semuanya melibatkan konversi sistem warisan dari COBOL dan PL/I ke Java dengan ukuran lebih dari satu juta baris kode. Fokus utama studi ini bukan pada keberhasilan transformasi, melainkan pada dampak pascatransformasi.
 
-    Hasil studi tersebut mengungkapkan permasalahan yang signifikan. Transformasi otomatis seringkali menghasilkan kode yang sintaksis valid di bahasa target, tapi mempertahankan karakteristik struktural dari bahasa sumber sehingga sulit dipahami pengembang yang tidak kenal sistem lama. Lebih lanjut, kasus yang memiliki \textit{test suite} otomatis sejak awal jauh lebih mudah dirawat pascatransformasi. Kasus tanpa pengujian otomatis menjadi beban jangka panjang.
+    Hasil studi tersebut mengungkapkan permasalahan yang signifikan. Transformasi otomatis seringkali menghasilkan kode yang sintaksis valid di bahasa target, tapi mempertahankan karakteristik struktural dari bahasa sumber sehingga sulit dipahami pengembang yang tidak kenal sistem lama. Lebih lanjut, sistem yang memiliki \textit{test suite} otomatis sejak awal jauh lebih mudah dirawat pascatransformasi, sementara sistem tanpa pengujian otomatis menjadi beban jangka panjang." (Menggabungkan dua kalimat pendek menjadi satu kalimat majemuk yang lebih elegan, serta mengganti kata "kasus" menjadi "sistem").
 
     Temuan ini menjadi alasan mengapa penelitian ini menyertakan PHPStan sebagai validasi pasca-konversi dan Semgrep sebagai pemindaian keamanan sebelum dan sesudah transformasi. Masalah yang ditinggalkan oleh konversi otomatis perlu terdeteksi segera, bukan bertahun-tahun kemudian.
 
@@ -140,7 +140,7 @@
 
     \subsection{PHP dan Perubahan Antar Versi}
 
-    PHP (\textit{Hypertext Preprocessor}) menjadi bahasa skrip sisi \textit{server} yang paling banyak digunakan di web sejak akhir 1990-an \cite{phpgroup_history}. W3Techs mencatat bahwa 71,7\% dari seluruh situs web yang memiliki bahasa pemrograman sisi \textit{server} menggunakan PHP \cite{w3techs2024php}.
+    PHP (\textit{Hypertext Preprocessor}) telah menjadi bahasa skrip sisi \textit{server} yang paling banyak digunakan di web sejak akhir 1990-an \cite{phpgroup_history}. W3Techs mencatat bahwa 71,7\% dari seluruh situs web yang memiliki bahasa pemrograman sisi \textit{server} menggunakan PHP \cite{w3techs2024php}.
 
     Untuk memahami tantangan migrasi yang dihadapi kode lama, perlu dipahami dulu karakteristik PHP 5.x yang masih banyak ditemukan di sistem yang belum bermigrasi. PHP 5.x, aktif digunakan dari sekitar 2004 hingga awal 2010-an, memiliki karakteristik yang berbeda secara fundamental dari versi modern. Yang paling signifikan adalah ekstensi \texttt{ext/mysql} dengan fungsi-fungsi seperti \texttt{mysql\_connect()}, \texttt{mysql\_query()}, dan \texttt{mysql\_fetch\_array()}. Fungsi-fungsi ini tidak mendukung \textit{prepared statements} secara asli, sehingga rentan terhadap injeksi SQL jika \textit{input} pengguna tidak disanitasi secara manual. Ekstensi ini sudah dinyatakan \textit{deprecated} sejak PHP 5.5 dan dihapus sepenuhnya di PHP 7.0 \cite{phpgroup2022supported}. PHP 5.x juga menggunakan kata kunci \texttt{var} untuk deklarasi properti kelas, sintaks \texttt{array()} yang panjang, dan belum mendukung \textit{type hints} skalar. Rector dapat menangani sebagian besar transformasi sintaksis dari PHP 5.x melalui \textit{ruleset} kumulatifnya \cite{rector2024}, namun penggantian \texttt{mysql\_*()} tidak dapat dilakukan oleh Rector karena membutuhkan pemahaman semantik tentang konteks penggunaan basis data. Keterbatasan inilah yang secara langsung memotivasi kehadiran AI Engine dalam \textit{pipeline} penelitian ini.
 
@@ -370,3 +370,33 @@ Dalam praktiknya, DevSecOps diwujudkan melalui integrasi alat keamanan otomatis 
     lain. Ketiga, Ollama mendukung kuantisasi Q4\_0 secara otomatis yang
     memungkinkan model berukuran 6--8 miliar parameter berjalan dalam VRAM
     8 GB tanpa pengaturan tambahan.
+
+    \subsection{Algoritma Ratcliff/Obershelp untuk Pengukuran \textit{Similarity} Kode}
+\label{subsec:ratcliff-obershelp}
+
+Pengukuran kemiripan antara dua versi kode sumber memerlukan algoritma yang sensitif 
+terhadap urutan dan struktur baris, bukan sekadar kehadiran kata kunci. Algoritma 
+Ratcliff/Obershelp \cite{ratcliff1988gestalt} dirancang untuk kebutuhan ini. Berbeda 
+dari \textit{cosine similarity} yang merepresentasikan teks sebagai vektor frekuensi 
+kata dan mengabaikan urutan, atau \textit{edit distance} (Levenshtein) yang bekerja 
+pada level karakter, Ratcliff/Obershelp menghitung rasio kecocokan berbasis blok 
+terpanjang yang cocok secara rekursif antara dua sekuens.
+
+Formula dasarnya adalah:
+
+\begin{equation}
+    S = \frac{2M}{T}
+    \label{eq:ratcliff}
+\end{equation}
+
+di mana $M$ adalah jumlah elemen yang cocok dan $T$ adalah total elemen pada kedua 
+sekuens. Nilai $S$ berada di rentang $0{,}0$ (tidak ada kesamaan) hingga $1{,}0$ 
+(identik). Dalam konteks perbandingan kode sumber, algoritma ini diterapkan pada 
+level baris (\textit{line-level}), sehingga setiap baris kode diperlakukan sebagai 
+satu elemen sekuens.
+
+Python mengimplementasikan algoritma ini melalui \texttt{difflib.SequenceMatcher} 
+dari \textit{standard library}, yang menjadikannya dapat digunakan tanpa dependensi 
+eksternal tambahan. Dalam penelitian ini, metrik ini digunakan pada tahap validasi 
+akurasi untuk mengukur kemiripan antara keluaran Rector dan konversi referensi yang 
+disiapkan secara manual, sebagaimana dibahas di Subbab \ref{subsec:validasi-akurasi}.
