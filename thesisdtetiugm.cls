@@ -411,7 +411,7 @@
 					{Telah disetujui dan disahkan}
 					{Has been approved and endorsed}\\
 				\vspace{0.5cm}
-				\iftoggle{lang}{Pada tanggal $\ldots\ldots$}{on $\ldots\ldots$}\\
+				\iftoggle{lang}{Pada tanggal 3 Juni 2026}{on 3 Juni 2026}\\
 				\vfill
 				\begin{center}
 					\begin{tabular}{ccc}
@@ -627,6 +627,16 @@
 	\chapter*{\statementname}%
 	\input{#1}
 	\addcontentsline{toc}{chapter}{\statementname}
+}
+
+%======================================
+%% PDF Statement Page
+%======================================
+\newcommand{\chapterstatementpdf}[1]{
+	\addtocounter{page}{1}
+	\addcontentsline{toc}{chapter}{\statementname}
+	\includepdf[page={1}]{#1}
+	\addtocounter{page}{-1}
 }
 
 %======================================
