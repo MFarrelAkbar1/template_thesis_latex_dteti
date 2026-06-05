@@ -340,7 +340,7 @@ Llama 3.1 8b        & 0{,}00 & 0{,}00 & 0{,}00 & 0{,}00 & 0\%  & 8{,}2 \\
 \end{tabular}%
 }
 \end{table}
-
+\newpage
 Statistik berikut dihitung dari 33 inferensi per model (11 temuan 
 $\times$ 3 \textit{run} independen, \textit{temperature} = 0,1).
 
@@ -757,7 +757,7 @@ eksekusi tiap tahap.
     \caption{Durasi eksekusi \textit{pipeline} pada dataset FT UGM}
     \label{fig:validation-duration}
 \end{figure}
-
+\newpage
 Pertama, \textit{syntax validity rate} diukur dengan menjalankan 
 \texttt{php -l} terhadap seluruh \textit{file} di direktori 
 \texttt{output/}. Hasilnya adalah 241 dari 241 \textit{file} 
@@ -801,7 +801,7 @@ cakupan 24 \textit{file} sampel tersebut.
     10\% berdasarkan direktori asal}
     \label{fig:validation-coverage}
 \end{figure}
-
+\newpage
 Dari 24 \textit{file} sampel, 12 berasal dari direktori 
 \texttt{application/} (kode aplikasi yang diproses Rector) 
 dan 12 berasal dari direktori \texttt{system/} (kode 
@@ -926,6 +926,19 @@ otomatis untuk aplikasi berbasis CodeIgniter 3.x.
 \textit{AI Engine} hanya memproses temuan dengan prioritas 1--5 dan membatasi potongan kode yang dikirim ke model pada 2.000 karakter pertama. Untuk \textit{file} PHP yang panjang, konteks yang diterima model terpotong sehingga saran perbaikan mungkin tidak mempertimbangkan keseluruhan logika fungsi. Meskipun Qwen2.5-Coder terbukti mampu membuat inferensi yang tepat dengan konteks terbatas, akurasi ini tidak selalu dapat dijamin untuk setiap kasus.
 
 Selain itu, validasi menggunakan \texttt{php -l} hanya memeriksa kebenaran sintaksis, bukan kebenaran semantik. Kode yang lolos \texttt{php -l} bisa saja masih mengandung kerentanan yang tidak tertangani atau logika yang tidak ekuivalen dengan kode aslinya. Pengujian fungsional terhadap kode hasil perbaikan AI bukan bagian dari cakupan penelitian ini.
+
+Proses validasi \textit{sampling} 10\% menggunakan model LLM 
+\textit{enterprise} sebagai referensi konversi ideal. Tahap ini 
+merupakan prosedur evaluasi peneliti yang dilakukan sekali dan 
+tidak melibatkan pengiriman kode sumber secara utuh, sehingga 
+berbeda dari komponen \textit{pipeline} produksi yang sepenuhnya 
+lokal. Penggunaan penilai berbasis model eksternal dipilih untuk 
+menjaga independensi evaluator, karena model yang sama dengan yang ada 
+di \textit{pipeline} tidak digunakan sebagai penilai untuk 
+menghindari \textit{bias} penilaian mandiri. Meskipun demikian, 
+pendekatan ini idealnya digantikan dengan penilai lokal agar 
+sepenuhnya konsisten dengan prinsip kerahasiaan data yang 
+diterapkan pada komponen lain dalam \textit{pipeline}.
 
 \subsubsection{Interpretasi Confidence Score}
 
@@ -1285,7 +1298,6 @@ dataset.
     \caption{Perbandingan \textit{error} PHPStan berdasarkan kontrol ISO/IEC 27001:2022 pada kedua studi kasus}
     \label{fig:comparison-phpstan}
 \end{figure}
-\newpage
 FT UGM menghasilkan 2.790 \textit{error} PHPStan sementara CBT DTI 
 menghasilkan 2.354 \textit{error}. Keduanya dijalankan pada PHPStan 
 \textit{level} 5 dengan target PHP 8.3, sehingga angka ini dapat 

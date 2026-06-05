@@ -38,7 +38,7 @@
 
     Strobl dkk. \cite{strobl2020automated} menganalisis tiga kasus transformasi kode otomatis skala besar di sebuah organisasi pemerintah, semuanya melibatkan konversi sistem warisan dari COBOL dan PL/I ke Java dengan ukuran lebih dari satu juta baris kode. Fokus utama studi ini bukan pada keberhasilan transformasi, melainkan pada dampak pascatransformasi.
 
-    Hasil studi tersebut mengungkapkan permasalahan yang signifikan. Transformasi otomatis seringkali menghasilkan kode yang sintaksis valid di bahasa target, tapi mempertahankan karakteristik struktural dari bahasa sumber sehingga sulit dipahami pengembang yang tidak kenal sistem lama. Lebih lanjut, sistem yang memiliki \textit{test suite} otomatis sejak awal jauh lebih mudah dirawat pascatransformasi, sementara sistem tanpa pengujian otomatis menjadi beban jangka panjang." (Menggabungkan dua kalimat pendek menjadi satu kalimat majemuk yang lebih elegan, serta mengganti kata "kasus" menjadi "sistem").
+    Hasil studi tersebut mengungkapkan permasalahan yang signifikan. Transformasi otomatis seringkali menghasilkan kode yang sintaksis valid di bahasa target, tapi mempertahankan karakteristik struktural dari bahasa sumber sehingga sulit dipahami pengembang yang tidak kenal sistem lama. Lebih lanjut, sistem yang memiliki \textit{test suite} otomatis sejak awal jauh lebih mudah dirawat pascatransformasi, sementara sistem tanpa pengujian otomatis menjadi beban jangka panjang. (Menggabungkan dua kalimat pendek menjadi satu kalimat majemuk yang lebih elegan, serta mengganti kata "kasus" menjadi "sistem").
 
     Temuan ini menjadi alasan mengapa penelitian ini menyertakan PHPStan sebagai validasi pasca-konversi dan Semgrep sebagai pemindaian keamanan sebelum dan sesudah transformasi. Masalah yang ditinggalkan oleh konversi otomatis perlu terdeteksi segera, bukan bertahun-tahun kemudian.
 
@@ -57,7 +57,7 @@
     Signifikansi studi ini terletak pada validasi teknis pendekatannya di lingkungan produksi nyata, bukan pada skala operasi. Chen et al. mendemonstrasikan bahwa transformasi berbasis AST dapat diterapkan secara otomatis pada basis kode TypeScript di Microsoft dan menghasilkan perubahan yang struktural konsisten, mengkonfirmasi kelayakan teknis pendekatan serupa yang mendasari Rector untuk migrasi kode dalam konteks institusional.
 
     Ada dua perbedaan konteks penting. Pertama, migrasi yang dilakukan Chen et al. adalah TypeScript ke TypeScript (\textit{refactoring} dalam bahasa yang sama), sedangkan penelitian ini berhadapan dengan \textit{breaking changes} antar versi PHP yang melibatkan penghapusan API dan perubahan sistem tipe. Kedua, seperti halnya Cai et al. \cite{cai2015pattern}, studi ini tidak menyentuh aspek keamanan sama sekali. Temuan keamanan yang muncul selama atau setelah migrasi bukan bagian dari cakupan mereka.
-    \newpage
+
     \subsection{Ringkasan Perbandingan}
 
     \begin{longtable}{|l|p{3cm}|p{3cm}|p{3cm}|}
