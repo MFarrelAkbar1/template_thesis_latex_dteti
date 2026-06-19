@@ -134,7 +134,13 @@
     \hline
     \end{longtable}
 
-    Kedua tabel memperlihatkan kesenjangan yang konsisten. Studi-studi yang berfokus pada keamanan tidak menangani migrasi versi. Studi-studi yang berfokus pada transformasi kode, termasuk yang sudah terbukti di skala industri seperti Chen et al. \cite{chen2022ast} tidak menyertakan pemeriksaan keamanan maupun pemetaan ke standar formal. Tidak satu pun dari kedelapan studi yang menggabungkan migrasi versi PHP, analisis keamanan berbasis LLM, validasi pasca-konversi, dan kepatuhan ISO/IEC 27001:2022 dalam satu alur kerja \textit{open source} dengan \textit{deployment} lokal. Kombinasi inilah yang menjadi kontribusi utama penelitian ini.
+    Kedua tabel memperlihatkan kesenjangan yang konsisten. Studi-studi yang berfokus pada keamanan tidak menangani migrasi versi. Studi-studi yang berfokus pada transformasi kode, termasuk yang sudah terbukti di skala industri seperti Chen et al. \cite{chen2022ast} tidak menyertakan pemeriksaan keamanan maupun pemetaan ke standar formal. Tidak satu pun dari kedelapan studi yang menggabungkan migrasi versi PHP, analisis keamanan berbasis LLM, validasi pasca-konversi, dan kepatuhan ISO/IEC 27001:2022 dalam satu alur kerja \textit{open source} dengan \textit{deployment} lokal.
+
+    Penting untuk digarisbawahi bahwa kedua tabel di atas membandingkan kehadiran fitur (\textit{feature presence}), bukan performa pada tugas yang sama. Kedelapan studi pembanding menyasar masalah yang secara fundamental berbeda dari penelitian ini -- bahasa target, jenis kerentanan, dan tujuan transformasi yang berbeda -- sehingga tidak dapat dibandingkan secara \textit{apple-to-apple} dalam metrik kinerja apa pun, dan tabel ini tidak dimaksudkan sebagai klaim bahwa penelitian ini mengungguli studi-studi tersebut. Perbedaan paling mendasar antara penelitian ini dan kedelapan studi tersebut juga bukan pada cakupan fitur yang lebih banyak, melainkan pada satu kemampuan spesifik yang belum dieksplorasi pada konteks PHP: menggunakan LLM lokal untuk menerjemahkan temuan mentah Semgrep menjadi penjelasan dan saran remediasi yang dapat diaudit, tanpa mengubah peran Semgrep sebagai detektor maupun Rector sebagai mesin transformasi. Rector, Semgrep, dan PHPStan sendiri bukan kontribusi baru dari penelitian ini; ketiganya digunakan sebagaimana adanya. Kombinasi penempatan lapisan AI di antara ketiganya, dengan validasi pasca-konversi dan pemetaan ke ISO/IEC 27001:2022 yang melekat pada alur kerja, adalah kontribusi yang diklaim penelitian ini, dan klaim tersebut diuji secara empiris melalui implementasi pada Bab IV, bukan diasumsikan dari tabel perbandingan ini.
+
+    Ditinjau secara keseluruhan, kemajuan riset pada tiga arah yang dibahas di atas berjalan paralel tanpa pernah bertemu. Pada sisi remediasi keamanan kode PHP, Merlo dkk. \cite{merlo2007automated} sudah membuktikan kelayakan otomatisasi sejak 2007, namun solusi yang dihasilkan tidak pernah diperluas untuk menangani migrasi versi maupun standar kepatuhan formal. Pada sisi deteksi kerentanan berbasis LLM, kemajuan dari \textit{prompt engineering} murni (Akuthota dkk. \cite{akuthota2023vulnerability}) ke kombinasi LLM dan analisis statis yang terstruktur (Li et al. \cite{li2025software}; Li, Dutta, dan Naik \cite{li2025iris}) konsisten menunjukkan bahwa LLM paling efektif ketika berperan sebagai lapisan interpretasi di atas alat analisis statis yang sudah ada, bukan sebagai pengganti alat tersebut -- temuan yang menjadi dasar konseptual langsung bagi peran AI Engine dalam penelitian ini. Pada sisi transformasi kode, kemajuan dari transformasi berbasis pola tekstual (Cai et al. \cite{cai2015pattern}) ke transformasi berbasis AST yang tervalidasi di skala produksi (Chen et al. \cite{chen2022ast}) dan transformasi berbantuan LLM dengan \textit{loop} umpan balik (St\"{u}mpfle dkk. \cite{stumpfle2025llm}) menunjukkan bahwa pendekatan struktural berbasis AST untuk perubahan sintaksis dan LLM untuk perubahan semantik adalah dua kemampuan yang saling melengkapi, bukan saling menggantikan.
+
+    \textit{Gap} penelitian yang tersisa dari kemajuan-kemajuan ini bukan pada masing-masing arah secara terpisah, melainkan pada ketidakhadiran integrasi ketiganya untuk kasus migrasi PHP lawas. Tidak satu pun studi yang ditinjau menggabungkan transformasi kode berbasis AST, deteksi kerentanan berbasis aturan, lapisan interpretasi berbasis LLM lokal, dan pemetaan ke standar kepatuhan formal dalam satu alur kerja yang dapat diaudit. Penelitian ini berkontribusi secara spesifik dan terbatas pada interseksi tersebut: bukan mengusulkan alat transformasi baru karena Rector sudah memadai untuk itu, dan bukan pula mengusulkan detektor kerentanan baru karena Semgrep sudah memadai untuk itu, melainkan menambahkan lapisan AI yang menerjemahkan temuan Semgrep menjadi penjelasan dan saran remediasi yang dipetakan ke kontrol ISO/IEC 27001:2022, sekaligus mengevaluasi lima kandidat model LLM lokal untuk menentukan mana yang paling sesuai menjalankan peran tersebut.
 
     \section{Dasar Teori}
 
@@ -395,8 +401,34 @@ sekuens. Nilai $S$ berada di rentang $0{,}0$ (tidak ada kesamaan) hingga $1{,}0$
 level baris (\textit{line-level}), sehingga setiap baris kode diperlakukan sebagai 
 satu elemen sekuens.
 
-Python mengimplementasikan algoritma ini melalui \texttt{difflib.SequenceMatcher} 
-dari \textit{standard library}, yang menjadikannya dapat digunakan tanpa dependensi 
-eksternal tambahan. Dalam penelitian ini, metrik ini digunakan pada tahap validasi 
-akurasi untuk mengukur kemiripan antara keluaran Rector dan konversi referensi yang 
+Python mengimplementasikan algoritma ini melalui \texttt{difflib.SequenceMatcher}
+dari \textit{standard library}, yang menjadikannya dapat digunakan tanpa dependensi
+eksternal tambahan. Dalam penelitian ini, metrik ini digunakan pada tahap validasi
+akurasi untuk mengukur kemiripan antara keluaran Rector dan konversi referensi yang
 disiapkan secara manual, sebagaimana dibahas di Subbab \ref{subsec:validasi-akurasi}.
+
+\section{Pertanyaan Penelitian}
+\label{sec:pertanyaan-penelitian}
+
+Rumusan masalah pada Subbab~\ref{sec:rumusan-masalah} menetapkan akar permasalahan yang melatari penelitian ini, dan tinjauan literatur serta dasar teori pada bab ini menetapkan posisi \textit{platform} yang diusulkan terhadap kesenjangan yang ada. Berdasarkan keduanya, penelitian ini mengajukan empat pertanyaan penelitian yang menguji apakah solusi yang diusulkan -- \textit{pipeline} yang menggabungkan Rector, Semgrep, PHPStan, dan lapisan AI Engine berbasis LLM lokal -- dapat menyelesaikan permasalahan yang diangkat. Berbeda dari rumusan masalah yang menyatakan persoalan yang harus diselesaikan, pertanyaan-pertanyaan ini diajukan dalam bentuk yang dapat diuji secara empiris melalui hasil implementasi pada Bab IV:
+
+\begin{enumerate}
+    \item Apakah \textit{pipeline} berbasis AI yang dirancang mampu
+    melakukan konversi otomatis aplikasi web PHP 7.x ke PHP 8.3
+    menggunakan alat \textit{open source}, tanpa menimbulkan regresi
+    fungsional pada kode yang dikonversi?
+    \item Apakah hasil konversi yang dihasilkan \textit{pipeline}
+    terbukti, melalui pemeriksaan validitas sintaksis dan kompatibilitas
+    tipe pasca-konversi, mempertahankan fungsionalitas kode sumber yang
+    telah dikonversi?
+    \item Apakah pemeriksaan \textit{secure coding} yang diintegrasikan
+    ke dalam \textit{pipeline} konversi otomatis selaras dengan kontrol
+    ISO/IEC 27001:2022 Annex A.8, sehingga temuan keamanan dapat
+    diterjemahkan menjadi bukti audit tanpa pekerjaan manual yang
+    terpisah dari proses migrasi?
+    \item Model LLM \textit{open source} lokal manakah yang memberikan
+    analisis keamanan dan saran perbaikan kode PHP terbaik dalam
+    konteks migrasi dari PHP 7.x ke PHP 8.3?
+\end{enumerate}
+
+Jawaban atas keempat pertanyaan ini, beserta bukti empiris yang mendasarinya, dibahas pada Bab IV dan digunakan untuk menyusun kesimpulan pada Bab V.

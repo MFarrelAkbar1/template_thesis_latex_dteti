@@ -186,11 +186,68 @@ pada kode FT UGM. Kedua, kerentanan yang telah ada sebelumnya tidak dapat
 diatasi melalui transformasi sintaksis berbasis AST, karena memerlukan 
 perbaikan pada tingkat logika program (semantik), yang berada di luar 
 cakupan pendekatan tersebut.
+
+Bukti konkret fenomena ini dapat diamati pada
+\texttt{system/core/\allowbreak Output.php} baris 677. Pada baris
+tersebut, Rector mengubah operator logika \texttt{OR} menjadi
+\texttt{||} yang secara semantik identik, tetapi operasi
+\texttt{fopen(\$filepath)} di mana \texttt{\$filepath} berasal
+dari data pengguna tetap tidak berubah:
+
+\begin{lstlisting}[style=promptstyle]
+// Sebelum konversi (Output.php baris 677)
+if ( ! file_exists($filepath)
+    OR ! $fp = @fopen($filepath, 'rb'))
+
+// Sesudah konversi (Output.php baris 650)
+if ( ! file_exists($filepath)
+    || ! $fp = @fopen($filepath, 'rb'))
+\end{lstlisting}
+
+Semgrep tetap menandai baris ini sebagai SSRF pada
+\textit{post-scan} karena \texttt{\$filepath} yang dibangun
+dari \texttt{\$uri} (data pengguna) masih digunakan sebagai
+argumen \texttt{fopen()} tanpa sanitasi. Perubahan
+\texttt{OR}~$\rightarrow$~\texttt{||} merupakan transformasi
+sintaksis murni yang tidak memengaruhi aliran data
+(\textit{taint flow}) pada kode tersebut. Contoh ini
+mengilustrasikan secara langsung mengapa $\Delta F = 0$:
+domain kerja Rector (sintaksis) dan domain deteksi Semgrep
+(logika keamanan) tidak beririsan.
+
 % ============================================================
 \subsection{Hasil Validasi PHPStan}
 % ============================================================
 
 PHPStan level 5 dijalankan terhadap kode hasil konversi di direktori \texttt{output/} dengan target PHP 8.3. Hasilnya adalah 2.790 temuan yang terdiri dari 2.469 ERROR dan 321 WARNING, tersebar di 179 dari 241 \textit{file} yang dianalisis. Di antara temuan tersebut, 354 di antaranya merupakan \textit{noise} dari arsitektur dinamis CodeIgniter 3 yang tidak dapat dianalisis secara statis oleh PHPStan, meliputi \textit{magic property} dan fungsi \textit{helper} yang diinjeksi saat \textit{runtime}.
+
+Sumber teknis dari \textit{noise} ini berakar pada mekanisme
+\textit{dependency injection} berbasis \textit{runtime} milik
+CodeIgniter~3. Berkas \texttt{system/core/\allowbreak Controller.php}
+mendaftarkan seluruh \textit{library} yang dimuat dengan cara
+berikut:
+
+\begin{lstlisting}[style=promptstyle]
+// system/core/Controller.php baris 80-83
+foreach (is_loaded() as $var => $class)
+{
+    $this->$var =& load_class($class);
+}
+\end{lstlisting}
+
+Akibatnya, properti seperti \texttt{\$this->db},
+\texttt{\$this->session}, dan \texttt{\$this->input} tidak
+pernah dideklarasikan secara eksplisit dalam definisi kelas ---
+keberadaannya hanya terlihat pada saat \textit{runtime}.
+PHPStan, yang bekerja secara statis, melaporkan setiap akses
+ke properti tersebut sebagai \texttt{"Access to an undefined
+property"}. Modul \texttt{analyzer.py} mengatasi masalah ini
+dengan mencocokkan setiap pesan PHPStan terhadap daftar pola
+\texttt{\_CI3\_NOISE\_SUBSTRINGS} yang telah dikurasi, mencakup
+\textit{substring} seperti \texttt{"::~\$db."}, 
+\texttt{"::~\$lang."}, dan \texttt{"Function base\_url not found"}.
+Pada SK1, mekanisme ini menyaring 354 pesan \textit{noise}
+dari total keluaran PHPStan.
 
 Sebagian besar \textit{error} yang ditemukan PHPStan berasal dari tiga kategori utama. Pertama, kelas dari \textit{library} pihak ketiga yang tidak ditemukan, seperti \texttt{PhpOffice\textbackslash\allowbreak PhpSpreadsheet} dan \texttt{Dotenv\textbackslash\allowbreak Dotenv}: PHPStan tidak dapat menemukan kelas-kelas ini karena hanya kode sumber yang dianalisis, bukan dependensi lengkap aplikasi. Kedua, penggunaan nilai kembalian fungsi \texttt{void} sebagai nilai, misalnya \texttt{Result of method sendResponse() (void) is used}, yang merupakan pola umum pada kode warisan yang ditulis tanpa deklarasi tipe eksplisit. Ketiga, ketidakkonsistenan tipe seperti \texttt{Cannot access property \$role on array}, yang mencerminkan penggunaan \textit{array} sebagai pengganti objek bertipe tanpa definisi yang jelas.
 
@@ -208,9 +265,33 @@ Angka PHPStan yang tinggi justru menunjukkan manfaat nyata dari komponen validas
 % ============================================================
 \subsection{Status Kepatuhan ISO/IEC 27001:2022}
 % ============================================================
-
-Berdasarkan pemetaan yang dilakukan oleh \texttt{iso\_mapper.py}, status kepatuhan terhadap enam kontrol ISO/IEC 27001:2022 yang dipetakan adalah sebagaimana ditunjukkan pada Tabel \ref{tab:iso-status}.
 % Use fixed column widths to avoid "Column widths have changed" warnings from longtable
+ISO/IEC 27001:2022 Annex A mendefinisikan 93 kontrol keamanan
+yang tersebar di empat domain: \textit{Organizational} (37),
+\textit{People} (8), \textit{Physical} (14), dan
+\textit{Technological} (34). Mayoritas kontrol bersifat
+manajerial, prosedural, atau terkait keamanan fisik yang tidak
+dapat diverifikasi melalui analisis artefak kode sumber.
+Sebagai contoh, A.6.3 (\textit{Security Awareness}) mengatur
+pelatihan kesadaran keamanan pegawai dan A.7.1
+(\textit{Physical Security Perimeters}) mengatur batas fisik
+area aman --- keduanya tidak memiliki representasi yang dapat
+diukur dari kode PHP.
+
+Dari 93 kontrol tersebut, \textit{pipeline} memetakan temuan
+ke enam kontrol yang secara teknis dapat diverifikasi melalui
+keluaran Semgrep dan PHPStan: empat kontrol kluster
+\textit{Secure Software Development} (A.8.24--A.8.29) yang
+secara eksplisit mengatur praktik pengembangan kode aman,
+serta A.5.17 (\textit{Authentication Information}) yang
+dipetakan ke deteksi \textit{hardcoded credentials}. Pemilihan
+ini bukan berarti kontrol lain tidak penting, melainkan bahwa
+cakupan \textit{pipeline} ini terbatas pada analisis statis
+kode sumber dan kontrol yang dipilih adalah satu-satunya yang
+dapat dipetakan secara deterministik ke keluaran alat yang
+tersedia. Tabel~\ref{tab:iso-status} menunjukkan status
+kepatuhan terhadap keenam kontrol tersebut.
+
 \begin{longtable}{|l|>{\raggedright\arraybackslash}p{2.5cm}|p{6cm}|p{3cm}|}
 \caption{Status kepatuhan ISO/IEC 27001:2022 hasil \textit{pipeline} pada dataset FT UGM}
 \label{tab:iso-status} \\
@@ -283,8 +364,12 @@ langsung digunakan sebagai dokumentasi audit ISO/IEC 27001:2022 \cite{iso27001_2
 Eksperimen Kondisi A dijalankan dengan \textit{prompt} yang identik untuk semua model (\textit{zero-shot}), 11 temuan Semgrep \textit{pre-scan} sebagai masukan, 3 \textit{run} per temuan per model, dan \textit{temperature} 0,1. Total percobaan adalah 165 (33 per model). Semua model dijalankan secara lokal melalui Ollama tanpa modifikasi.
 
 \subsubsection{Format Compliance Rate}
+Setelah mengidentifikasi kerentanan keamanan melalui Semgrep,
+\textit{pipeline} memanfaatkan komponen \textit{AI Engine} untuk
+merumuskan saran perbaikan secara otomatis terhadap setiap temuan.
+Gambar~\ref{fig:format-compliance-a} menunjukkan
+\textit{format compliance rate} untuk masing-masing model.
 
-Setelah mengidentifikasi kerentanan keamanan melalui Semgrep, \textit{pipeline} memanfaatkan komponen \textit{AI Engine} untuk merumuskan saran perbaikan secara otomatis terhadap setiap temuan. Eksperimen Kondisi A dijalankan dengan \textit{prompt} yang identik untuk semua model (\textit{zero-shot}), 11 temuan Semgrep \textit{pre-scan} sebagai masukan, 3 \textit{run} per temuan per model, dan \textit{temperature} 0,1.
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\textwidth]{contents/chapter-4/llm_chart_20260425_212836_2_format_compliance.png}
@@ -340,7 +425,6 @@ Llama 3.1 8b        & 0{,}00 & 0{,}00 & 0{,}00 & 0{,}00 & 0\%  & 8{,}2 \\
 \end{tabular}%
 }
 \end{table}
-\newpage
 Statistik berikut dihitung dari 33 inferensi per model (11 temuan 
 $\times$ 3 \textit{run} independen, \textit{temperature} = 0,1).
 
@@ -376,7 +460,6 @@ sambil tetap mengerjakan tugas utama dengan baik. Waktu inferensi
 Qwen2.5-Coder (10,0 detik) adalah yang tertinggi dibandingkan
 model lain, selaras dengan respons yang lebih panjang dan detail
 yang dihasilkannya.
-\newpage
 \begin{lstlisting}[style=promptstyle]
 $uri .= '?'.$_SERVER['QUERY_STRING'];
 $cache_path .= md5(
@@ -780,16 +863,16 @@ komparasi multi-model (Kondisi A--C) yang merupakan prosedur
 evaluasi terpisah. Tahap konversi Rector dan analisis
 PHPStan secara gabungan mendominasi waktu eksekusi.
 
-\subsubsection{Validasi Sampling 10\%}
+\subsubsection{Validasi 24 file}
 
 Untuk mengukur seberapa dekat hasil konversi Rector dengan 
 konversi manual yang ideal, dilakukan validasi berbasis 
-\textit{sampling} terhadap 10\% dari total \textit{file} 
+\textit{sampling} terhadap 24 \textit{file} dari total \textit{file} 
 valid. Sebanyak 24 \textit{file} dipilih secara acak 
 (seed=42) dari seluruh \textit{file} valid yang 
 lolos pemeriksaan \texttt{php -l} menggunakan modul 
 \texttt{accuracy\_validator.py}, merepresentasikan 
-10\% dari total populasi \textit{file} valid.
+24 \textit{file} dari total 241 \textit{file} valid.
 
 Gambar~\ref{fig:validation-coverage} menunjukkan distribusi 
 cakupan 24 \textit{file} sampel tersebut.
@@ -798,7 +881,7 @@ cakupan 24 \textit{file} sampel tersebut.
     \centering
     \includegraphics[width=0.6\textwidth]{contents/chapter-4/validation/validation_accuracy_qwen_3_coverage.png}
     \caption{Distribusi cakupan \textit{file} sampel validasi 
-    10\% berdasarkan direktori asal}
+    24 file berdasarkan direktori asal}
     \label{fig:validation-coverage}
 \end{figure}
 \newpage
@@ -846,29 +929,32 @@ Rector dan referensi LLM.
     sampel (\textit{line-level SequenceMatcher})}
     \label{fig:validation-similarity}
 \end{figure}
-\textit{Similarity score} dihitung menggunakan algoritma 
-Ratcliff/Obershelp melalui \textit{line-level} 
-\texttt{difflib.SequenceMatcher} dengan formula $2M/T$, 
-di mana $M$ adalah jumlah baris yang cocok dan $T$ adalah 
-total baris pada kedua teks yang dibandingkan. Metrik ini 
-mengukur proporsi baris yang identik antara dua versi kode. 
-Rata-rata \textit{similarity score} adalah 0,9214, dengan 
-distribusi yang terkonsentrasi di rentang 0,90--1,00 (11 
-dari 12 \textit{file}). Satu \textit{file} memiliki skor 
-di rentang 0,70--0,80, yang mencerminkan perbedaan gaya 
-penulisan antara transformasi AST otomatis dan konversi 
-manual, bukan indikasi kesalahan konversi.
+\textit{Similarity score} dihitung menggunakan algoritma Ratcliff/Obershelp melalui mekanisme \textit{line-level} pada \texttt{difflib.SequenceMatcher}. Sesuai dengan formula pada Bab 2, yaitu $2M/T$, $M$ adalah jumlah baris yang cocok secara presisi dan $T$ adalah total baris pada kedua teks yang dibandingkan. 
 
-Skor 0,9214 mengindikasikan tingkat kesesuaian yang tinggi
-antara pendekatan otomatis berbasis AST (Rector) dan
-pendekatan manual berbasis LLM. Perbedaan yang tersisa
-umumnya berupa variasi kosmetik seperti spasi, urutan
-atribut, atau gaya penulisan yang tidak mempengaruhi
-kebenaran fungsional kode. Karena kedua dataset menggunakan
-\textit{framework} CodeIgniter 3.x dengan karakteristik kode
-yang serupa, hasil validasi ini berlaku pula untuk studi kasus
-CBT DTI UGM.
+Rata-rata \textit{similarity score} yang didapatkan adalah 0,9214, dengan distribusi yang terkonsentrasi di rentang 0,90--1,00 (11 dari 12 \textit{file}). Satu \textit{file} memiliki skor di rentang 0,70--0,80.
 
+Sebagai ilustrasi perhitungan numerik dari formula tersebut, misalkan sebuah \textit{file} hasil konversi Rector memiliki 50 baris dan \textit{file} referensi manual juga memiliki 50 baris, maka total baris yang dievaluasi ($T$) adalah 100. Jika terdapat 46 baris yang identik secara presisi ($M=46$), maka skor kemiripannya dihitung sebagai:
+
+$$\text{Similarity} = \frac{2 \times 46}{100} = 0{,}92$$
+
+Selisih baris yang tidak cocok (sehingga skor tidak mencapai maksimal 1,0) bukanlah indikasi kesalahan fungsional konversi, melainkan karena sensitivitas metrik \textit{line-level} terhadap perbedaan gaya penulisan (\textit{formatting}). Sebagai contoh konkret dari perbedaan tersebut, perhatikan perbandingan potongan kode berikut:
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=promptstyle]
+// Hasil Konversi AST Otomatis (Rector)
+$config['base_url'] = '';
+$config['index_page'] = 'index.php';
+
+// Referensi Konversi Manual (LLM)
+$config['base_url']   = '';
+$config['index_page'] = 'index.php';
+\end{lstlisting}
+\end{minipage}
+\vspace{1em}
+
+Pada contoh di atas, meskipun logika dan sintaksis keduanya sepenuhnya ekuivalen, penambahan spasi kosong (\textit{whitespace}) yang dilakukan secara manual untuk menyejajarkan tanda sama dengan (\texttt{=}) menyebabkan baris tersebut dievaluasi sebagai baris yang berbeda. Perbedaan kosmetik semacam inilah yang mendasari mengapa skor kemiripan menghasilkan nilai rata-rata di angka 0,9214, alih-alih 1,0.
+
+Skor 0,9214 ini secara objektif mengindikasikan tingkat kesesuaian yang tinggi antara pendekatan otomatis berbasis AST (Rector) dan pendekatan manual berbasis LLM. Perbedaan yang tersisa umumnya berupa variasi kosmetik seperti spasi, urutan atribut, atau gaya penulisan yang sama sekali tidak mempengaruhi kebenaran fungsional kode. Karena kedua dataset menggunakan \textit{framework} CodeIgniter 3.x dengan karakteristik kode yang serupa, hasil validasi ini berlaku pula untuk studi kasus CBT DTI UGM.
 
 % ============================================================
 \subsection{Diskusi dan Keterbatasan}
@@ -924,10 +1010,10 @@ otomatis untuk aplikasi berbasis CodeIgniter 3.x.
 \label{sec:keterbatasan}
 
 \textit{AI Engine} hanya memproses temuan dengan prioritas 1--5 dan membatasi potongan kode yang dikirim ke model pada 2.000 karakter pertama. Untuk \textit{file} PHP yang panjang, konteks yang diterima model terpotong sehingga saran perbaikan mungkin tidak mempertimbangkan keseluruhan logika fungsi. Meskipun Qwen2.5-Coder terbukti mampu membuat inferensi yang tepat dengan konteks terbatas, akurasi ini tidak selalu dapat dijamin untuk setiap kasus.
-
+\newpage
 Selain itu, validasi menggunakan \texttt{php -l} hanya memeriksa kebenaran sintaksis, bukan kebenaran semantik. Kode yang lolos \texttt{php -l} bisa saja masih mengandung kerentanan yang tidak tertangani atau logika yang tidak ekuivalen dengan kode aslinya. Pengujian fungsional terhadap kode hasil perbaikan AI bukan bagian dari cakupan penelitian ini.
 
-Proses validasi \textit{sampling} 10\% menggunakan model LLM 
+Proses validasi 24 file menggunakan model LLM 
 \textit{enterprise} sebagai referensi konversi ideal. Tahap ini 
 merupakan prosedur evaluasi peneliti yang dilakukan sekali dan 
 tidak melibatkan pengiriman kode sumber secara utuh, sehingga 

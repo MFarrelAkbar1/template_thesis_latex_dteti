@@ -16,6 +16,12 @@ sintaks pasca-konversi mencapai 100\% pada keduanya. Kegagalan
 pada dua \textit{file} di kedua dataset disebabkan oleh 
 \textit{bug} internal Rector, bukan dari kode sumber.
 
+Validasi berbasis \textit{sampling} terhadap 12 \textit{file}
+aplikasi menunjukkan rata-rata \textit{similarity score} 0,9214
+antara keluaran Rector dan referensi konversi manual,
+mengindikasikan tingkat kesesuaian yang tinggi antara
+pendekatan otomatis dan manual.
+
 \textbf{Kedua}, mekanisme pemeriksaan keamanan yang dipetakan ke
 kontrol ISO/IEC 27001:2022 Annex A berhasil diimplementasikan secara
 deterministik dan dapat diaudit sepenuhnya. Nilai $\Delta F = 0$ pada
@@ -44,7 +50,7 @@ sebelumnya. Fakta ini justru memperjelas nilai tambah
 memberi gambaran menyeluruh tentang kondisi aktual basis kode yang 
 selama ini tersembunyi di balik sifat permisif sistem tipe 
 pada PHP versi lama
-\newpage
+
 \textbf{Keempat}, komparasi performa lima model LLM \textit{open
 source} dalam konteks analisis keamanan kode PHP menghasilkan temuan 
 empiris yang relevan sebagai landasan untuk implementasi maupun 
@@ -80,10 +86,17 @@ pengembangan yang disarankan untuk penelitian selanjutnya.
     QLoRA dapat dilakukan menjadikan penelitian ini 
     sebagai \textit{baseline}.
 
-    \item Akurasi laporan PHPStan pada basis kode 
-    CodeIgniter 3.x dapat ditingkatkan melalui \textit{custom 
-    stubs} atau konfigurasi \textit{baseline} PHPStan, sehingga 
-    hanya temuan yang muncul akibat konversi yang dilaporkan.
+    \item Akurasi laporan PHPStan pada basis kode
+CodeIgniter 3.x dapat ditingkatkan melalui dua pendekatan:
+(1) \textit{custom stubs} yang mendefinisikan tipe untuk
+\textit{magic property} CI3 seperti \texttt{\$this->db} dan
+\texttt{\$this->load} secara eksplisit, sehingga PHPStan
+tidak perlu bergantung pada \textit{runtime resolution};
+dan (2) penggantian mekanisme \textit{noise filter} berbasis
+\textit{substring matching} yang digunakan saat ini dengan
+konfigurasi \textit{baseline} PHPStan yang lebih akurat dan
+tidak berisiko menyaring temuan nyata secara tidak sengaja.
+
 
     \item Validasi pemetaan ISO/IEC 27001:2022 oleh 
     auditor atau praktisi bersertifikat perlu dilakukan untuk 

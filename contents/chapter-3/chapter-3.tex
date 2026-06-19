@@ -177,7 +177,13 @@ Gambar \ref{fig:arsitektur-sistem} menunjukkan hubungan antar modul.
 
 \subsection{Scanner (scanner.py)}
 
-Scanner merupakan modul pertama yang dieksekusi dalam \textit{pipeline}. Modul ini menjalankan Semgrep pada direktori
+Scanner merupakan modul pertama yang dieksekusi dalam \textit{pipeline}. Modul ini menjalankan Semgrep dengan \textit{ruleset} \texttt{p/php} dan \texttt{p/owasp-top-ten} pada direktori \texttt{input/} sebelum konversi (\textit{pre-scan}), dan pada direktori \texttt{output/} setelah konversi (\textit{post-scan}) untuk mengukur perubahan postur keamanan melalui $\Delta F$. Fungsi \texttt{\_classify()} di dalam modul ini juga menugaskan jenis kerentanan, prioritas, dan kontrol ISO awal untuk setiap temuan, sebagaimana dijelaskan pada Subbab~\ref{sec:iso-mapping-design}.
+
+\begin{itemize}
+    \item \textbf{Input}: direktori berisi \textit{file} PHP (\texttt{input/} untuk \textit{pre-scan}, \texttt{output/} untuk \textit{post-scan}).
+    \item \textbf{Output}: daftar temuan kerentanan terstruktur (\texttt{rule\_id}, nama \textit{file}, baris, deskripsi, jenis kerentanan, prioritas, kontrol ISO awal) sebagai objek Python \textit{in-memory}, diteruskan ke AI Engine dan ISO Mapper.
+\end{itemize}
+
 \subsection{Converter (converter.py)}
 
 \begin{sloppypar}
@@ -185,6 +191,11 @@ Scanner merupakan modul pertama yang dieksekusi dalam \textit{pipeline}. Modul i
 Modul ini menggunakan Rector untuk transformasi kode PHP berbasis AST. Argumen CLI \texttt{--target-php} menentukan versi target; nilai yang diterima adalah \texttt{"7.4"}, \texttt{"8.0"}, \texttt{"8.1"}, \texttt{"8.2"}, atau \texttt{"8.3"}. Sebelum Rector dijalankan, seluruh \textit{file} PHP dari \texttt{input/} disalin dahulu ke \texttt{output/}. Rector kemudian memodifikasi \textit{file} di \texttt{output/} langsung tanpa membuat salinan baru. \textit{File} yang gagal dikonversi tetap ada di \texttt{output/} sebagai salinan kode asli dan statusnya dicatat \texttt{FAILED} di laporan; direktori \texttt{input/} tidak dimodifikasi sama sekali. Konfigurasi Rector dibuat sebagai \textit{tempfile} saat \textit{runtime} dan dihapus otomatis setelahnya.
 
 \end{sloppypar}
+
+\begin{itemize}
+    \item \textbf{Input}: direktori \texttt{input/} berisi \textit{file} PHP sumber dan versi target \texttt{--target-php}.
+    \item \textbf{Output}: direktori \texttt{output/} berisi \textit{file} PHP hasil transformasi (atau salinan asli untuk \textit{file} yang gagal/dilewati), beserta status per \textit{file} (\texttt{SUCCESS}, \texttt{SKIPPED}, atau \texttt{FAILED}) yang diteruskan ke laporan akhir.
+\end{itemize}
 \begin{table}[htbp]
 \caption{Pemetaan argumen \texttt{--target-php} ke konfigurasi Rector}
 \vspace{0.5em}
@@ -227,6 +238,11 @@ telah diuraikan pada Subbab~\ref{subsec:rector}.
 
 Setelah konversi, Analyzer menjalankan PHPStan pada direktori \texttt{output/} untuk memverifikasi kompatibilitas kode dengan versi PHP target. Level 5 dipilih sebagai keseimbangan antara keketatan dan jumlah \textit{false positive} yang wajar untuk kode warisan. Setiap temuan PHPStan dikategorikan sebagai ERROR atau WARNING, lalu dikaitkan dengan kontrol ISO/IEC 27001:2022 yang relevan.
 
+\begin{itemize}
+    \item \textbf{Input}: direktori \texttt{output/} hasil konversi Rector.
+    \item \textbf{Output}: daftar temuan PHPStan (kategori \texttt{ERROR}/\texttt{WARNING}) yang masing-masing dikaitkan dengan kontrol ISO/IEC 27001:2022, diteruskan ke ISO Mapper.
+\end{itemize}
+
 
 \subsection{AI Engine (ai\_engine.py)}
 
@@ -243,13 +259,29 @@ Untuk setiap temuan yang lolos filter, modul mengirimkan konteks dan potongan ko
 
 \end{sloppypar}
 
+\begin{itemize}
+    \item \textbf{Input}: temuan Semgrep \textit{pre-scan} dengan prioritas 1--5 beserta potongan kode sumber terkait (maksimum 2.000 karakter pertama).
+    \item \textbf{Output}: penjelasan kerentanan dalam bahasa Inggris, saran kode perbaikan PHP 8.x (atau \textit{placeholder} \texttt{// Manual review required} jika tidak ada blok kode yang berhasil diekstraksi), dan skor kepercayaan \texttt{CONFIDENCE}, diteruskan ke ISO Mapper dan laporan akhir.
+\end{itemize}
+
 \subsection{ISO Mapper (iso\_mapper.py)}
 
 Modul ini menerima semua hasil dari Scanner, Analyzer, dan AI Engine sebagai objek Python \textit{in-memory} langsung dari \texttt{main.py}, lalu memetakannya ke kontrol ISO/IEC 27001:2022 secara berbasis aturan. Tidak ada pembacaan \textit{file} JSON. Pemetaan berbasis aturan dipilih agar hasilnya deterministik dan dapat diaudit. Detail pemetaan dibahas dalam Subbab \ref{sec:iso-mapping-design}.
 
+\begin{itemize}
+    \item \textbf{Input}: objek Python \textit{in-memory} dari Scanner (temuan Semgrep \textit{pre}- dan \textit{post-scan}), Analyzer (temuan PHPStan), dan AI Engine (saran perbaikan).
+    \item \textbf{Output}: status kepatuhan (\texttt{COMPLIANT}, \texttt{PARTIAL}, atau \texttt{NON\_COMPLIANT}) untuk masing-masing dari enam kontrol ISO/IEC 27001:2022 yang dipetakan, diteruskan ke \texttt{main.py}.
+\end{itemize}
+
 \subsection{Main (main.py)}
 
 Modul \texttt{main.py} bertindak sebagai orkestrator yang mengontrol seluruh \textit{pipeline}. Menerima direktori \textit{input} dan versi PHP target sebagai argumen CLI, menjalankan keenam modul secara berurutan, dan menghasilkan laporan JSON di direktori \texttt{reports/}. Ringkasan hasil ditampilkan di konsol menggunakan pustaka Rich.
+
+\begin{itemize}
+    \item \textbf{Input}: direktori \textit{input} dan versi PHP target sebagai argumen CLI.
+    \item \textbf{Output}: laporan JSON terstruktur di direktori \texttt{reports/} yang menggabungkan hasil seluruh modul, serta ringkasan yang ditampilkan di konsol.
+\end{itemize}
+
 Contoh kerangka laporan JSON yang dihasilkan:
 
 \begin{lstlisting}[style=promptstyle]
@@ -278,16 +310,21 @@ Modul ini membaca berkas \texttt{composer.json} pada direktori
 \textit{root} repositori dan memeriksa kompatibilitas setiap dependensi 
 terhadap PHP 8.x menggunakan data dari Packagist. Jika berkas 
 \texttt{composer.json} tidak ditemukan, modul dilewati secara otomatis 
-tanpa menghentikan \textit{pipeline}. Setiap dependensi diklasifikasikan 
-sebagai \texttt{SAFE} (versi yang dikonfigurasi mendukung PHP 8.x secara 
-deklaratif) atau \texttt{MANUAL REVIEW} (kompatibilitas tidak dapat 
+tanpa menghentikan \textit{pipeline}. Setiap dependensi diklasifikasikan
+sebagai \texttt{SAFE} (versi yang dikonfigurasi mendukung PHP 8.x secara
+deklaratif) atau \texttt{MANUAL REVIEW} (kompatibilitas tidak dapat
 diverifikasi secara otomatis).
+
+\begin{itemize}
+    \item \textbf{Input}: berkas \texttt{composer.json} pada direktori \textit{root} repositori (jika tersedia).
+    \item \textbf{Output}: klasifikasi setiap dependensi (\texttt{SAFE} atau \texttt{MANUAL REVIEW}) terhadap kompatibilitas PHP 8.x, diteruskan ke laporan akhir.
+\end{itemize}
 
 \section{Alur Data Pipeline}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=1\textwidth]{contents/chapter-3/alur-data-pipeline.png}
+    \includegraphics[width=1\textwidth]{contents/chapter-3/alur-data-pipeline233.png}
     \caption{Alur data \textit{pipeline}: tahap masukan: 
     Scanner, Converter, dan Composer Analyzer}
     \label{fig:alur-pipeline-input}
@@ -560,7 +597,11 @@ dalam Subbab \ref{sec:data-privacy}.
 \newpage
 \section{Rancangan Eksperimen Komparasi Model LLM}
 
-Eksperimen komparasi dirancang dengan kondisi yang dikontrol ketat dan dilakukan terpisah dari pengujian \textit{pipeline} utama menggunakan skrip evaluasi khusus.
+Eksperimen komparasi dirancang dengan kondisi yang dikontrol ketat dan dilakukan terpisah dari pengujian \textit{pipeline} utama menggunakan skrip evaluasi khusus. Pemisahan ini bukan sekadar pilihan implementasi, melainkan kebutuhan validitas: performa Rector dan Semgrep bersifat deterministik, sedangkan performa model LLM bersifat stokastik. Jika perbandingan model dijalankan sebagai bagian dari eksekusi \textit{pipeline} penuh, variasi pada tahap-tahap sebelumnya (misalnya jumlah dan urutan temuan yang berbeda antar dataset atau antar versi target) akan menjadi perancu (\textit{confounding variable}) yang mengaburkan perbandingan antar model. Dengan menetapkan 11 temuan Semgrep \textit{pre-scan} dataset FT UGM yang identik sebagai \textit{input} tetap untuk seluruh model dan kondisi eksperimen, perbedaan hasil yang terukur dapat diatribusikan pada perbedaan kemampuan model, bukan pada variasi rangkaian \textit{pipeline} di tahap lain.
+
+\subsection{Baseline Pembanding}
+
+Penelitian ini tidak memiliki \textit{baseline} eksternal dalam arti tidak ada alat atau penelitian terdahulu yang menjalankan tugas yang identik -- menerjemahkan temuan Semgrep pada kode PHP menjadi penjelasan dan saran remediasi menggunakan LLM lokal -- sehingga tidak tersedia titik pembanding dari luar untuk mengklaim bahwa pendekatan ini ``lebih baik'' dari pendekatan lain secara mutlak. Sebagai gantinya, validitas perbandingan dibangun melalui dua mekanisme pembanding internal. Pertama, \textbf{Kondisi A} berfungsi sebagai \textit{baseline zero-shot} yang sama untuk kelima model, sehingga Kondisi B dan Kondisi C dapat diukur sebagai peningkatan relatif terhadap kondisi awal yang setara, bukan terhadap titik nol yang sewenang-wenang. Kedua, perbandingan lintas-model itu sendiri berfungsi sebagai \textit{baseline} relatif: pertanyaan yang dijawab bukan ``apakah pendekatan ini efektif secara absolut'', melainkan ``model mana, di antara kandidat yang memenuhi batasan privasi data dan perangkat keras pada Subbab~\ref{sec:data-privacy}, yang paling sesuai untuk peran ini''. Ketiadaan \textit{baseline} eksternal ini diakui sebagai keterbatasan penelitian dan dibahas lebih lanjut pada Bab V.
 
 Eksperimen ini mencakup tiga kondisi yang dirancang secara bertahap. \textbf{Kondisi A} adalah \textit{baseline}: semua model menerima \textit{prompt} yang identik secara \textit{zero-shot} tanpa optimasi apa pun. \textbf{Kondisi B} mengoptimasi \textit{prompt} per model berdasarkan pola kegagalan yang terobservasi pada Kondisi A, untuk mengetahui sejauh mana performa model bisa ditingkatkan melalui penyesuaian \textit{prompt}. \textbf{Kondisi C} mengeksplorasi variasi parameter \textit{temperature} dan \textit{context window} pada model terbaik hasil Kondisi A dan B.
 
