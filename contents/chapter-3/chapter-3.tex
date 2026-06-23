@@ -156,9 +156,11 @@ masalah, proses kembali ke tahap implementasi (iterasi).
 
 \section{Arsitektur Sistem}
 
-Sistem terdiri dari enam modul fungsional Python yang
-dikoordinasikan oleh \texttt{main.py} sebagai orkestrator
-yang masing-masing menangani satu langkah dalam proses konversi dan analisis keamanan. 
+Sistem terdiri dari enam modul fungsional Python, di mana masing-masing modul 
+menangani satu langkah spesifik dalam proses konversi dan analisis keamanan. 
+Sistem terdiri dari enam modul fungsional Python, di mana masing-masing modul 
+menangani satu langkah spesifik dalam proses konversi dan analisis keamanan. 
+Seluruh modul ini dikoordinasikan oleh \texttt{main.py} sebagai orkestrator. 
 Arsitektur modular memungkinkan setiap bagian diuji, diperbaiki, atau diganti secara independen.
 
 Gambar \ref{fig:arsitektur-sistem} menunjukkan hubungan antar modul.
@@ -255,7 +257,7 @@ terhadap kerahasiaan dan integritas sistem serta frekuensi kemunculannya pada ap
 
 \begin{sloppypar}
 
-Untuk setiap temuan yang lolos filter, modul mengirimkan konteks dan potongan kode ke model LLM melalui endpoint \texttt{/api/chat} Ollama di \texttt{localhost:11434}. Jika model tidak menghasilkan blok kode PHP sama sekali, respons tetap dicatat dengan \textit{placeholder} // Manual review required dan tidak diabaikan begitu saja. Jika Ollama tidak tersedia, \textit{pipeline} tetap berjalan tanpa komponen AI. Desain \textit{prompt} yang digunakan dibahas dalam Subbab \ref{sec:prompt-design}.
+Untuk setiap temuan yang lolos filter, modul mengirimkan konteks dan potongan kode ke model LLM melalui endpoint \texttt{/api/chat} Ollama di \texttt{localhost:11434}. Jika model tidak menghasilkan blok kode PHP sama sekali, respons tetap dicatat menggunakan \textit{placeholder} \texttt{// Manual review required} sebagai penanda untuk tinjauan lanjutan. Jika Ollama tidak tersedia, \textit{pipeline} tetap berjalan tanpa komponen AI. Desain \textit{prompt} yang digunakan dibahas dalam Subbab \ref{sec:prompt-design}.
 
 \end{sloppypar}
 
@@ -613,11 +615,10 @@ Eksperimen ini mencakup tiga kondisi yang dirancang secara bertahap. \textbf{Kon
 
     \item \textbf{Jumlah percobaan}: 3 \textit{run} per temuan per model (33 percobaan per model, 165 total)
 
-    \item \textbf{Temperature}: 0,1 untuk semua model
+    \textbf{Temperature}: 0,1 untuk Kondisi A dan B guna meminimalkan variasi acak, serta nilai yang divariasikan secara spesifik pada tahap pengujian Kondisi C.
 
-    \item \textbf{Prompt}: identik untuk semua model pada 
-Kondisi A (\textit{zero-shot}); dioptimasi per model 
-pada Kondisi B
+    \textbf{Prompt}: Identik untuk semua model pada Kondisi A (\textit{zero-shot}); dioptimasi per model pada Kondisi B; dan dimodifikasi parameter konteksnya pada Kondisi C.
+    
     \item \textbf{Model}: dijalankan lokal melalui Ollama tanpa modifikasi
 
 \end{itemize}
@@ -651,6 +652,100 @@ kualitas kode yang buruk. Sebaliknya, model dengan FCR rendah namun
 SVR tinggi mengabaikan instruksi format tetapi menghasilkan kode
 berkualitas baik. Kedua kondisi ini punya implikasi praktis yang
 berbeda dan dibahas secara empiris di Bab IV.
+\section{Rancangan Eksperimen Validasi Efektivitas \textit{AI Engine}}
+\label{sec:eksperimen-b0t1}
+
+Eksperimen komparasi model pada Subbab sebelumnya menentukan model LLM 
+terbaik untuk menjalankan peran \textit{AI Engine}. Namun pertanyaan 
+yang berbeda dan sama pentingnya adalah: apakah kehadiran \textit{AI 
+Engine} itu sendiri memberikan nilai tambah yang terukur dibandingkan 
+tanpa komponen AI sama sekali? Pertanyaan ini merupakan inti dari 
+Rumusan Masalah ke-4 dan dijawab melalui eksperimen validasi 
+\textit{baseline} berikut.
+
+\subsection{Definisi Kondisi B0 dan T1}
+
+Dua kondisi keluaran \textit{pipeline} dibandingkan:
+
+\begin{itemize}
+    \item \textbf{B0} (\textit{baseline} tanpa AI): keluaran 
+    \textit{pipeline} tanpa komponen \textit{AI Engine} aktif. Setiap 
+    temuan hanya mengandung informasi yang dihasilkan Semgrep secara 
+    langsung: \texttt{rule\_id}, nama \textit{file}, nomor baris, 
+    tingkat keparahan (\textit{severity}), potongan kode, dan kontrol 
+    ISO yang dipetakan secara berbasis aturan.
+    \item \textbf{T1} (\textit{treatment} dengan AI): keluaran 
+    \textit{pipeline} lengkap dengan \textit{AI Engine} aktif 
+    menggunakan model Qwen2.5-Coder 7b. Setiap temuan dilengkapi 
+    dengan penjelasan kerentanan dalam bahasa natural dan saran kode 
+    remediasi PHP 8.x yang dihasilkan model.
+\end{itemize}
+
+\subsection{Dataset}
+
+Dataset yang digunakan adalah 11 temuan Semgrep \textit{pre-scan} dari 
+dataset FT UGM (FT-01 hingga FT-11): 1 kasus SQL Injection dan 10 kasus 
+SSRF yang berasal dari \texttt{Output.php}. Dataset DTI UGM 
+dikecualikan karena karakteristik temuannya identik dengan FT UGM 
+(sumber \textit{file} dan jenis kerentanan yang sama), sehingga tidak 
+menambah keberagaman data untuk eksperimen ini.
+
+\subsection{Desain \textit{Blind Rating}}
+
+Untuk menghindari bias penilai terhadap keluaran yang diketahui 
+berasal dari AI, penilaian dilakukan secara buta (\textit{blind}). 
+Setiap temuan disajikan dalam dua paket tanpa label asal:
+
+\begin{itemize}
+    \item \textbf{Paket A} dan \textbf{Paket B} untuk setiap temuan, 
+    di mana salah satu paket berisi keluaran B0 dan satu lagi berisi 
+    keluaran T1. Penugasan A/B diacak menggunakan \textit{seed} = 42.
+    \item Dokumen penilaian tidak mengandung istilah B0, T1, 
+    \textit{AI Engine}, nama model, atau informasi lain yang dapat 
+    mengungkap asal paket kepada penilai.
+    \item Paket yang berisi keluaran T1 memiliki bagian 
+    ``Catatan Tambahan'' berisi penjelasan dan saran remediasi; 
+    penilai diberitahu bahwa \textit{beberapa} paket mungkin memiliki 
+    bagian ini.
+\end{itemize}
+
+Penilaian dilakukan oleh dua \textit{rater} independen dengan latar 
+belakang keamanan siber yang tidak familiar dengan \textit{pipeline} 
+penelitian ini, untuk meminimalkan bias konfirmasi.
+
+\subsection{Instrumen Penilaian}
+
+Setiap paket dinilai pada empat dimensi menggunakan skala Likert 
+7 poin \cite{likert1932technique} sebagaimana diperkenalkan pada 
+Subbab~\ref{subsec:evaluasi-manusia}:
+
+\begin{enumerate}
+    \item \textbf{Akurasi}: sejauh mana identifikasi kerentanan 
+    yang disajikan tepat dan tidak menyesatkan.
+    \item \textbf{Kejelasan}: sejauh mana informasi yang disajikan 
+    mudah dipahami oleh pengembang.
+    \item \textbf{Actionability}: sejauh mana informasi yang 
+    disajikan dapat langsung ditindaklanjuti untuk perbaikan kode.
+    \item \textbf{Ketepatan pemetaan ISO}: sejauh mana kontrol 
+    ISO/IEC 27001:2022 yang disertakan relevan dengan temuan.
+\end{enumerate}
+
+\subsection{Metode Analisis Statistik}
+
+Analisis statistik menggunakan \textit{Wilcoxon signed-rank test} 
+\cite{wilcoxon1945individual} untuk membandingkan skor B0 dan T1 
+pada pasangan temuan yang sama, sebagaimana diperkenalkan pada 
+Subbab~\ref{subsec:evaluasi-manusia}. Uji ini dipilih karena data 
+berskala ordinal (Likert 7 poin) dan ukuran sampel kecil tidak 
+memenuhi asumsi normalitas untuk uji parametrik.
+
+Uji Wilcoxon diterapkan pada 10 temuan berpasangan (FT-02 hingga 
+FT-11, $n = 10$). Temuan FT-01 (SQL Injection) dianalisis secara 
+deskriptif saja karena $n = 1$ tidak mencukupi untuk uji 
+nonparametrik. Konsistensi antar-\textit{rater} diukur menggunakan 
+\textit{Cohen's kappa} \cite{cohen1960coefficient} sebelum hasil 
+penilaian digabungkan untuk analisis utama.
+
 \section{Metode Pengujian dan Evaluasi}
 
 Pengujian dilakukan dengan pendekatan berbasis keluaran 

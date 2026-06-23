@@ -2,43 +2,102 @@
 
 \section{Latar Belakang}
 
-Akar permasalahan yang melatari penelitian ini adalah kerentanan keamanan yang melekat pada aplikasi web PHP yang masih berjalan di versi lawas (\textit{end-of-life}). PHP tetap menjadi bahasa sisi \textit{server} paling dominan, digunakan oleh 71,7\% situs web yang bahasa sisi \textit{server}-nya diketahui \cite{w3techs2024php}, namun hanya 58,1\% di antaranya yang telah beralih ke PHP 8.x; sekitar 41,8\% sisanya masih berjalan di PHP 7.x (33,1\%) atau PHP 5.x (8,7\%) \cite{w3techs2024php}. Dukungan resmi untuk PHP 7.4, versi terakhir seri 7.x, telah berakhir pada 28 November 2022 \cite{phpgroup2022supported}, yang berarti tidak ada lagi pembaruan keamanan resmi untuk kerentanan baru yang ditemukan setelah tanggal tersebut. NVD yang dikelola NIST mencatat bahwa sistem yang berjalan di versi \textit{end-of-life} secara efektif membiarkan celah keamanan yang sudah diketahui publik tetap terbuka tanpa kemungkinan diperbaiki secara resmi \cite{nist_nvd}, dan akumulasi risiko ini membesar seiring lamanya sistem dibiarkan tidak diperbarui.
+Penelitian ini dilatarbelakangi oleh isu kerentanan keamanan yang melekat pada aplikasi web PHP yang masih berjalan di versi lawas (\textit{end-of-life}). PHP tetap menjadi bahasa sisi \textit{server} paling dominan, digunakan oleh 71,7\% situs web yang bahasa sisi \textit{server}-nya diketahui \cite{w3techs2024php}, namun hanya 58,1\% di antaranya yang telah beralih ke PHP 8.x; sekitar 41,8\% sisanya masih berjalan di PHP 7.x (33,1\%) atau PHP 5.x (8,7\%) \cite{w3techs2024php}. Dukungan resmi untuk PHP 7.4, versi terakhir seri 7.x, telah berakhir pada 28 November 2022 \cite{phpgroup2022supported}, yang berarti tidak ada lagi pembaruan keamanan resmi untuk kerentanan baru yang ditemukan setelah tanggal tersebut. NVD yang dikelola NIST mencatat bahwa sistem yang berjalan di versi \textit{end-of-life} secara efektif membiarkan celah keamanan yang sudah diketahui publik tetap terbuka tanpa kemungkinan diperbaiki secara resmi \cite{nist_nvd}, dan akumulasi risiko ini membesar seiring lamanya sistem dibiarkan tidak diperbarui.
 
-Kondisi ini bukan persoalan hipotetis bagi FT UGM. Institusi ini mengelola aplikasi \textit{Dashboard} TCK yang dibangun di atas \textit{framework} CodeIgniter 3.x dengan PHP 7.4.9, terdiri dari 245 \textit{file} PHP yang sebagian besar berisi logika bisnis spesifik institusi. Pemindaian awal dengan Semgrep \cite{semgrep2024} terhadap basis kode ini menemukan 11 temuan kerentanan aktif, terdiri dari 1 kasus injeksi SQL dan 10 kasus \textit{Server-Side Request Forgery} (SSRF) yang terkonsentrasi pada satu \textit{file} pemrosesan \textit{output}, sementara PHPStan \cite{phpstan2024} mengidentifikasi 2.790 masalah tipe dan kompatibilitas yang berpotensi memicu kegagalan saat dijalankan di PHP versi baru. 
+Permasalahan serupa secara nyata terjadi pada sistem di lingkungan FT UGM. Institusi ini mengelola aplikasi \textit{Dashboard} TCK yang dibangun di atas \textit{framework} CodeIgniter 3.x dengan PHP 7.4.9, terdiri dari 245 \textit{file} PHP yang sebagian besar berisi logika bisnis spesifik institusi. Pemindaian awal dengan Semgrep \cite{semgrep2024} terhadap basis kode ini menemukan 11 temuan kerentanan aktif, terdiri dari 1 kasus injeksi SQL dan 10 kasus \textit{Server-Side Request Forgery} (SSRF) yang terkonsentrasi pada satu \textit{file} pemrosesan \textit{output}, sementara PHPStan \cite{phpstan2024} mengidentifikasi 2.790 masalah tipe dan kompatibilitas yang berpotensi memicu kegagalan saat dijalankan di PHP versi baru. 
 Status kepatuhan keseluruhan terhadap kontrol \textit{secure coding} ISO/IEC 27001:2022 Annex A pada kondisi ini adalah \texttt{NON\_COMPLIANT}, dengan empat dari enam kontrol yang dipetakan (A.8.25, A.8.26, A.8.28, A.8.29) berstatus tidak terpenuhi. Temuan ini menunjukkan dampak operasional yang nyata: 11 kerentanan keamanan tetap terbuka dan dapat dieksploitasi publik selama proses migrasi berlangsung, sementara 2.790 isu kompatibilitas tipe harus ditelusuri satu per satu sebelum kode dapat dinyatakan siap berjalan stabil di PHP 8.x -- pekerjaan yang tidak realistis dilakukan secara manual oleh tim pengembang yang terbatas dalam batas waktu migrasi yang wajar.
 
 Migrasi ke versi PHP yang masih didukung secara resmi bukan langkah yang sederhana untuk dilakukan secara manual. PHP 8.x membawa sejumlah \textit{breaking changes} dari seri 7.x, termasuk penghapusan fungsi seperti \texttt{create\_function()}, \texttt{each()}, dan seluruh ekstensi \texttt{ext/mysql}, serta sistem tipe yang lebih ketat dengan tipe \textit{union} dan tipe campuran yang dapat memicu kegagalan \textit{runtime} pada kode yang sebelumnya berjalan normal \cite{phpgroup2022supported}. Penanganan kesalahan pun berubah: fungsi yang sebelumnya mengembalikan \texttt{false} saat gagal kini melempar pengecualian. Menerapkan seluruh perubahan ini secara manual pada ratusan \textit{file} tidak realistis, dan risiko regresi fungsional meningkat sejalan dengan ukuran basis kode yang dimigrasikan -- inilah yang membuat sebagian organisasi memilih migrasi bertahap (PHP 7.4 dahulu, baru PHP 8.x) \cite{phpgroup2022supported} sebagai mitigasi risiko, bukan sekadar preferensi teknis.
 
-Alat otomatis yang tersedia saat ini membantu namun tidak saling terintegrasi. Rector \cite{rector2024} terbukti andal untuk transformasi sintaksis berbasis AST pada skala industri \cite{chen2022ast}, tetapi tidak dapat menangani perubahan yang membutuhkan pemahaman semantik, seperti penggantian \texttt{mysql\_*()} dengan PDO/MySQLi yang merupakan penulisan ulang logika akses basis data, bukan sekadar penggantian nama fungsi. Semgrep \cite{semgrep2024} dan PHPStan \cite{phpstan2024} masing-masing dapat mendeteksi pola kerentanan dan masalah kompatibilitas tipe, namun tidak satu pun yang menggabungkan deteksi kerentanan, transformasi kode, dan validasi pasca-konversi dalam satu alur kerja. Strobl et al. \cite{strobl2020automated} menemukan dari tiga kasus transformasi kode skala besar di sektor pemerintahan bahwa ketiadaan mekanisme validasi yang melekat pada proses transformasi menimbulkan risiko yang baru terasa setelah sistem berjalan di produksi -- risiko implementasi yang sama berlaku pada \textit{pipeline} otomatis apa pun, termasuk yang diusulkan penelitian ini, sehingga validasi pasca-konversi bukan langkah opsional melainkan kebutuhan inti desain. Akibat dari fragmentasi alat ini, tim migrasi dan tim keamanan bekerja terpisah, dan bagi organisasi yang harus memenuhi ISO/IEC 27001:2022 Annex A.8 (A.8.25, A.8.28, A.8.29), bukti kepatuhan \textit{secure coding} harus disusun lagi secara manual setelah migrasi selesai, sebagaimana ditunjukkan oleh kondisi \texttt{NON\_COMPLIANT} pada kode FT UGM di atas yang temuannya hanya tersaji sebagai data mentah Semgrep dan PHPStan, bukan sebagai penjelasan yang siap diaudit.
 
-Di titik inilah kebutuhan akan AI menjadi konkret, bukan sekadar tren. Keluaran Semgrep berbentuk simbolik -- ID \textit{rule}, nomor baris, dan potongan pola yang cocok -- yang masih harus diterjemahkan secara manual oleh pengembang menjadi penjelasan risiko, langkah remediasi, dan pemetaan ke kontrol ISO/IEC 27001:2022 yang relevan; pekerjaan penerjemahan inilah yang selama ini memakan waktu dan tidak konsisten antar pengembang. \textit{Large Language Model} (LLM) telah terbukti mampu mendeteksi sekaligus menjelaskan kerentanan perangkat lunak dalam bahasa natural \cite{akuthota2023vulnerability}\cite{li2025software}, dan Li, Dutta, dan Naik \cite{li2025iris} menunjukkan bahwa menggabungkan LLM dengan alat analisis statis menghasilkan hasil yang lebih baik daripada masing-masing pendekatan yang berjalan sendiri. St\"{u}mpfle et al. \cite{stumpfle2025llm} menunjukkan LLM juga dapat diandalkan untuk transformasi kode yang membutuhkan pemahaman semantik. Dengan kemampuan ini, LLM diposisikan bukan untuk mengganti Semgrep sebagai detektor, melainkan untuk mengisi celah interpretasi antara temuan mentah dan tindakan remediasi yang dapat diaudit -- sesuatu yang tidak dapat dilakukan oleh alat berbasis aturan seperti Semgrep maupun Rector.
+Alat otomatis yang tersedia saat ini membantu namun tidak saling 
+terintegrasi, dan tidak satu pun yang mampu menjembatani celah antara 
+deteksi kerentanan dan pembuktian kepatuhan yang dapat diaudit. 
+Rector \cite{rector2024} terbukti andal untuk transformasi sintaksis 
+berbasis AST pada skala industri \cite{chen2022ast}, tetapi tidak dapat 
+menangani perubahan yang membutuhkan pemahaman semantik, seperti 
+penggantian \texttt{mysql\_*()} dengan PDO/MySQLi. Semgrep 
+\cite{semgrep2024} dan PHPStan \cite{phpstan2024} masing-masing dapat 
+mendeteksi pola kerentanan dan masalah kompatibilitas tipe, namun 
+keluarannya masih berbentuk simbolik -- ID \textit{rule}, nomor baris, 
+dan potongan pola yang cocok -- yang harus diterjemahkan secara manual 
+oleh pengembang menjadi penjelasan risiko, langkah remediasi, dan 
+pemetaan ke kontrol ISO/IEC 27001:2022 yang relevan. Akibatnya, bagi 
+organisasi yang harus memenuhi ISO/IEC 27001:2022 Annex A.8, bukti 
+kepatuhan \textit{secure coding} tetap harus disusun lagi secara manual 
+setelah migrasi selesai -- sebagaimana ditunjukkan oleh status 
+\texttt{NON\_COMPLIANT} pada kode FT UGM di atas, di mana temuannya 
+hanya tersaji sebagai data mentah Semgrep dan PHPStan, bukan penjelasan 
+yang siap diaudit. Strobl dkk.~\cite{strobl2020automated} juga 
+menemukan bahwa ketiadaan mekanisme validasi yang melekat pada proses 
+transformasi menimbulkan risiko yang baru terasa setelah sistem berjalan 
+di produksi, sehingga validasi pasca-konversi bukan langkah opsional 
+melainkan kebutuhan inti desain.
 
-Kendala utama penggunaan LLM untuk tujuan ini adalah privasi data. Model performa tinggi seperti GPT-4 hanya dapat diakses melalui API \textit{cloud}, yang mengharuskan kode sumber dikirim ke \textit{server} pihak ketiga -- pilihan yang tidak dapat diterima untuk kode aplikasi internal FT UGM. Perkembangan model LLM \textit{open source} berukuran kecil-menengah seperti DeepSeek Coder 6.7b \cite{deepseek2024coder}, Qwen2.5-Coder 7b \cite{hui2024qwen}, CodeLlama 7b \cite{roziere2024codellama}, Mistral 7b \cite{jiang2023mistral}, dan Llama 3.1 8b \cite{dubey2024llama3} mengubah situasi ini: model-model ini dapat dijalankan secara lokal pada perangkat keras konsumen ber-VRAM 8 GB melalui Ollama \cite{ollama2024}, sehingga seluruh inferensi terjadi di mesin lokal tanpa data yang keluar dari lingkungan organisasi.
+Oleh karena itu, pendekatan berbasis kecerdasan buatan (AI). Pekerjaan penerjemahan temuan 
+Semgrep menjadi penjelasan yang dapat diaudit -- yang selama ini memakan 
+waktu dan tidak konsisten antar pengembang -- merupakan tugas yang relevan bagi LLM mengingat model ini tidak memerlukan eksekusi kode maupun akses ke basis data produksi, tetapi mampu memberikan pemahaman semantik 
+tentang konteks kerentanan yang tidak dapat dihasilkan oleh 
+alat berbasis aturan. \textit{Large Language Model} (LLM) telah terbukti 
+mampu mendeteksi sekaligus menjelaskan kerentanan perangkat lunak dalam 
+bahasa natural \cite{akuthota2023vulnerability}\cite{li2025software}, 
+dan Li, Dutta, dan Naik \cite{li2025iris} menunjukkan bahwa menggabungkan 
+LLM dengan alat analisis statis menghasilkan hasil yang lebih baik 
+daripada masing-masing pendekatan yang berjalan sendiri -- temuan yang 
+menjadi dasar konseptual langsung bagi peran AI dalam penelitian ini. 
+Dengan demikian, LLM diposisikan bukan untuk mengganti Semgrep sebagai 
+detektor, melainkan untuk mengisi celah interpretasi antara temuan 
+mentah dan tindakan remediasi yang dapat diaudit.
 
-Berdasarkan uraian di atas, penelitian ini mengidentifikasi dua kesenjangan yang belum terpecahkan. Pertama, migrasi kode PHP lama masih memerlukan intervensi manual besar untuk kasus yang membutuhkan pemahaman semantik, dan alat yang ada tidak menyertakan pemeriksaan keamanan maupun penerjemahan temuan keamanan menjadi penjelasan yang dapat diaudit sebagai bagian dari alur migrasi. Kedua, organisasi yang harus memenuhi ISO/IEC 27001:2022 masih harus menyusun bukti kepatuhan sebagai langkah manual yang terpisah setelah migrasi selesai. Belum ada platform yang menggabungkan keduanya dalam satu alur kerja \textit{open source} yang dapat dijalankan secara lokal, sebagaimana ditunjukkan oleh tinjauan literatur pada Bab II.
+Kendala utama penggunaan LLM untuk tujuan ini adalah privasi data. 
+Model performa tinggi seperti GPT-4 hanya dapat diakses melalui API 
+\textit{cloud}, yang mengharuskan kode sumber dikirim ke \textit{server} 
+pihak ketiga -- pilihan yang tidak dapat diterima untuk kode aplikasi 
+internal FT UGM. Perkembangan model LLM \textit{open source} berukuran 
+kecil-menengah seperti DeepSeek Coder 6.7b \cite{deepseek2024coder}, 
+Qwen2.5-Coder 7b \cite{hui2024qwen}, CodeLlama 7b 
+\cite{roziere2024codellama}, Mistral 7b \cite{jiang2023mistral}, dan 
+Llama 3.1 8b \cite{dubey2024llama3} mengubah situasi ini: model-model 
+ini dapat dijalankan secara lokal pada perangkat keras konsumen 
+ber-VRAM 8 GB melalui Ollama \cite{ollama2024}, sehingga seluruh 
+inferensi terjadi di mesin lokal tanpa data yang keluar dari lingkungan 
+organisasi.
 
-Penelitian ini membangun \textit{platform} berbasis AI dan alat \textit{open source} yang dapat secara otomatis mengubah aplikasi web PHP lama ke versi PHP target yang dapat dikonfigurasi, dengan dukungan teknis dari PHP 5.2 hingga PHP 8.x, sekaligus menyertakan pemeriksaan \textit{secure coding} berbasis ISO/IEC 27001:2022. \textit{Platform} ini menggunakan Rector \cite{rector2024} untuk transformasi kode berbasis AST, Semgrep \cite{semgrep2024} untuk pemindaian keamanan, PHPStan \cite{phpstan2024} untuk validasi pasca-konversi, serta lima model LLM \textit{open source} yang dijalankan secara lokal melalui Ollama \cite{ollama2024} untuk menerjemahkan temuan Semgrep menjadi penjelasan dan saran remediasi yang siap diaudit. Studi kasus dilakukan pada kode PHP milik FT UGM dan CBT DTI UGM.
+Penelitian ini membangun \textit{platform} berbasis AI dan alat 
+\textit{open source} yang dapat secara otomatis mengubah aplikasi web 
+PHP lawas ke versi PHP target yang dapat dikonfigurasi, dengan dukungan 
+teknis dari PHP 5.2 hingga PHP 8.x, sekaligus menyertakan pemeriksaan 
+\textit{secure coding} berbasis ISO/IEC 27001:2022. \textit{Platform} 
+ini menggunakan Rector \cite{rector2024} untuk transformasi kode berbasis 
+AST, Semgrep \cite{semgrep2024} untuk pemindaian keamanan, PHPStan 
+\cite{phpstan2024} untuk validasi pasca-konversi, serta lima model LLM 
+\textit{open source} yang dijalankan secara lokal melalui Ollama 
+\cite{ollama2024} untuk menerjemahkan temuan Semgrep menjadi penjelasan 
+dan saran remediasi yang siap diaudit. Studi kasus dilakukan pada kode 
+PHP milik FT UGM dan CBT DTI UGM.
 
 \section{Rumusan Masalah}
+\label{sec:rumusan-masalah}
 
-Dari latar belakang dan evidensi di atas, akar permasalahan yang teridentifikasi adalah: (a) aplikasi PHP lawas milik FT UGM dan DTI UGM menyimpan kerentanan keamanan aktif (terkonfirmasi melalui pemindaian Semgrep dan PHPStan) yang tidak lagi mendapat pembaruan resmi; (b) migrasi manual ke versi PHP yang didukung memerlukan pemahaman semantik yang tidak dapat ditangani sepenuhnya oleh alat berbasis aturan seperti Rector, sehingga berisiko menimbulkan regresi fungsional bila dipaksakan otomatis tanpa validasi; (c) deteksi kerentanan, transformasi kode, dan pembuktian kepatuhan ISO/IEC 27001:2022 berjalan sebagai proses-proses terpisah, sehingga temuan keamanan tersaji sebagai data mentah yang masih harus diterjemahkan secara manual menjadi bukti audit; dan (d) belum diketahui model LLM \textit{open source} lokal mana yang paling sesuai untuk tugas penerjemahan temuan keamanan kode PHP tersebut. Berdasarkan akar permasalahan tersebut, penelitian ini merumuskan empat permasalahan sebagai berikut:
+Berdasarkan latar belakang dan fakta-fakta yang telah diuraikan, akar permasalahan yang teridentifikasi adalah: (a) aplikasi PHP lawas milik FT UGM dan DTI UGM menyimpan kerentanan keamanan aktif (terkonfirmasi melalui pemindaian Semgrep dan PHPStan) yang tidak lagi mendapat pembaruan resmi; (b) migrasi manual ke versi PHP yang didukung memerlukan pemahaman semantik yang tidak dapat ditangani sepenuhnya oleh alat berbasis aturan seperti Rector, sehingga berisiko menimbulkan regresi fungsional bila dipaksakan otomatis tanpa validasi; (c) deteksi kerentanan, transformasi kode, dan pembuktian kepatuhan ISO/IEC 27001:2022 berjalan sebagai proses-proses terpisah, sehingga temuan keamanan tersaji sebagai data mentah yang masih harus diterjemahkan secara manual menjadi bukti audit; dan (d) belum diketahui model LLM \textit{open source} lokal mana yang paling sesuai untuk tugas penerjemahan temuan keamanan kode PHP tersebut. Berdasarkan akar permasalahan tersebut, penelitian ini merumuskan empat permasalahan sebagai berikut:
 
 \begin{enumerate}
-    \item Bagaimana merancang \textit{pipeline} berbasis AI yang mampu
-    melakukan konversi otomatis aplikasi web PHP 7.x ke PHP 8.3
-    menggunakan alat \textit{open source}, tanpa menimbulkan regresi
-    fungsional pada kode yang dikonversi?
-    \item Bagaimana memvalidasi bahwa hasil konversi mempertahankan
-    fungsionalitas kode sumber yang telah dikonversi?
-    \item Bagaimana mengintegrasikan pemeriksaan \textit{secure coding}
-    yang selaras dengan kontrol ISO/IEC 27001:2022 Annex A.8 ke dalam
-    \textit{pipeline} konversi otomatis, sehingga temuan keamanan dapat
-    diterjemahkan menjadi bukti audit tanpa pekerjaan manual terpisah?
-    \item Model LLM \textit{open source} lokal mana yang memberikan
-    analisis keamanan dan saran perbaikan kode PHP terbaik dalam
-    konteks migrasi dari PHP 7.x ke PHP 8.3?
+    \item Apakah \textit{pipeline} yang dibangun berhasil memigrasikan
+    aplikasi web PHP 7.x ke PHP 8.3 tanpa menimbulkan regresi
+    fungsional pada kode sumber yang dikonversi?
+    \item Apakah hasil konversi mempertahankan fungsionalitas kode
+    sumber asli sebagaimana dapat diverifikasi melalui pemeriksaan
+    validitas sintaksis dan kompatibilitas tipe pasca-konversi?
+    \item Apakah deteksi kerentanan keamanan, transformasi kode, dan
+    pembuktian kepatuhan terhadap kontrol ISO/IEC 27001:2022 Annex A.8
+    dapat disatukan dalam satu alur kerja otomatis sehingga temuan
+    keamanan tidak lagi memerlukan penerjemahan manual menjadi bukti
+    audit?
+    \item Apakah \textit{AI Engine} berbasis LLM \textit{open source}
+    lokal yang diusulkan menghasilkan penjelasan dan saran remediasi
+    yang secara terukur lebih informatif dibandingkan keluaran
+    \textit{pipeline} tanpa komponen AI?
 \end{enumerate}
-
 
 \section{Tujuan Penelitian}
 \label{sec:tujuan-penelitian}
@@ -56,10 +115,13 @@ di atas:
     \item Mengimplementasikan mekanisme pemeriksaan \textit{secure
     coding} yang dipetakan ke kontrol ISO/IEC 27001:2022 Annex A.8
     sebagai bagian dari alur konversi.
-    \item Membandingkan performa lima model LLM \textit{open source}
-    yang dijalankan secara lokal untuk menentukan model yang paling
-    efektif dalam memberikan analisis dan saran perbaikan keamanan
-    kode PHP dalam konteks migrasi versi.
+    \item Mengevaluasi efektivitas \textit{AI Engine} berbasis LLM 
+\textit{open source} lokal melalui perbandingan terukur antara keluaran 
+\textit{pipeline} dengan dan tanpa komponen AI, menggunakan eksperimen 
+penilaian manusia secara buta (\textit{blind rating}). Sebagai bagian 
+dari evaluasi ini, performa lima kandidat model LLM dibandingkan untuk 
+menentukan model yang paling sesuai menjalankan peran \textit{AI Engine}.
+
 \end{enumerate}
 
 \section{Batasan Penelitian}
@@ -109,13 +171,13 @@ akses terhadap aset informasi sensitif.
 
 \subsection{Manfaat Akademis}
 
-Penelitian ini memberikan contoh nyata tentang cara mengintegrasikan kontrol \textit{secure coding} ISO/IEC 27001:2022 ke dalam alur kerja transformasi kode otomatis \cite{iso27001_2022}, sesuatu yang belum dilakukan oleh penelitian-penelitian sebelumnya di bidang ini \cite{merlo2007automated}\cite{akuthota2023vulnerability}\cite{stumpfle2025llm}. Selain itu, penelitian ini menghasilkan data empiris tentang performa model-model LLM \textit{open source} lokal berukuran kecil hingga menengah dalam tugas analisis keamanan kode, yang relevan bagi institusi dengan sumber daya komputasi terbatas.
+Penelitian ini berkontribusi dalam mengintegrasikan kontrol \textit{secure coding} ISO/IEC 27001:2022 ke dalam alur kerja transformasi kode otomatis \cite{iso27001_2022}, sebuah pendekatan yang belum banyak dieksplorasi pada penelitian terdahulu di bidang ini \cite{merlo2007automated}\cite{akuthota2023vulnerability}\cite{stumpfle2025llm}. Selain itu, penelitian ini menghasilkan data empiris tentang performa model-model LLM \textit{open source} lokal berukuran kecil hingga menengah dalam tugas analisis keamanan kode, yang relevan bagi institusi dengan sumber daya komputasi terbatas.
 
 Desain modular \textit{platform} memungkinkan pengembangan lebih lanjut oleh peneliti lain, misalnya dengan mengganti alat transformasi untuk mendukung bahasa pemrograman lain, menggunakan model AI yang lebih baru, atau memperluas pemetaan ke standar keamanan lain selain ISO/IEC 27001:2022.
 
 \subsection{Manfaat Praktis}
 
-\textit{Platform} yang dibangun memudahkan pemindahan aplikasi PHP lama, khususnya bagi organisasi yang tidak memiliki banyak sumber daya pengembangan. Pemeriksaan kepatuhan keamanan disertakan langsung dalam proses migrasi \cite{iso27001_2022}, sehingga kerentanan dapat ditemukan bersamaan dengan konversi dan laporan kepatuhan dihasilkan secara otomatis. Dukungan versi target dari PHP 5.2 hingga PHP 8.x mengakomodasi berbagai strategi migrasi, baik yang bertahap maupun yang langsung. Seluruh \textit{platform} bersifat \textit{open source} dan dapat digunakan secara gratis.
+\textit{Platform} yang dibangun memudahkan proses migrasi aplikasi PHP lawas, khususnya bagi organisasi yang tidak memiliki banyak sumber daya pengembangan. Pemeriksaan kepatuhan keamanan disertakan langsung dalam proses migrasi \cite{iso27001_2022}, sehingga kerentanan dapat ditemukan bersamaan dengan konversi dan laporan kepatuhan dihasilkan secara otomatis. Dukungan versi target dari PHP 5.2 hingga PHP 8.x mengakomodasi berbagai strategi migrasi, baik yang bertahap maupun yang langsung. Seluruh \textit{platform} bersifat \textit{open source} dan dapat digunakan secara gratis.
 
 \section{Sistematika Penulisan}
 

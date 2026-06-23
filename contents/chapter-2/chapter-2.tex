@@ -8,7 +8,7 @@
 
     Merlo, Letarte, dan Antoniol \cite{merlo2007automated} pada 2007 sudah menunjukkan bahwa analisis keamanan dan perbaikan kode PHP dapat diotomatisasi. Pendekatan mereka menggabungkan analisis statis, analisis dinamis, dan rekayasa ulang kode untuk melindungi aplikasi PHP lama dari injeksi SQL tanpa mengubah fungsionalitasnya. Caranya adalah dengan mengekstrak penjaga berbasis model dari kasus uji tepercaya, lalu secara otomatis menyisipkannya ke titik-titik akses basis data dalam kode sumber.
 
-    Hasilnya cukup kuat: pengujian pada phpBB versi 2.0.0 (37.193 baris kode PHP 4.2.2) berhasil menghentikan semua 176 serangan injeksi yang diuji tanpa satu pun \textit{false positive}. Namun, pendekatan ini memiliki keterbatasan. Kualitas perlindungan sepenuhnya bergantung pada kelengkapan rangkaian pengujian yang digunakan selama fase analisis dinamis. Titik akses yang tidak tercakup pengujian tidak terlindungi.
+    Pendekatan ini terbukti efektif: pengujian pada phpBB versi 2.0.0 (37.193 baris kode PHP 4.2.2) berhasil menghentikan semua 176 serangan injeksi yang diuji tanpa satu pun \textit{false positive}. Namun, pendekatan ini memiliki keterbatasan. Kualitas perlindungan sepenuhnya bergantung pada kelengkapan rangkaian pengujian yang digunakan selama fase analisis dinamis. Titik akses yang tidak tercakup pengujian tidak terlindungi.
 
     Relevansi karya ini terhadap penelitian saat ini tidak terletak pada aspek teknisnya, melainkan pada konfirmasi bahwa otomatisasi analisis keamanan dan remediasi kode PHP dalam skala besar memang dapat dilakukan. Fakta bahwa studi ini sudah muncul hampir dua dekade lalu, namun solusi komprehensif yang bekerja dengan standar keamanan modern masih belum ada, justru mempertegas kesenjangan yang ingin diisi oleh penelitian ini.
 
@@ -16,7 +16,7 @@
 
     Akuthota dkk. \cite{akuthota2023vulnerability} meneliti kemampuan GPT-3.5-Turbo untuk deteksi dan pemantauan kerentanan perangkat lunak. Pendekatannya murni berbasis \textit{prompt engineering} tanpa pelatihan ulang model sama sekali. Model berhasil menemukan pola kerentanan yang umum, meskipun akurasinya menurun seiring meningkatnya kompleksitas pola yang dicari.
 
-    Li et al. \cite{li2025software} mengambil pendekatan yang lebih terstruktur. Mereka menggabungkan analisis \textit{patch} historis dengan analisis statis, lalu menambahkan tabel fitur kerentanan dan templat penganalisis untuk membuat klasifikasi LLM lebih akurat, terutama pada kerentanan yang membutuhkan pemahaman aliran data lintas fungsi. Evaluasi pada basis kode Linux kernel berhasil menemukan 44 bug baru, 37 di antaranya dikonfirmasi dan 30 diperbaiki, dengan hasil yang lebih baik dibandingkan analisis statis saja.
+    Li dkk. \cite{li2025software} mengambil pendekatan yang lebih terstruktur. Mereka menggabungkan analisis \textit{patch} historis dengan analisis statis, lalu menambahkan tabel fitur kerentanan dan templat penganalisis untuk membuat klasifikasi LLM lebih akurat, terutama pada kerentanan yang membutuhkan pemahaman aliran data lintas fungsi. Evaluasi pada basis kode Linux kernel berhasil menemukan 44 bug baru, 37 di antaranya dikonfirmasi dan 30 diperbaiki, dengan hasil yang lebih baik dibandingkan analisis statis saja.
 
     Terdapat dua temuan penting yang dapat ditarik dari kedua studi tersebut. LLM tujuan umum sudah bisa menemukan pola kerentanan hanya dengan \textit{prompt engineering}, dan penggabungan LLM dengan analisis statis terstruktur memberikan hasil yang lebih akurat untuk kasus yang kompleks. Namun, hambatan yang sama muncul di keduanya: model dijalankan via API \textit{cloud}, yang menjadi kendala nyata ketika kode yang dianalisis bersifat rahasia. Penelitian ini mengatasi kendala tersebut dengan menjalankan semua model secara lokal melalui Ollama, sehingga tidak ada kode sumber yang keluar dari lingkungan organisasi.
 
@@ -24,7 +24,7 @@
 
     St\"{u}mpfle dkk. \cite{stumpfle2025llm} mengusulkan pendekatan untuk mengubah varian perangkat lunak yang dikloning menjadi \textit{Software Product Line} (SPL) menggunakan LLM. Metodenya bekerja dalam tiga tahap: penyaringan titik variasi untuk menemukan perbedaan kode yang relevan secara semantik antar varian, rekayasa \textit{prompt} untuk menghasilkan artefak SPL yang benar, dan \textit{loop} umpan balik penyempurnaan diri yang mengirimkan hasil pengujian kembali ke model secara berulang hingga kode lolos kompilasi dan pengujian fungsional. \textit{Loop} umpan balik ini terbukti secara signifikan mengurangi kegagalan akibat halusinasi model, meskipun efektivitasnya tetap bergantung pada kualitas langkah penyaringan awal.
 
-    Baik St\"{u}mpfle et al. maupun penelitian ini menggunakan LLM untuk transformasi kode yang melampaui substitusi sintaksis dan membutuhkan pemahaman semantik. \textit{Loop} umpan balik dalam St\"{u}mpfle dkk. memiliki fungsi konseptual yang mirip dengan peran validasi PHPStan dalam \textit{pipeline} penelitian ini: keduanya menggunakan \textit{output} alat analisis statis untuk memverifikasi apakah transformasi berhasil. Perbedaan utamanya terletak pada fokus: St\"{u}mpfle et al. menangani ekstraksi fitur lintas varian untuk rekayasa lini produk, sedangkan penelitian ini berfokus pada migrasi versi dan verifikasi kepatuhan keamanan untuk kode warisan dalam satu bahasa.
+    Baik St\"{u}mpfle dkk. maupun penelitian ini menggunakan LLM untuk transformasi kode yang melampaui substitusi sintaksis dan membutuhkan pemahaman semantik. \textit{Loop} umpan balik dalam St\"{u}mpfle dkk. memiliki fungsi konseptual yang mirip dengan peran validasi PHPStan dalam \textit{pipeline} penelitian ini: keduanya menggunakan \textit{output} alat analisis statis untuk memverifikasi apakah transformasi berhasil. Perbedaan utamanya terletak pada fokus: St\"{u}mpfle dkk. menangani ekstraksi fitur lintas varian untuk rekayasa lini produk, sedangkan penelitian ini berfokus pada migrasi versi dan verifikasi kepatuhan keamanan untuk kode warisan dalam satu bahasa.
 
     \subsection{Pendekatan Neuro-Simbolik untuk Deteksi Kerentanan Keamanan}
 
@@ -44,19 +44,19 @@
 
     \subsection{Transformasi Kode Berbasis Pola untuk Migrasi Aplikasi}
 
-    Cai et al. \cite{cai2015pattern} mengusulkan pendekatan transformasi kode berbasis pola untuk migrasi aplikasi ke lingkungan \textit{cloud}. Prosesnya iteratif: pemindaian kode untuk mengidentifikasi blok yang perlu diubah, pencocokan pola menggunakan ekspresi reguler yang diperluas, perancangan templat untuk kode target, lalu eksekusi aturan transformasi. Pendekatan ini diuji pada 19 proyek \textit{open source} Java dengan memigrasikannya ke Amazon Web Services (AWS).
+    Cai dkk. \cite{cai2015pattern} mengusulkan pendekatan transformasi kode berbasis pola untuk migrasi aplikasi ke lingkungan \textit{cloud}. Prosesnya iteratif: pemindaian kode untuk mengidentifikasi blok yang perlu diubah, pencocokan pola menggunakan ekspresi reguler yang diperluas, perancangan templat untuk kode target, lalu eksekusi aturan transformasi. Pendekatan ini diuji pada 19 proyek \textit{open source} Java dengan memigrasikannya ke Amazon Web Services (AWS).
 
-    Kontribusinya jelas: transformasi berbasis pola terbukti bisa mengurangi pekerjaan manual berulang pada migrasi skala besar. Namun, terdapat keterbatasan mendasar pada pendekatan tersebut. Ekspresi reguler yang diperluas tetap beroperasi pada level teks, bukan pada representasi struktural kode. Hasil ini membuatnya rentan gagal pada konstruksi kode yang kompleks atau tidak mengikuti pola yang telah didefinisikan sebelumnya.
+    Kontribusi utama dari pendekatan ini adalah membuktikan bahwa transformasi berbasis pola terbukti bisa mengurangi pekerjaan manual berulang pada migrasi skala besar. Namun, terdapat keterbatasan mendasar pada pendekatan tersebut. Ekspresi reguler yang diperluas tetap beroperasi pada level teks, bukan pada representasi struktural kode. Hasil ini membuatnya rentan gagal pada konstruksi kode yang kompleks atau tidak mengikuti pola yang telah didefinisikan sebelumnya.
 
-    Rector \cite{rector2024} bekerja pada AST, bukan teks, sehingga transformasinya lebih dapat diandalkan untuk kode produksi yang beragam. Selain itu, Cai et al. \cite{cai2015pattern} tidak menyertakan aspek keamanan atau kepatuhan standar sama sekali dalam pendekatan mereka. Perbedaan ini mencerminkan bagaimana kebutuhan dalam transformasi kode otomatis telah berkembang: dari sekadar memindahkan kode ke lingkungan baru, menjadi memastikan kode yang dipindahkan juga aman.
+    Rector \cite{rector2024} bekerja pada AST, bukan teks, sehingga transformasinya lebih dapat diandalkan untuk kode produksi yang beragam. Selain itu, Cai dkk. \cite{cai2015pattern} tidak menyertakan aspek keamanan atau kepatuhan standar sama sekali dalam pendekatan mereka. Perbedaan ini mencerminkan bagaimana kebutuhan dalam transformasi kode otomatis telah berkembang: dari sekadar memindahkan kode ke lingkungan baru, menjadi memastikan kode yang dipindahkan juga aman.
 
   \subsection{Migrasi Kode Berbasis AST di Lingkungan Produksi}
 
-    Chen et al. \cite{chen2022ast} mendokumentasikan penerapan migrasi kode berbasis AST pada skala produksi di Microsoft. Pendekatan mereka menggunakan penggantian simbol berbasis AST untuk memigrasikan basis kode TypeScript berskala besar secara otomatis. Kunci dari pendekatan ini adalah bahwa transformasi dilakukan pada tingkat pohon sintaksis, bukan teks, sehingga menghasilkan perubahan yang struktural konsisten dan tidak bergantung pada gaya penulisan kode masing-masing pengembang.
+    Chen dkk. \cite{chen2022ast} mendokumentasikan penerapan migrasi kode berbasis AST pada skala produksi di Microsoft. Pendekatan mereka menggunakan penggantian simbol berbasis AST untuk memigrasikan basis kode TypeScript berskala besar secara otomatis. Kunci dari pendekatan ini adalah bahwa transformasi dilakukan pada tingkat pohon sintaksis, bukan teks, sehingga menghasilkan perubahan yang struktural konsisten dan tidak bergantung pada gaya penulisan kode masing-masing pengembang.
 
-    Signifikansi studi ini terletak pada validasi teknis pendekatannya di lingkungan produksi nyata, bukan pada skala operasi. Chen et al. mendemonstrasikan bahwa transformasi berbasis AST dapat diterapkan secara otomatis pada basis kode TypeScript di Microsoft dan menghasilkan perubahan yang struktural konsisten, mengkonfirmasi kelayakan teknis pendekatan serupa yang mendasari Rector untuk migrasi kode dalam konteks institusional.
+    Signifikansi studi ini terletak pada validasi teknis pendekatannya di lingkungan produksi nyata, bukan pada skala operasi. Chen dkk. mendemonstrasikan bahwa transformasi berbasis AST dapat diterapkan secara otomatis pada basis kode TypeScript di Microsoft dan menghasilkan perubahan yang struktural konsisten, mengkonfirmasi kelayakan teknis pendekatan serupa yang mendasari Rector untuk migrasi kode dalam konteks institusional.
 
-    Ada dua perbedaan konteks penting. Pertama, migrasi yang dilakukan Chen et al. adalah TypeScript ke TypeScript (\textit{refactoring} dalam bahasa yang sama), sedangkan penelitian ini berhadapan dengan \textit{breaking changes} antar versi PHP yang melibatkan penghapusan API dan perubahan sistem tipe. Kedua, seperti halnya Cai et al. \cite{cai2015pattern}, studi ini tidak menyentuh aspek keamanan sama sekali. Temuan keamanan yang muncul selama atau setelah migrasi bukan bagian dari cakupan mereka.
+    Ada dua perbedaan konteks penting. Pertama, migrasi yang dilakukan Chen dkk. adalah TypeScript ke TypeScript (\textit{refactoring} dalam bahasa yang sama), sedangkan penelitian ini berhadapan dengan \textit{breaking changes} antar versi PHP yang melibatkan penghapusan API dan perubahan sistem tipe. Kedua, seperti halnya Cai dkk. \cite{cai2015pattern}, studi ini tidak menyentuh aspek keamanan sama sekali. Temuan keamanan yang muncul selama atau setelah migrasi bukan bagian dari cakupan mereka.
 
     \subsection{Ringkasan Perbandingan}
 
@@ -77,21 +77,21 @@
     \endfoot
     \hline
     \endlastfoot
-    Merlo et al. \cite{merlo2007automated} & PHP & Tidak ada & \textit{Security remediation} \\
+    Merlo dkk. \cite{merlo2007automated} & PHP & Tidak ada & \textit{Security remediation} \\
     \hline
-    Akuthota et al. \cite{akuthota2023vulnerability} & Java & GPT-3.5-Turbo & \textit{Vulnerability detection} \\
+    Akuthota dkk. \cite{akuthota2023vulnerability} & Java & GPT-3.5-Turbo & \textit{Vulnerability detection} \\
     \hline
-    Li et al. \cite{li2025software} & C (Linux kernel) & LLM + analisis statis & \textit{Vulnerability detection} \\
+    Li dkk. \cite{li2025software} & C (Linux kernel) & LLM + analisis statis & \textit{Vulnerability detection} \\
     \hline
-    St\"{u}mpfle et al. \cite{stumpfle2025llm} & C/C++ & LLM & \textit{Code transformation} \\
+    St\"{u}mpfle dkk. \cite{stumpfle2025llm} & C/C++ & LLM & \textit{Code transformation} \\
     \hline
     Li, Dutta \& Naik \cite{li2025iris} & Java & GPT-4 & \textit{Vulnerability detection} \\
     \hline
-    Strobl et al. \cite{strobl2020automated} & COBOL/PL/I & Tidak ada & \textit{Code transformation} \\
+    Strobl dkk. \cite{strobl2020automated} & COBOL/PL/I & Tidak ada & \textit{Code transformation} \\
     \hline
-    Cai et al. \cite{cai2015pattern} & Java & Tidak ada & \textit{Cloud migration} \\
+    Cai dkk. \cite{cai2015pattern} & Java & Tidak ada & \textit{Cloud migration} \\
     \hline
-    Chen et al. \cite{chen2022ast} & TypeScript & Tidak ada & \textit{Code migration} (AST) \\
+    Chen dkk. \cite{chen2022ast} & TypeScript & Tidak ada & \textit{Code migration} (AST) \\
     \hline
     \textbf{Penelitian ini} & PHP & Membandingkan 5 LLM lokal dan memilih AI terbaik untuk migrasi PHP & \textit{Version migration} + \textit{security compliance} \\
     \hline
@@ -114,33 +114,69 @@
     \endfoot
     \hline
     \endlastfoot
-    Merlo et al. \cite{merlo2007automated} & N/A & Tidak & Tidak ada & Ya \\
+    Merlo dkk. \cite{merlo2007automated} & N/A & Tidak & Tidak ada & Ya \\
     \hline
-    Akuthota et al. \cite{akuthota2023vulnerability} & \textit{Cloud} & Tidak & Tidak ada & Tidak \\
+    Akuthota dkk. \cite{akuthota2023vulnerability} & \textit{Cloud} & Tidak & Tidak ada & Tidak \\
     \hline
-    Li et al. \cite{li2025software} & \textit{Cloud} & Tidak & Tidak ada & Tidak \\
+    Li dkk. \cite{li2025software} & \textit{Cloud} & Tidak & Tidak ada & Tidak \\
     \hline
-    St\"{u}mpfle et al. \cite{stumpfle2025llm} & \textit{Cloud} & Ya (\textit{feedback loop}) & Tidak ada & Tidak \\
+    St\"{u}mpfle dkk. \cite{stumpfle2025llm} & \textit{Cloud} & Ya (\textit{feedback loop}) & Tidak ada & Tidak \\
     \hline
     Li, Dutta \& Naik \cite{li2025iris} & \textit{Cloud} & Tidak & Tidak ada & Ya (IRIS) \\
     \hline
-    Strobl et al. \cite{strobl2020automated} & N/A & Tidak & Tidak ada & Tidak \\
+    Strobl dkk. \cite{strobl2020automated} & N/A & Tidak & Tidak ada & Tidak \\
     \hline
-    Cai et al. \cite{cai2015pattern} & N/A & Tidak & Tidak ada & Tidak \\
+    Cai dkk. \cite{cai2015pattern} & N/A & Tidak & Tidak ada & Tidak \\
     \hline
-    Chen et al. \cite{chen2022ast} & N/A & Tidak & Tidak ada & Tidak \\
+    Chen dkk. \cite{chen2022ast} & N/A & Tidak & Tidak ada & Tidak \\
     \hline
     \textbf{Penelitian ini} & Lokal (Ollama) & Ya (PHPStan + Semgrep) & ISO/IEC 27001:2022 & Ya \\
     \hline
     \end{longtable}
 
-    Kedua tabel memperlihatkan kesenjangan yang konsisten. Studi-studi yang berfokus pada keamanan tidak menangani migrasi versi. Studi-studi yang berfokus pada transformasi kode, termasuk yang sudah terbukti di skala industri seperti Chen et al. \cite{chen2022ast} tidak menyertakan pemeriksaan keamanan maupun pemetaan ke standar formal. Tidak satu pun dari kedelapan studi yang menggabungkan migrasi versi PHP, analisis keamanan berbasis LLM, validasi pasca-konversi, dan kepatuhan ISO/IEC 27001:2022 dalam satu alur kerja \textit{open source} dengan \textit{deployment} lokal.
+    Kedua tabel memperlihatkan kesenjangan yang konsisten. Studi-studi yang berfokus pada keamanan tidak menangani migrasi versi. Studi-studi yang berfokus pada transformasi kode, termasuk yang sudah terbukti di skala industri seperti Chen dkk. \cite{chen2022ast} tidak menyertakan pemeriksaan keamanan maupun pemetaan ke standar formal. Tidak satu pun dari kedelapan studi yang menggabungkan migrasi versi PHP, analisis keamanan berbasis LLM, validasi pasca-konversi, dan kepatuhan ISO/IEC 27001:2022 dalam satu alur kerja \textit{open source} dengan \textit{deployment} lokal.
 
     Penting untuk digarisbawahi bahwa kedua tabel di atas membandingkan kehadiran fitur (\textit{feature presence}), bukan performa pada tugas yang sama. Kedelapan studi pembanding menyasar masalah yang secara fundamental berbeda dari penelitian ini -- bahasa target, jenis kerentanan, dan tujuan transformasi yang berbeda -- sehingga tidak dapat dibandingkan secara \textit{apple-to-apple} dalam metrik kinerja apa pun, dan tabel ini tidak dimaksudkan sebagai klaim bahwa penelitian ini mengungguli studi-studi tersebut. Perbedaan paling mendasar antara penelitian ini dan kedelapan studi tersebut juga bukan pada cakupan fitur yang lebih banyak, melainkan pada satu kemampuan spesifik yang belum dieksplorasi pada konteks PHP: menggunakan LLM lokal untuk menerjemahkan temuan mentah Semgrep menjadi penjelasan dan saran remediasi yang dapat diaudit, tanpa mengubah peran Semgrep sebagai detektor maupun Rector sebagai mesin transformasi. Rector, Semgrep, dan PHPStan sendiri bukan kontribusi baru dari penelitian ini; ketiganya digunakan sebagaimana adanya. Kombinasi penempatan lapisan AI di antara ketiganya, dengan validasi pasca-konversi dan pemetaan ke ISO/IEC 27001:2022 yang melekat pada alur kerja, adalah kontribusi yang diklaim penelitian ini, dan klaim tersebut diuji secara empiris melalui implementasi pada Bab IV, bukan diasumsikan dari tabel perbandingan ini.
 
-    Ditinjau secara keseluruhan, kemajuan riset pada tiga arah yang dibahas di atas berjalan paralel tanpa pernah bertemu. Pada sisi remediasi keamanan kode PHP, Merlo dkk. \cite{merlo2007automated} sudah membuktikan kelayakan otomatisasi sejak 2007, namun solusi yang dihasilkan tidak pernah diperluas untuk menangani migrasi versi maupun standar kepatuhan formal. Pada sisi deteksi kerentanan berbasis LLM, kemajuan dari \textit{prompt engineering} murni (Akuthota dkk. \cite{akuthota2023vulnerability}) ke kombinasi LLM dan analisis statis yang terstruktur (Li et al. \cite{li2025software}; Li, Dutta, dan Naik \cite{li2025iris}) konsisten menunjukkan bahwa LLM paling efektif ketika berperan sebagai lapisan interpretasi di atas alat analisis statis yang sudah ada, bukan sebagai pengganti alat tersebut -- temuan yang menjadi dasar konseptual langsung bagi peran AI Engine dalam penelitian ini. Pada sisi transformasi kode, kemajuan dari transformasi berbasis pola tekstual (Cai et al. \cite{cai2015pattern}) ke transformasi berbasis AST yang tervalidasi di skala produksi (Chen et al. \cite{chen2022ast}) dan transformasi berbantuan LLM dengan \textit{loop} umpan balik (St\"{u}mpfle dkk. \cite{stumpfle2025llm}) menunjukkan bahwa pendekatan struktural berbasis AST untuk perubahan sintaksis dan LLM untuk perubahan semantik adalah dua kemampuan yang saling melengkapi, bukan saling menggantikan.
+    Secara keseluruhan, tinjauan literatur menunjukkan bahwa perkembangan riset pada ketiga bidang tersebut masih berjalan secara terpisah. Pada sisi remediasi keamanan kode PHP, Merlo dkk. \cite{merlo2007automated} sudah membuktikan kelayakan otomatisasi sejak 2007, namun solusi yang dihasilkan tidak pernah diperluas untuk menangani migrasi versi maupun standar kepatuhan formal. Pada sisi deteksi kerentanan berbasis LLM, kemajuan dari \textit{prompt engineering} murni (Akuthota dkk. \cite{akuthota2023vulnerability}) ke kombinasi LLM dan analisis statis yang terstruktur (Li dkk. \cite{li2025software}; Li, Dutta, dan Naik \cite{li2025iris}) konsisten menunjukkan bahwa LLM paling efektif ketika berperan sebagai lapisan interpretasi di atas alat analisis statis yang sudah ada, bukan sebagai pengganti alat tersebut -- temuan yang menjadi dasar konseptual langsung bagi peran AI Engine dalam penelitian ini. Pada sisi transformasi kode, kemajuan dari transformasi berbasis pola tekstual (Cai dkk. \cite{cai2015pattern}) ke transformasi berbasis AST yang tervalidasi di skala produksi (Chen dkk. \cite{chen2022ast}) dan transformasi berbantuan LLM dengan \textit{loop} umpan balik (St\"{u}mpfle dkk. \cite{stumpfle2025llm}) menunjukkan bahwa pendekatan struktural berbasis AST untuk perubahan sintaksis dan LLM untuk perubahan semantik adalah dua kemampuan yang saling melengkapi, bukan saling menggantikan.
 
-    \textit{Gap} penelitian yang tersisa dari kemajuan-kemajuan ini bukan pada masing-masing arah secara terpisah, melainkan pada ketidakhadiran integrasi ketiganya untuk kasus migrasi PHP lawas. Tidak satu pun studi yang ditinjau menggabungkan transformasi kode berbasis AST, deteksi kerentanan berbasis aturan, lapisan interpretasi berbasis LLM lokal, dan pemetaan ke standar kepatuhan formal dalam satu alur kerja yang dapat diaudit. Penelitian ini berkontribusi secara spesifik dan terbatas pada interseksi tersebut: bukan mengusulkan alat transformasi baru karena Rector sudah memadai untuk itu, dan bukan pula mengusulkan detektor kerentanan baru karena Semgrep sudah memadai untuk itu, melainkan menambahkan lapisan AI yang menerjemahkan temuan Semgrep menjadi penjelasan dan saran remediasi yang dipetakan ke kontrol ISO/IEC 27001:2022, sekaligus mengevaluasi lima kandidat model LLM lokal untuk menentukan mana yang paling sesuai menjalankan peran tersebut.
+    Kesenjangan penelitian yang teridentifikasi adalah belum adanya integrasi dari ketiga pendekatan tersebut untuk menangani kasus migrasi versi aplikasi PHP lawas. Tidak satu pun studi yang ditinjau menggabungkan transformasi kode berbasis AST, deteksi kerentanan berbasis aturan, lapisan interpretasi berbasis LLM lokal, dan pemetaan ke standar kepatuhan formal dalam satu alur kerja yang dapat diaudit. Penelitian ini berkontribusi secara spesifik dan terbatas pada interseksi tersebut: bukan mengusulkan alat transformasi baru karena Rector sudah memadai untuk itu, dan bukan pula mengusulkan detektor kerentanan baru karena Semgrep sudah memadai untuk itu, melainkan menambahkan lapisan AI yang menerjemahkan temuan Semgrep menjadi penjelasan dan saran remediasi yang dipetakan ke kontrol ISO/IEC 27001:2022, sekaligus mengevaluasi lima kandidat model LLM lokal untuk menentukan mana yang paling sesuai menjalankan peran tersebut.
+
+    Kemajuan terkini pada ketiga bidang yang ditinjau menunjukkan bahwa 
+kombinasi LLM dengan alat analisis statis adalah arah yang paling 
+menjanjikan: IRIS \cite{li2025iris} membuktikan peningkatan deteksi 
+kerentanan sebesar dua kali lipat dibanding analisis statis saja, 
+sementara St\"{u}mpfle dkk.\ \cite{stumpfle2025llm} menunjukkan 
+transformasi kode berbantuan LLM dapat mengurangi kegagalan akibat 
+halusinasi secara signifikan melalui \textit{feedback loop}. Namun, 
+kesenjangan yang belum tertangani adalah penerapan kombinasi ini pada 
+konteks migrasi versi PHP dengan kendala privasi data, di mana kode 
+sumber tidak dapat dikirim ke layanan \textit{cloud}. Penelitian ini 
+mengisi kesenjangan tersebut dengan membangun \textit{pipeline} yang 
+menempatkan LLM lokal sebagai lapisan interpretasi di atas Semgrep 
+dan Rector, sekaligus memetakan hasilnya ke kontrol ISO/IEC 27001:2022 
+dalam satu alur kerja yang dapat diaudit.
+    \subsection{Pertanyaan Penelitian}
+
+Berdasarkan kesenjangan yang teridentifikasi, penelitian ini mengajukan 
+empat pertanyaan penelitian berikut:
+
+\begin{enumerate}
+    \item Apakah \textit{pipeline} yang dibangun berhasil memigrasikan 
+    aplikasi web PHP 7.x ke PHP 8.3 tanpa menimbulkan regresi fungsional 
+    pada kode sumber yang dikonversi?
+    \item Apakah hasil konversi mempertahankan fungsionalitas kode sumber 
+    asli sebagaimana dapat diverifikasi melalui pemeriksaan validitas 
+    sintaksis dan kompatibilitas tipe pasca-konversi?
+    \item Apakah deteksi kerentanan keamanan, transformasi kode, dan 
+    pembuktian kepatuhan terhadap kontrol ISO/IEC 27001:2022 Annex A.8 
+    dapat disatukan dalam satu alur kerja otomatis sehingga temuan 
+    keamanan tidak lagi memerlukan penerjemahan manual menjadi bukti audit?
+    \item Apakah \textit{AI Engine} berbasis LLM \textit{open source} 
+    lokal yang diusulkan menghasilkan penjelasan dan saran remediasi yang 
+    secara terukur lebih informatif dibandingkan keluaran \textit{pipeline} 
+    tanpa komponen AI?
+\end{enumerate}
 
     \section{Dasar Teori}
 
@@ -204,7 +240,7 @@ Dalam praktiknya, DevSecOps diwujudkan melalui integrasi alat keamanan otomatis 
 
     Analisis statis adalah teknik pemeriksaan kode sumber tanpa menjalankan program. Dalam konteks keamanan perangkat lunak, teknik ini digunakan untuk mengidentifikasi pola kerentanan, praktik pengkodean tidak aman, dan pelanggaran kebijakan secara otomatis. Analisis statis sudah menjadi bagian standar dari \textit{pipeline} DevSecOps modern karena bisa dijalankan terus-menerus selama pengembangan tanpa beban tambahan yang signifikan \cite{iso27001_2022}.
 
-    \textit{Abstract Syntax Trees} (AST) adalah representasi pohon dari kode sumber di mana setiap \textit{node} mewakili konstruksi sintaksis seperti ekspresi, pernyataan, atau deklarasi. Alat yang bekerja dengan AST bisa menganalisis dan mengubah kode secara struktural, berbeda dari pendekatan berbasis teks biasa yang digunakan oleh Cai et al. \cite{cai2015pattern}. Rector menggunakan PHP AST untuk menemukan pola yang perlu diubah dan menghasilkan kode penggantinya. Chen et al. \cite{chen2022ast} mendemonstrasikan bahwa pendekatan berbasis AST bukan sekadar teori; mereka menerapkannya untuk migrasi kode TypeScript di Microsoft pada skala produksi.
+    \textit{Abstract Syntax Trees} (AST) adalah representasi pohon dari kode sumber di mana setiap \textit{node} mewakili konstruksi sintaksis seperti ekspresi, pernyataan, atau deklarasi. Alat yang bekerja dengan AST bisa menganalisis dan mengubah kode secara struktural, berbeda dari pendekatan berbasis teks biasa yang digunakan oleh Cai dkk. \cite{cai2015pattern}. Rector menggunakan PHP AST untuk menemukan pola yang perlu diubah dan menghasilkan kode penggantinya. Chen dkk. \cite{chen2022ast} mendemonstrasikan bahwa pendekatan berbasis AST bukan sekadar teori; mereka menerapkannya untuk migrasi kode TypeScript di Microsoft pada skala produksi.
 
     \subsection{Rector: Alat Transformasi Kode Berbasis AST}
     \label{subsec:rector}
@@ -407,28 +443,26 @@ eksternal tambahan. Dalam penelitian ini, metrik ini digunakan pada tahap valida
 akurasi untuk mengukur kemiripan antara keluaran Rector dan konversi referensi yang
 disiapkan secara manual, sebagaimana dibahas di Subbab \ref{subsec:validasi-akurasi}.
 
-\section{Pertanyaan Penelitian}
-\label{sec:pertanyaan-penelitian}
+\subsection{Evaluasi Berbasis Penilaian Manusia}
+\label{subsec:evaluasi-manusia}
 
-Rumusan masalah pada Subbab~\ref{sec:rumusan-masalah} menetapkan akar permasalahan yang melatari penelitian ini, dan tinjauan literatur serta dasar teori pada bab ini menetapkan posisi \textit{platform} yang diusulkan terhadap kesenjangan yang ada. Berdasarkan keduanya, penelitian ini mengajukan empat pertanyaan penelitian yang menguji apakah solusi yang diusulkan -- \textit{pipeline} yang menggabungkan Rector, Semgrep, PHPStan, dan lapisan AI Engine berbasis LLM lokal -- dapat menyelesaikan permasalahan yang diangkat. Berbeda dari rumusan masalah yang menyatakan persoalan yang harus diselesaikan, pertanyaan-pertanyaan ini diajukan dalam bentuk yang dapat diuji secara empiris melalui hasil implementasi pada Bab IV:
+Skala Likert \cite{likert1932technique} adalah skala penilaian ordinal yang
+digunakan untuk mengukur sikap atau penilaian subjektif terhadap suatu objek
+melalui serangkaian poin bertingkat, biasanya dari sangat tidak setuju hingga
+sangat setuju. Skala ini banyak digunakan dalam penelitian yang melibatkan
+penilaian kualitas oleh manusia karena sederhana diterapkan namun tetap
+memberikan gradasi penilaian yang lebih informatif dibandingkan skala biner.
 
-\begin{enumerate}
-    \item Apakah \textit{pipeline} berbasis AI yang dirancang mampu
-    melakukan konversi otomatis aplikasi web PHP 7.x ke PHP 8.3
-    menggunakan alat \textit{open source}, tanpa menimbulkan regresi
-    fungsional pada kode yang dikonversi?
-    \item Apakah hasil konversi yang dihasilkan \textit{pipeline}
-    terbukti, melalui pemeriksaan validitas sintaksis dan kompatibilitas
-    tipe pasca-konversi, mempertahankan fungsionalitas kode sumber yang
-    telah dikonversi?
-    \item Apakah pemeriksaan \textit{secure coding} yang diintegrasikan
-    ke dalam \textit{pipeline} konversi otomatis selaras dengan kontrol
-    ISO/IEC 27001:2022 Annex A.8, sehingga temuan keamanan dapat
-    diterjemahkan menjadi bukti audit tanpa pekerjaan manual yang
-    terpisah dari proses migrasi?
-    \item Model LLM \textit{open source} lokal manakah yang memberikan
-    analisis keamanan dan saran perbaikan kode PHP terbaik dalam
-    konteks migrasi dari PHP 7.x ke PHP 8.3?
-\end{enumerate}
+\textit{Wilcoxon signed-rank test} \cite{wilcoxon1945individual} adalah uji
+statistik nonparametrik untuk membandingkan dua kondisi berpasangan pada data
+berskala ordinal. Uji ini dipilih ketika asumsi normalitas data tidak dapat
+dipenuhi, sebagaimana umum terjadi pada sampel berukuran kecil atau data hasil
+penilaian skala Likert, sehingga lebih sesuai dibandingkan uji parametrik
+seperti \textit{paired t-test}.
 
-Jawaban atas keempat pertanyaan ini, beserta bukti empiris yang mendasarinya, dibahas pada Bab IV dan digunakan untuk menyusun kesimpulan pada Bab V.
+\textit{Cohen's kappa} \cite{cohen1960coefficient} adalah ukuran reliabilitas
+antar-\textit{rater} (\textit{inter-rater reliability}) yang mengukur tingkat
+kesepakatan antara dua \textit{rater} setelah memperhitungkan kesepakatan yang
+mungkin terjadi secara kebetulan. Nilai ini penting untuk memastikan bahwa
+penilaian yang diberikan \textit{rater} cukup konsisten sebelum hasilnya
+digunakan sebagai dasar penarikan kesimpulan.
