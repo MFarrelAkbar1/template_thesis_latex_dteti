@@ -126,7 +126,7 @@ CWE: CWE-89 - Improper Neutralization of Special Elements used
 OWASP: A03:2021 - Injection
 \end{lstlisting}
 \end{small}
-
+\newpage
 \textbf{Potongan Kode:}
 \begin{small}
 \begin{lstlisting}[style=promptstyle]
@@ -137,7 +137,8 @@ OWASP: A03:2021 - Injection
 767
 768  if ( ! @unlink($cache_path))
 769  {
-770 >> log_message('error', 'Unable to delete cache file for '.$uri);
+770 >> log_message('error', 'Unable to delete cache file for 
+       '.$uri);
 771     return FALSE;
 772  }
 773
@@ -175,12 +176,14 @@ public function delete_cache($uri = '')
         $cache_path = APPPATH . 'cache/';
     }
     if (!is_dir($cache_path)) {
-        log_message('error', 'Unable to find cache path: '.$cache_path);
+        log_message('error', 'Unable to find cache path: 
+        '.$cache_path);
         return FALSE;
     }
     if (empty($uri)) {
         $uri = $CI->uri->uri_string();
-        if (($cache_query_string = $CI->config->item('cache_query_string'))
+        if (($cache_query_string = $CI->config->
+        item('cache_query_string'))
             && !empty($_SERVER['QUERY_STRING'])) {
             if (is_array($cache_query_string)) {
                 $uri .= '?' . http_build_query(
@@ -263,7 +266,8 @@ OWASP: A03:2021 - Injection
 767
 768  if ( ! @unlink($cache_path))
 769  {
-770 >> log_message('error', 'Unable to delete cache file for '.$uri);
+770 >> log_message('error', 'Unable to delete cache file for 
+       '.$uri);
 771     return FALSE;
 772  }
 773
@@ -341,7 +345,8 @@ OWASP: A10:2021 - Server-Side Request Forgery (SSRF)
 581
 582  if ( ! $fp = @fopen($cache_path, 'w+b'))
 583  {
-584 >> log_message('error', 'Unable to write cache file: '.$cache_path);
+584 >> log_message('error', 'Unable to write cache file: 
+    '.$cache_path);
 585     return;
 586  }
 587
@@ -411,7 +416,8 @@ OWASP: A10:2021 - Server-Side Request Forgery (SSRF)
 581
 582  if ( ! $fp = @fopen($cache_path, 'w+b'))
 583  {
-584 >> log_message('error', 'Unable to write cache file: '.$cache_path);
+584 >> log_message('error', 'Unable to write cache file: 
+       '.$cache_path);
 585     return;
 586  }
 587

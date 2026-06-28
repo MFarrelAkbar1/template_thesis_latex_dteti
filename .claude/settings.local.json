@@ -4,7 +4,8 @@
       "Bash(pdflatex:*)",
       "Bash(where latexmk:*)",
       "Bash(where pdflatex:*)",
-      "Bash(where xelatex:*)"
+      "Bash(where xelatex:*)",
+      "Bash(latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex)"
     ]
   }
 }
