@@ -10,7 +10,7 @@
 
     Pendekatan ini terbukti efektif: pengujian pada phpBB versi 2.0.0 (37.193 baris kode PHP 4.2.2) berhasil menghentikan semua 176 serangan injeksi yang diuji tanpa satu pun \textit{false positive}. Namun, pendekatan ini memiliki keterbatasan. Kualitas perlindungan sepenuhnya bergantung pada kelengkapan rangkaian pengujian yang digunakan selama fase analisis dinamis. Titik akses yang tidak tercakup pengujian tidak terlindungi.
 
-    Relevansi karya ini terhadap penelitian saat ini tidak terletak pada aspek teknisnya, melainkan pada konfirmasi bahwa otomatisasi analisis keamanan dan remediasi kode PHP dalam skala besar memang dapat dilakukan. Fakta bahwa studi ini sudah muncul hampir dua dekade lalu, namun solusi komprehensif yang bekerja dengan standar keamanan modern masih belum ada, justru mempertegas kesenjangan yang ingin diisi oleh penelitian ini.
+    Karya ini relevan bukan karena pendekatan teknisnya, melainkan karena membuktikan bahwa analisis keamanan dan perbaikan kode PHP skala besar sangat mungkin diotomatisasi. Mengingat studi ini terbit hampir dua dekade lalu namun solusi komprehensif berstandar modern belum juga tersedia, jelas ada celah penelitian yang harus segera diisi.
 
     \subsection{Menggunakan LLM untuk Menemukan dan Memantau Kerentanan}
 
@@ -18,7 +18,7 @@
 
     Li dkk. \cite{li2025software} mengambil pendekatan yang lebih terstruktur. Mereka menggabungkan analisis \textit{patch} historis dengan analisis statis, lalu menambahkan tabel fitur kerentanan dan templat penganalisis untuk membuat klasifikasi LLM lebih akurat, terutama pada kerentanan yang membutuhkan pemahaman aliran data lintas fungsi. Evaluasi pada basis kode Linux kernel berhasil menemukan 44 bug baru, 37 di antaranya dikonfirmasi dan 30 diperbaiki, dengan hasil yang lebih baik dibandingkan analisis statis saja.
 
-    Terdapat dua temuan penting yang dapat ditarik dari kedua studi tersebut. LLM tujuan umum sudah bisa menemukan pola kerentanan hanya dengan \textit{prompt engineering}, dan penggabungan LLM dengan analisis statis terstruktur memberikan hasil yang lebih akurat untuk kasus yang kompleks. Namun, hambatan yang sama muncul di keduanya: model dijalankan via API \textit{cloud}, yang menjadi kendala nyata ketika kode yang dianalisis bersifat rahasia. Penelitian ini mengatasi kendala tersebut dengan menjalankan semua model secara lokal melalui Ollama, sehingga tidak ada kode sumber yang keluar dari lingkungan organisasi.
+    Dari kedua studi tersebut, terlihat bahwa LLM umum mampu mendeteksi pola kerentanan murni melalui \textit{prompt engineering}, dan penggabungan LLM dengan analisis statis terstruktur memberikan hasil yang lebih akurat untuk kasus yang kompleks. Namun, hambatan yang sama muncul di keduanya: model dijalankan via API \textit{cloud}, yang menjadi kendala nyata ketika kode yang dianalisis bersifat rahasia. Penelitian ini mengatasi kendala tersebut dengan menjalankan semua model secara lokal melalui Ollama, sehingga tidak ada kode sumber yang keluar dari lingkungan organisasi.
 
     \subsection{Transformasi Kode dengan Bantuan LLM}
 
@@ -38,7 +38,13 @@
 
     Strobl dkk. \cite{strobl2020automated} menganalisis tiga kasus transformasi kode otomatis skala besar di sebuah organisasi pemerintah, semuanya melibatkan konversi sistem warisan dari COBOL dan PL/I ke Java dengan ukuran lebih dari satu juta baris kode. Fokus utama studi ini bukan pada keberhasilan transformasi, melainkan pada dampak pascatransformasi.
 
-    Hasil studi tersebut mengungkapkan permasalahan yang signifikan. Transformasi otomatis seringkali menghasilkan kode yang sintaksis valid di bahasa target, tapi mempertahankan karakteristik struktural dari bahasa sumber sehingga sulit dipahami pengembang yang tidak kenal sistem lama. Lebih lanjut, sistem yang memiliki \textit{test suite} otomatis sejak awal jauh lebih mudah dirawat pascatransformasi, sementara sistem tanpa pengujian otomatis menjadi beban jangka panjang. (Menggabungkan dua kalimat pendek menjadi satu kalimat majemuk yang lebih elegan, serta mengganti kata "kasus" menjadi "sistem").
+    Hasil studi tersebut mengungkapkan permasalahan yang signifikan. 
+Transformasi otomatis seringkali menghasilkan kode yang sintaksis 
+valid di bahasa target, tapi mempertahankan karakteristik struktural 
+dari bahasa sumber sehingga sulit dipahami pengembang yang tidak 
+kenal sistem lama. Lebih lanjut, sistem yang memiliki \textit{test 
+suite} otomatis sejak awal jauh lebih mudah dirawat pascatransformasi, 
+sementara sistem tanpa pengujian otomatis menjadi beban jangka panjang.
 
     Temuan ini menjadi alasan mengapa penelitian ini menyertakan PHPStan sebagai validasi pasca-konversi dan Semgrep sebagai pemindaian keamanan sebelum dan sesudah transformasi. Masalah yang ditinggalkan oleh konversi otomatis perlu terdeteksi segera, bukan bertahun-tahun kemudian.
 
@@ -136,26 +142,9 @@
 
     Kedua tabel memperlihatkan kesenjangan yang konsisten. Studi-studi yang berfokus pada keamanan tidak menangani migrasi versi. Studi-studi yang berfokus pada transformasi kode, termasuk yang sudah terbukti di skala industri seperti Chen dkk. \cite{chen2022ast} tidak menyertakan pemeriksaan keamanan maupun pemetaan ke standar formal. Tidak satu pun dari kedelapan studi yang menggabungkan migrasi versi PHP, analisis keamanan berbasis LLM, validasi pasca-konversi, dan kepatuhan ISO/IEC 27001:2022 dalam satu alur kerja \textit{open source} dengan \textit{deployment} lokal.
 
-    Penting untuk digarisbawahi bahwa kedua tabel di atas membandingkan kehadiran fitur (\textit{feature presence}), bukan performa pada tugas yang sama. Kedelapan studi pembanding menyasar masalah yang secara fundamental berbeda dari penelitian ini -- bahasa target, jenis kerentanan, dan tujuan transformasi yang berbeda -- sehingga tidak dapat dibandingkan secara \textit{apple-to-apple} dalam metrik kinerja apa pun, dan tabel ini tidak dimaksudkan sebagai klaim bahwa penelitian ini mengungguli studi-studi tersebut. Perbedaan paling mendasar antara penelitian ini dan kedelapan studi tersebut juga bukan pada cakupan fitur yang lebih banyak, melainkan pada satu kemampuan spesifik yang belum dieksplorasi pada konteks PHP: menggunakan LLM lokal untuk menerjemahkan temuan mentah Semgrep menjadi penjelasan dan saran remediasi yang dapat diaudit, tanpa mengubah peran Semgrep sebagai detektor maupun Rector sebagai mesin transformasi. Rector, Semgrep, dan PHPStan sendiri bukan kontribusi baru dari penelitian ini; ketiganya digunakan sebagaimana adanya. Kombinasi penempatan lapisan AI di antara ketiganya, dengan validasi pasca-konversi dan pemetaan ke ISO/IEC 27001:2022 yang melekat pada alur kerja, adalah kontribusi yang diklaim penelitian ini, dan klaim tersebut diuji secara empiris melalui implementasi pada Bab IV, bukan diasumsikan dari tabel perbandingan ini.
+    Kedua tabel di atas membandingkan kehadiran fitur (\textit{feature presence}), bukan performa absolut. Mengingat kedelapan studi pembanding menyasar bahasa target dan jenis kerentanan yang berbeda, komparasi kinerja secara langsung tidak dapat dilakukan. Kontribusi utama penelitian ini tidak sekadar memperbanyak cakupan fitur, melainkan mengintegrasikan kemampuan spesifik yang belum dieksplorasi pada konteks PHP: menggunakan LLM lokal untuk menerjemahkan temuan mentah Semgrep menjadi penjelasan dan saran remediasi yang dapat diaudit, tanpa mengubah peran Semgrep sebagai detektor maupun Rector sebagai mesin transformasi. Rector, Semgrep, dan PHPStan sendiri bukan kontribusi baru dari penelitian ini; ketiganya digunakan sebagaimana adanya. Kombinasi penempatan lapisan AI di antara ketiganya, dengan validasi pasca-konversi dan pemetaan ke ISO/IEC 27001:2022 yang melekat pada alur kerja, adalah kontribusi yang diklaim penelitian ini, dan klaim tersebut diuji secara empiris melalui implementasi pada Bab IV, bukan diasumsikan dari tabel perbandingan ini.
 
-    Secara keseluruhan, tinjauan literatur menunjukkan bahwa perkembangan riset pada ketiga bidang tersebut masih berjalan secara terpisah. Pada sisi remediasi keamanan kode PHP, Merlo dkk. \cite{merlo2007automated} sudah membuktikan kelayakan otomatisasi sejak 2007, namun solusi yang dihasilkan tidak pernah diperluas untuk menangani migrasi versi maupun standar kepatuhan formal. Pada sisi deteksi kerentanan berbasis LLM, kemajuan dari \textit{prompt engineering} murni (Akuthota dkk. \cite{akuthota2023vulnerability}) ke kombinasi LLM dan analisis statis yang terstruktur (Li dkk. \cite{li2025software}; Li, Dutta, dan Naik \cite{li2025iris}) konsisten menunjukkan bahwa LLM paling efektif ketika berperan sebagai lapisan interpretasi di atas alat analisis statis yang sudah ada, bukan sebagai pengganti alat tersebut -- temuan yang menjadi dasar konseptual langsung bagi peran AI Engine dalam penelitian ini. Pada sisi transformasi kode, kemajuan dari transformasi berbasis pola tekstual (Cai dkk. \cite{cai2015pattern}) ke transformasi berbasis AST yang tervalidasi di skala produksi (Chen dkk. \cite{chen2022ast}) dan transformasi berbantuan LLM dengan \textit{loop} umpan balik (St\"{u}mpfle dkk. \cite{stumpfle2025llm}) menunjukkan bahwa pendekatan struktural berbasis AST untuk perubahan sintaksis dan LLM untuk perubahan semantik adalah dua kemampuan yang saling melengkapi, bukan saling menggantikan.
-
-    Kesenjangan penelitian yang teridentifikasi adalah belum adanya integrasi dari ketiga pendekatan tersebut untuk menangani kasus migrasi versi aplikasi PHP lawas. Tidak satu pun studi yang ditinjau menggabungkan transformasi kode berbasis AST, deteksi kerentanan berbasis aturan, lapisan interpretasi berbasis LLM lokal, dan pemetaan ke standar kepatuhan formal dalam satu alur kerja yang dapat diaudit. Penelitian ini berkontribusi secara spesifik dan terbatas pada interseksi tersebut: bukan mengusulkan alat transformasi baru karena Rector sudah memadai untuk itu, dan bukan pula mengusulkan detektor kerentanan baru karena Semgrep sudah memadai untuk itu, melainkan menambahkan lapisan AI yang menerjemahkan temuan Semgrep menjadi penjelasan dan saran remediasi yang dipetakan ke kontrol ISO/IEC 27001:2022, sekaligus mengevaluasi lima kandidat model LLM lokal untuk menentukan mana yang paling sesuai menjalankan peran tersebut.
-
-    Kemajuan terkini pada ketiga bidang yang ditinjau menunjukkan bahwa 
-kombinasi LLM dengan alat analisis statis adalah arah yang paling 
-menjanjikan: IRIS \cite{li2025iris} membuktikan peningkatan deteksi 
-kerentanan sebesar dua kali lipat dibanding analisis statis saja, 
-sementara St\"{u}mpfle dkk.\ \cite{stumpfle2025llm} menunjukkan 
-transformasi kode berbantuan LLM dapat mengurangi kegagalan akibat 
-halusinasi secara signifikan melalui \textit{feedback loop}. Namun, 
-kesenjangan yang belum tertangani adalah penerapan kombinasi ini pada 
-konteks migrasi versi PHP dengan kendala privasi data, di mana kode 
-sumber tidak dapat dikirim ke layanan \textit{cloud}. Penelitian ini 
-mengisi kesenjangan tersebut dengan membangun \textit{pipeline} yang 
-menempatkan LLM lokal sebagai lapisan interpretasi di atas Semgrep 
-dan Rector, sekaligus memetakan hasilnya ke kontrol ISO/IEC 27001:2022 
-dalam satu alur kerja yang dapat diaudit.
+    Berdasarkan tinjauan literatur di atas, terlihat jelas bahwa riset mengenai perbaikan keamanan, deteksi kerentanan berbasis LLM, dan transformasi kode masih berkembang secara terpisah. Kemajuan terkini menunjukkan bahwa kombinasi LLM dengan alat analisis statis adalah arah yang paling menjanjikan, sebagaimana dibuktikan oleh IRIS \cite{li2025iris} dan St"{u}mpfle dkk. \cite{stumpfle2025llm}. Kesenjangan penelitian yang belum tertangani adalah penerapan kombinasi ini pada konteks migrasi versi PHP dengan kendala privasi data. Penelitian ini mengisi kesenjangan tersebut dengan membangun \textit{pipeline} yang menempatkan LLM lokal sebagai lapisan interpretasi di atas Semgrep dan Rector, serta memetakannya ke standar kepatuhan formal ISO/IEC 27001:2022 dalam satu alur kerja yang dapat diaudit.
     \subsection{Pertanyaan Penelitian}
 
 Berdasarkan kesenjangan yang teridentifikasi, penelitian ini mengajukan 

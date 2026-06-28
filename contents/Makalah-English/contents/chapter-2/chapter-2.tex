@@ -1,0 +1,301 @@
+% ============================================================
+%  CHAPTER II — LITERATURE REVIEW AND THEORETICAL FRAMEWORK
+% ============================================================
+
+\chapter{Literature Review and Theoretical Framework}
+
+\section{Literature Review}
+
+This section reviews previous research relevant to the three main focal areas of this study: automated security analysis of PHP applications, LLM-based vulnerability detection, and code transformation involving LLMs. Each work is discussed in terms of the problem it addresses, its contribution, and its limitations. The section concludes with a comparison table that situates the present research among these works.
+
+\subsection{Automated Protection of PHP Applications Against SQL Injection}
+
+Merlo, Letarte, and Antoniol \cite{merlo2007automated} demonstrated as early as 2007 that security analysis and PHP code remediation can be automated. Their approach combines static analysis, dynamic analysis, and code reengineering to protect legacy PHP applications against SQL injection without altering their functionality. The method works by extracting model-based guards from trusted test cases and then automatically inserting them at database access points within the source code.
+
+The results were robust: tests on phpBB version 2.0.0 (37,193 lines of PHP 4.2.2 code) successfully blocked all 176 injection attacks tested without a single false positive. However, the approach has a fundamental limitation. The quality of protection depends entirely on the completeness of the test suite used during the dynamic analysis phase. Access points not covered by testing remain unprotected.
+
+The relevance of this work to the present research lies not in its technical details but in its confirmation that automated security analysis and PHP code remediation at scale are indeed feasible. The fact that this study appeared nearly two decades ago, yet a comprehensive solution operating against modern security standards still does not exist, reinforces the gap that this research aims to fill.
+
+\subsection{Using LLMs to Detect and Monitor Vulnerabilities}
+
+Akuthota et al. \cite{akuthota2023vulnerability} investigated the capability of GPT-3.5-Turbo for software vulnerability detection and monitoring. The approach is purely prompt-engineering-based, with no model retraining whatsoever. The model successfully identified common vulnerability patterns, although accuracy degraded as the complexity of the patterns being searched for increased.
+
+Li et al. \cite{li2025software} took a more structured approach. They combined historical patch analysis with static analysis, then added vulnerability feature tables and analyzer templates to make LLM classification more accurate, particularly for vulnerabilities that require understanding cross-function data flow. Evaluation on the Linux kernel CVE dataset showed better results than static analysis alone.
+
+Two important findings can be drawn from both studies. General-purpose LLMs can already detect vulnerability patterns with prompt engineering alone, and combining LLMs with structured static analysis produces more accurate results for complex cases. The same obstacle appears in both: models are run via cloud API, which poses a genuine constraint when the code being analyzed is confidential. This research addresses that constraint by running all models locally via Ollama, ensuring that no source code leaves the organization's environment.
+
+\subsection{LLM-Assisted Code Transformation}
+
+Stümpfle et al. \cite{stumpfle2025llm} proposed an approach for transforming cloned software variants into a Software Product Line (SPL) using LLMs. The method operates in three stages: filtering variation points to identify semantically relevant code differences across variants, prompt engineering to generate correct SPL artifacts, and a self-refinement feedback loop that feeds test results back to the model iteratively until the code passes compilation and functional testing. This feedback loop was shown to significantly reduce failures caused by model hallucination, although its effectiveness still depends on the quality of the initial filtering step.
+
+Both Stümpfle et al. and this research use LLMs for code transformations that go beyond syntactic substitution and require semantic understanding. The feedback loop in Stümpfle et al. serves a conceptual function similar to the role of PHPStan validation in this research's pipeline: both use static analysis tool output to verify whether a transformation succeeded. The key difference lies in focus: Stümpfle et al. deal with cross-variant feature extraction for product line engineering, whereas this research focuses on version migration and security compliance verification for legacy code in a single language.
+
+\subsection{A Neuro-Symbolic Approach to Security Vulnerability Detection}
+
+Li, Dutta, and Naik \cite{li2025iris} introduced IRIS, a system that combines LLMs with static analysis for vulnerability detection at the entire-repository level. The problem it addresses is specific: traditional static analysis tools such as CodeQL rely heavily on manually crafted taint specifications, and these specifications are almost inevitably incomplete because the number of third-party APIs continues to grow. LLMs also cannot operate independently because they are unable to reason across the entire code flow of a large-scale project.
+
+IRIS's solution is to have the LLM automatically generate taint specifications based on contextual understanding of relevant APIs, then delegate path analysis to the existing static analysis tool. On the CWE-Bench-Java dataset of 120 manually validated vulnerabilities, IRIS with GPT-4 detected 55 vulnerabilities compared to only 27 by CodeQL alone, while also reducing the average false positive rate by 5.21 percentage points.
+
+These results provide the empirical basis for the combined approach adopted in this research. The primary differences are that IRIS relies on GPT-4 via the cloud and was tested only on Java. This research adopts a conceptually similar approach, but with local models via Ollama and targeting PHP.
+
+\subsection{Long-Term Consequences of Automated Code Transformation}
+
+Strobl et al. \cite{strobl2020automated} analyzed three large-scale automated code transformation cases at an Austrian government organization, all involving the conversion of legacy systems from COBOL and PL/I to Java, each exceeding one million lines of code. The primary focus of the study was not on transformation success but on post-transformation consequences.
+
+The findings revealed significant problems. Automated transformation frequently produced code that was syntactically valid in the target language but retained structural characteristics from the source language, making it difficult for developers unfamiliar with the legacy system to understand. Furthermore, cases that had automated test suites from the outset were far easier to maintain after transformation. Cases without automated testing became a long-term maintenance burden.
+
+These findings are the reason this research includes PHPStan as post-conversion validation and Semgrep as a security scan both before and after transformation. Problems left behind by automated conversion need to be detected immediately, not years later.
+
+\subsection{Pattern-Based Code Transformation for Application Migration}
+
+Cai et al. \cite{cai2015pattern} proposed a pattern-based code transformation approach for migrating applications to cloud environments. The process is iterative: scanning code to identify blocks that need to be changed, pattern matching using extended regular expressions, designing templates for the target code, and then executing transformation rules. The approach was tested on 19 open-source Java projects by migrating them to Amazon Web Services (AWS).
+
+The contribution is clear: pattern-based transformation demonstrably reduces repetitive manual work in large-scale migrations. However, the approach has a fundamental limitation. Extended regular expressions still operate at the text level, not on structural code representations. This makes them prone to failure on complex code constructs or on code that does not follow predefined patterns.
+
+Rector \cite{rector2024} operates on the AST, not on text, making its transformations more reliable for diverse production codebases. In addition, Cai et al. \cite{cai2015pattern} include no security or standards compliance aspects in their approach at all. This difference reflects how the requirements of automated code transformation have evolved: from simply moving code to a new environment, to ensuring that the moved code is also secure.
+
+\subsection{AST-Based Code Migration at Industrial Scale}
+
+Chen et al. \cite{chen2022ast} documented the application of AST-based code migration at production scale within Microsoft. Their approach uses AST-based symbol replacement to automatically migrate large-scale TypeScript codebases. The key insight is that transformations are performed at the syntax tree level rather than the text level, producing structurally consistent changes that are independent of individual developers' coding styles.
+
+The significance of this study lies in its scalability validation, not in any radical innovation. By demonstrating that AST-based transformation can be applied to millions of lines of production code without significant functional regression, Chen et al. confirm that the same technical approach underlying Rector is reliable enough to trust in a real institutional context.
+
+There are two important contextual differences. First, the migration performed by Chen et al. was TypeScript to TypeScript (refactoring within the same language), whereas this research deals with breaking changes across PHP versions that involve API removal and type system changes. Second, like Cai et al. \cite{cai2015pattern}, this study does not touch on security aspects at all. Security findings arising during or after migration fall outside their scope.
+
+\newpage
+\subsection{Comparative Summary}
+
+\begin{longtable}{|l|p{3cm}|p{3cm}|p{3cm}|}
+\caption{Comparison of Prior Research: Characteristics}
+\label{tab:perbandingan-1} \\
+\hline
+\textbf{Study} & \textbf{Language} & \textbf{AI/LLM Used} & \textbf{Primary Task} \\
+\hline \hline
+\endfirsthead
+\multicolumn{4}{l}{\textit{(continued from Table \ref{tab:perbandingan-1})}} \\
+\hline
+\textbf{Study} & \textbf{Language} & \textbf{AI/LLM Used} & \textbf{Primary Task} \\
+\hline \hline
+\endhead
+\hline
+\multicolumn{4}{r}{\textit{(continued on next page)}} \\
+\endfoot
+\hline
+\endlastfoot
+Merlo et al. \cite{merlo2007automated} & PHP & None & Security remediation \\
+\hline
+Akuthota et al. \cite{akuthota2023vulnerability} & Multiple & GPT-3.5-Turbo & Vulnerability detection \\
+\hline
+Li et al. \cite{li2025software} & C (Linux kernel) & LLM + static analysis & Vulnerability detection \\
+\hline
+Stümpfle et al. \cite{stumpfle2025llm} & C/C++ & LLM & Code transformation \\
+\hline
+Li, Dutta \& Naik \cite{li2025iris} & Java & GPT-4 & Vulnerability detection \\
+\hline
+Strobl et al. \cite{strobl2020automated} & COBOL/PL/I & None & Code transformation \\
+\hline
+Cai et al. \cite{cai2015pattern} & Java & None & Cloud migration \\
+\hline
+Chen et al. \cite{chen2022ast} & TypeScript & None & Code migration (AST) \\
+\hline
+\textbf{This research} & PHP & Comparing 5 local LLMs and selecting the best AI for PHP migration & Version migration + security compliance \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|l|p{2cm}|p{2.8cm}|p{2.5cm}|p{2cm}|}
+\caption{Comparison of Prior Research: Methodological Aspects}
+\label{tab:perbandingan-2} \\
+\hline
+\textbf{Study} & \textbf{Deployment} & \textbf{Post-Conversion Validation} & \textbf{Security Standard} & \textbf{Open Source} \\
+\hline \hline
+\endfirsthead
+\multicolumn{5}{l}{\textit{(continued from Table \ref{tab:perbandingan-2})}} \\
+\hline
+\textbf{Study} & \textbf{Deployment} & \textbf{Post-Conversion Validation} & \textbf{Security Standard} & \textbf{Open Source} \\
+\hline \hline
+\endhead
+\hline
+\multicolumn{5}{r}{\textit{(continued on next page)}} \\
+\endfoot
+\hline
+\endlastfoot
+Merlo et al. \cite{merlo2007automated} & N/A & No & None & Yes \\
+\hline
+Akuthota et al. \cite{akuthota2023vulnerability} & Cloud & No & None & No \\
+\hline
+Li et al. \cite{li2025software} & Cloud & No & None & No \\
+\hline
+Stümpfle et al. \cite{stumpfle2025llm} & Cloud & Yes (feedback loop) & None & No \\
+\hline
+Li, Dutta \& Naik \cite{li2025iris} & Cloud & No & None & Yes (IRIS) \\
+\hline
+Strobl et al. \cite{strobl2020automated} & N/A & No & None & No \\
+\hline
+Cai et al. \cite{cai2015pattern} & N/A & No & None & No \\
+\hline
+Chen et al. \cite{chen2022ast} & N/A & No & None & No \\
+\hline
+\textbf{This research} & Local (Ollama) & Yes (PHPStan + Semgrep) & ISO/IEC 27001:2022 & Yes \\
+\hline
+\end{longtable}
+
+Both tables reveal a consistent gap. Studies focused on security do not address version migration. Studies focused on code transformation — including those proven at industrial scale such as Chen et al. \cite{chen2022ast} — include neither security checks nor mapping to formal standards. Not one of the eight studies combines PHP version migration, LLM-based security analysis, post-conversion validation, and ISO/IEC 27001:2022 compliance within a single open-source workflow with local deployment. This combination constitutes the primary contribution of the present research.
+
+\section{Theoretical Framework}
+
+\subsection{PHP and Cross-Version Changes}
+
+PHP (Hypertext Preprocessor) has been the most widely used server-side scripting language on the web since the late 1990s \cite{phpgroup_history}. W3Techs reports that 71.7\% of all websites with a known server-side programming language use PHP \cite{w3techs2024php}.
+
+To understand the migration challenges facing legacy code, it is necessary first to understand the characteristics of PHP 5.x, which is still commonly found in systems that have not yet migrated. PHP 5.x, actively used from around 2004 through the early 2010s, differs fundamentally from modern versions. The most significant characteristic is the \texttt{ext/mysql} extension, with functions such as \texttt{mysql\_connect()}, \texttt{mysql\_query()}, and \texttt{mysql\_fetch\_array()}. These functions do not natively support prepared statements, making them vulnerable to SQL injection if user input is not sanitized manually. The extension was declared deprecated as of PHP 5.5 and removed entirely in PHP 7.0 \cite{phpgroup2022supported}. PHP 5.x also uses the \texttt{var} keyword for class property declarations, the verbose \texttt{array()} syntax, and has no support for scalar type hints. Rector can handle most syntactic transformations from PHP 5.x through its cumulative rulesets \cite{rector2024}, but the replacement of \texttt{mysql\_*()} cannot be performed by Rector because it requires semantic understanding of the database usage context. This limitation is the direct motivation for the presence of the AI Engine in this research's pipeline.
+
+PHP 7.x brought significant performance improvements via Zend Engine 3.0, adding scalar type declarations, return type hints, and the null coalescing operator. PHP 7.4, the last release in this series, added typed properties and arrow functions before its official support ended on 28 November 2022 \cite{phpgroup2022supported}.
+
+PHP 8.x introduced a number of breaking changes that prevent PHP 7.x code from running without modification \cite{phpgroup2022supported}. Beyond the removal of already-deprecated functions, the type system became considerably stricter with union types and mixed types. New features such as \textit{match} expressions, the nullsafe operator (\texttt{?->}), named arguments, and JIT compilation were introduced. Error handling also changed: several functions that previously returned \texttt{false} on failure now throw exceptions instead. For large codebases, performing all of these changes manually is clearly impractical.
+
+\subsection{ISO/IEC 27001:2022 and Secure Coding}
+
+ISO/IEC 27001:2022 is the international standard for Information Security Management Systems (ISMS), jointly developed by ISO and IEC \cite{iso27001_2022}. The standard sets requirements for establishing, implementing, maintaining, and continually improving an ISMS within an organization. Annex A contains 93 security controls divided across four domains: Organizational, People, Physical, and Technological. Of these 93 controls, this research maps only those directly relevant to software development:
+
+\begin{itemize}
+    \item \textbf{A.8.25} (Secure development lifecycle) requires that secure development rules be established and followed at every stage, including the use of secure coding guidelines and static analysis tools.
+    \item \textbf{A.8.28} (Secure coding) requires that secure coding rules be followed to prevent common vulnerabilities such as injection, broken authentication, sensitive data exposure, and insecure cryptography.
+    \item \textbf{A.8.29} (Security testing in development and acceptance) requires that security testing form part of the development process before code enters production.
+\end{itemize}
+
+These three controls, together with A.5.17, A.8.24, and A.8.26, which are also mapped by the pipeline, serve as the formal reference for the security checking engine in this research \cite{iso27001_2022}. The Semgrep rules used correspond directly to A.8.28 and A.8.29. The overall pipeline structure reflects the lifecycle requirements of A.8.25.
+
+\subsection{OWASP Top 10 and PHP Web Application Vulnerabilities}
+
+The OWASP Top 10 is the standard reference for the most critical security risks in web applications, published periodically by OWASP based on data from hundreds of organizations worldwide \cite{owasp2021}. The most recent edition, OWASP Top 10:2021, is directly relevant to the condition of legacy PHP applications.
+
+Injection ranks third and is the most commonly encountered finding in legacy PHP code \cite{owasp2021}. SQL injection frequently arises from the use of \texttt{mysql\_query()} without parameterization. XSS also falls under the injection category and occurs when output is not encoded before being rendered in the browser. Cryptographic failures, which rank second, often appear in the practice of storing passwords using \texttt{md5()} or \texttt{sha1()}, both of which have long been considered insecure.
+
+In this research, Semgrep is run with the \texttt{p/php} and \texttt{p/owasp-top-ten} rulesets \cite{semgrep2024}, which directly map to the categories in OWASP Top 10:2021. Semgrep findings are then mapped to the relevant ISO/IEC 27001:2022 controls through the \texttt{iso\_mapper.py} script.
+
+\subsection{DevSecOps and Security Integration in Development Pipelines}
+
+DevSecOps is the practice of integrating security into every stage of the software development lifecycle \cite{li2025software}. The traditional approach places security testing as a separate step at the end of the process, with security teams engaging only after code is complete. DevSecOps, by contrast, integrates security as part of every technical decision throughout development.
+
+In practice, DevSecOps is realized through the integration of automated security tools into the pipeline: static application security testing (SAST), dependency scanning, and dynamic security testing. Vulnerabilities identified earlier are far less costly to remediate than those discovered after a system is already in production.
+
+The pipeline in this research applies DevSecOps principles directly: Semgrep scans before and after conversion, PHPStan validates code compatibility, and the AI Engine handles cases requiring semantic analysis. Security is not a separate audit step but an integral part of the migration process itself \cite{iso27001_2022}.
+
+\subsection{Research and Development Methodology with the Prototype Model}
+\label{subsec:model-prototipe}
+
+Research and Development (R\&D) methodology is a research approach that produces a product or system that can be empirically tested and validated, rather than being purely theoretical analysis. The prototype model is one approach within R\&D in which a system is built in an early version, tested, and then iteratively refined based on test results until a stable state is reached \cite{pressman2019}. This approach is appropriate for systems whose design decisions depend on the behavior of external components that are difficult to predict in advance, such as how LLM models respond to particular prompt formats or how Rector handles unusual code patterns.
+
+\subsection{Abstract Syntax Trees and Static Analysis}
+
+Static analysis is a technique for examining source code without executing the program. In the context of software security, it is used to automatically identify vulnerability patterns, unsafe coding practices, and policy violations. Static analysis has become a standard component of modern DevSecOps pipelines because it can be run continuously throughout development without imposing significant additional overhead \cite{li2025software}.
+
+Abstract Syntax Trees (ASTs) are tree-based representations of source code in which each node represents a syntactic construct such as an expression, statement, or declaration. Tools that operate on ASTs can analyze and transform code structurally, as opposed to plain-text-based approaches such as those used by Cai et al. \cite{cai2015pattern}. Rector uses the PHP AST to locate patterns that need to be changed and to generate replacement code. Chen et al. \cite{chen2022ast} demonstrated that AST-based approaches are not merely theoretical; they applied one to TypeScript code migration at Microsoft at production scale.
+
+\subsection{Rector: An AST-Based Code Transformation Tool}
+\label{subsec:rector}
+
+Rector is an open-source tool for AST-based PHP code transformation \cite{rector2024}. Its process works as follows: PHP source code is parsed into an AST, transformation rules are applied, and new PHP code is generated from the modified tree. Rector ships with built-in rules for migrating between PHP versions, including \texttt{LevelSetList::UP\_TO\_PHP\_80} through \texttt{UP\_TO\_PHP\_85}, and its rulesets are cumulative, covering all changes from the source version up to the selected target version.
+
+In this research, Rector serves as the primary transformation engine. Syntactic and structural transformations from PHP 5.x or 7.x to PHP 8.x are handled entirely by Rector. Transformation of the \texttt{ext/mysql} extension cannot be handled because it requires semantic rewriting, not merely syntactic substitution. That task is therefore delegated to the AI Engine.
+
+\subsection{PHPStan: A Static Analysis Tool for PHP}
+
+PHPStan is a static analysis tool for PHP that checks type correctness, function call consistency, and logical errors without executing the program \cite{phpstan2024}. Unlike Semgrep, which searches for security vulnerability patterns, PHPStan focuses on code integrity from the perspective of compatibility and typing.
+
+PHPStan operates on a scale of levels 0 through 9, where higher levels mean stricter checks. In this research's pipeline, PHPStan is used at level 5 as the post-conversion validation component. After Rector completes its work, PHPStan checks whether the converted code is compatible with the target PHP version and free of type errors. Its role supports ISO/IEC 27001:2022 control A.8.29 \cite{iso27001_2022} by ensuring that automatically generated code does not contain errors that could affect reliability before entering production.
+
+\subsection{Semgrep: A Lightweight Static Analysis Tool for Security}
+
+Semgrep is a lightweight static analysis tool that supports more than 30 programming languages, including PHP \cite{semgrep2024}. Its security rules are written in YAML format with syntax resembling the source code being analyzed, so users can write custom rules without needing to understand the internals of the target language's AST. Its public rule registry covers a wide range of common vulnerabilities including SQL injection, XSS, weak cryptography, and unsafe deserialization.
+
+In this research, Semgrep is run twice: before conversion to establish a security baseline for the original code, and after conversion to ensure that no new vulnerabilities have been introduced. Both scans support ISO/IEC 27001:2022 controls A.8.28 and A.8.29 \cite{iso27001_2022}.
+
+\subsection{LLM Models for Code Analysis}
+\label{subsec:model-llm}
+
+A Large Language Model (LLM) is a transformer-based neural language model trained on large volumes of text and code data. LLMs trained on code can understand code semantics, identify vulnerability patterns, suggest fixes, and generate new code \cite{akuthota2023vulnerability}. This capability differs from rule-based analysis: LLMs take into account the context and intent of the code, not merely its structure.
+
+This research evaluates five open-source LLMs running locally. The selection criteria were twofold: the model must run on a GPU with 8 GB VRAM using Q4\_0 quantization, and it must have documented code understanding capability in the academic literature.
+
+\textbf{DeepSeek Coder 6.7b} \cite{deepseek2024coder} has 6.7 billion parameters and was trained on 2 trillion tokens with a composition of 87\% source code from more than 80 programming languages.
+
+\textbf{Qwen2.5-Coder 7b} \cite{hui2024qwen} is a code model from Alibaba with 7 billion parameters, trained on 5.5 trillion code tokens, and demonstrates strong capability in code completion and bug fixing.
+
+\textbf{CodeLlama 7b} \cite{roziere2024codellama} was developed by Meta AI based on Llama 2. It supports contexts of up to 100,000 tokens and is available in an instruct variant optimized for following instructions.
+
+\textbf{Mistral 7b} \cite{jiang2023mistral} is a general-purpose model from Mistral AI that uses grouped-query attention (GQA) and sliding window attention (SWA), making it computationally efficient.
+
+\textbf{Llama 3.1 8b} \cite{dubey2024llama3} is an 8-billion-parameter model from Meta AI trained on more than 15 trillion multilingual tokens, with significant improvements in reasoning capability over its predecessor.
+
+Li, Dutta, and Naik \cite{li2025iris} have already shown that combining LLMs with static analysis yields better vulnerability detection than either approach running independently. An empirical comparison of the performance of these five models in the context of PHP code security analysis is presented in Chapter IV.
+
+\subsection{Metrics for Evaluating LLM Output Quality}
+\label{subsec:metrik-llm}
+
+Evaluating the output quality of LLMs on programming tasks requires metrics that are automatically verifiable and objective. Two primary dimensions used in the literature are the ability to follow format instructions and the ability to produce syntactically valid code.
+
+\textbf{Pass@k} is the standard metric for measuring the quality of LLM-generated code \cite{roziere2024codellama}\cite{hui2024qwen}. It measures the probability that at least one of $k$ code samples generated by the model can pass a set of tests. At $k=1$ with greedy decoding, pass@1 measures the percentage of attempts that produced a solution successfully passing the tests out of total attempts.
+
+\textbf{Instruction-following evaluation} measures the extent to which a model complies with format instructions given in the prompt, independent of the quality of the content produced. Zhou et al. \cite{zhou2023ifeval} introduced IFEval, which defines prompt-level strict-accuracy as the percentage of prompts for which all verifiable instructions are satisfied simultaneously. This approach is all-or-nothing: a response that satisfies only some instructions is not counted as compliant.
+
+This research adapts both concepts into five formal metrics tailored to the PHP migration and security analysis context.
+
+\textbf{Rector Conversion Rate} (CR) measures the percentage of PHP files successfully converted by Rector:
+
+\begin{equation}
+    CR = \frac{f_{success}}{f_{total}} \times 100\%
+    \label{eq:cr}
+\end{equation}
+
+where $f_{success}$ is the number of files successfully converted and $f_{total}$ is the total number of PHP files in the \texttt{input/} directory.
+
+\textbf{Format Compliance Rate} (FCR) adapts the concept of prompt-level strict-accuracy from IFEval \cite{zhou2023ifeval} to measure the percentage of model responses that simultaneously satisfy all three format elements of the prompt:
+
+\begin{equation}
+    FCR = \frac{r_{compliant}}{r_{total}} \times 100\%
+    \label{eq:fcr}
+\end{equation}
+
+where $r_{compliant}$ is the number of format-compliant responses and $r_{total}$ is the total number of attempts per model. This metric reflects the model's ability to follow instructions, not the quality of the code it produces.
+
+\textbf{Syntax Validity Rate} (SVR) adapts the pass@1 concept \cite{roziere2024codellama}\cite{hui2024qwen} to measure the percentage of PHP code blocks that were extracted and passed \texttt{php -l}:
+
+\begin{equation}
+    SVR = \frac{c_{valid}}{c_{extracted}} \times 100\%
+    \label{eq:svr}
+\end{equation}
+
+where $c_{valid}$ is the number of code blocks that passed the syntax check and $c_{extracted}$ is the total number of code blocks successfully extracted from model responses. This is the primary metric because its results are concrete and independently verifiable.
+
+\textbf{Security Finding Delta} ($\Delta F$) measures the change in the number of security findings between the pre-scan and post-scan:
+
+\begin{equation}
+    \Delta F = F_{post} - F_{pre}
+    \label{eq:deltaf}
+\end{equation}
+
+A value of $\Delta F < 0$ indicates a reduction in findings, $\Delta F = 0$ means no change, and $\Delta F > 0$ is not automatically interpreted as a regression, as it may reflect latent vulnerabilities that only become visible after code transformation.
+
+In addition to the four metrics above, this research also records the \textbf{Mean Confidence Score} ($\bar{C}_m$) as a secondary metric measuring the average self-reported confidence score of model $m$:
+
+\begin{equation}
+    \bar{C}_m = \frac{1}{n} \sum_{i=1}^{n} c_i
+    \label{eq:conf-mean}
+\end{equation}
+
+To measure consistency across runs, variance is used:
+
+\begin{equation}
+    \sigma^2_m = \frac{1}{n} \sum_{i=1}^{n} (c_i - \bar{C}_m)^2
+    \label{eq:conf-var}
+\end{equation}
+
+where $n$ is the number of runs and $c_i$ is the confidence score on the $i$-th run. It should be noted that $\bar{C}_m$ is a secondary metric; small-scale LLMs are generally poorly calibrated in assessing their own output \cite{akuthota2023vulnerability, li2025iris}, so this score cannot serve as a proxy for code quality. FCR and SVR are two independent dimensions: a model can achieve high FCR with low SVR, or the reverse \cite{zhou2023ifeval}. This is supported by the CodeIF evaluation, which found that LLM compliance with instructions — particularly multi-constraint instructions — often trades off against the consistency and validity of the generated code \cite{yan2025codeif}. The implications of this pattern are discussed in Chapter IV.
+
+\subsection{Ollama: Running LLMs Locally}
+\label{subsec:justifikasi-ollama}
+
+Several alternatives with similar functions are available, including LM Studio \cite{elementlabs2024lmstudio} and llama.cpp \cite{gerganov2023llamacpp}. LM Studio provides an intuitive graphical interface for running models locally, but does not offer a built-in REST API that can be called directly from Python scripts without additional configuration. llama.cpp is a high-performance inference backend written in C/C++ with no external dependencies \cite{gerganov2023llamacpp} and forms the technical foundation of Ollama, but it requires manual compilation and lacks an integrated model management layer.
+
+Ollama was selected for three reasons. First, its REST API, which is compatible with the OpenAI format, enables direct integration into Python scripts without additional libraries. Second, model management is handled through a single \texttt{ollama pull} command without manual configuration, making experiments easily reproducible in other environments. Third, Ollama supports Q4\_0 quantization automatically, allowing models with 6 to 8 billion parameters to run within 8 GB of VRAM without additional setup.

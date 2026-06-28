@@ -1,0 +1,35 @@
+\begin{abstract}
+Most websites still run PHP applications on version 7.x or older 
+that no longer receive official security updates, leaving systems 
+exposed to an ever-growing accumulation of known vulnerabilities. 
+Manual migration across hundreds of source files is impractical, 
+and existing transformation tools do not incorporate security 
+compliance checks as an integrated part of the migration workflow. 
+Organizations operating under ISO/IEC 27001:2022 must also perform 
+security audits as a separate post-migration step, adding to the 
+operational burden. This research builds a Python-based pipeline 
+that integrates automatic conversion of legacy PHP web applications 
+to a configurable target PHP version with ISO/IEC 27001:2022 
+secure coding compliance checks in a single, fully local, 
+open-source workflow. The pipeline combines Rector for AST-based 
+code transformation, Semgrep for security scanning, PHPStan for 
+post-conversion type validation, and five open-source large 
+language models running locally via Ollama for semantic 
+vulnerability analysis and remediation suggestions. Case studies 
+were conducted on PHP codebases from FT UGM (245 files) and 
+CBT DTI UGM (326 files). Rector achieved conversion rates of 
+97.6\% and 91.7\% respectively, with 100\% post-conversion syntax 
+validity in both cases. A security finding delta of $\Delta F = 0$ 
+confirmed that the conversion process introduced no new 
+vulnerabilities. Automatically generated JSON reports include 
+per-finding mappings to ISO/IEC 27001:2022 Annex A controls and 
+serve directly as audit documentation. Among five evaluated LLMs, 
+Qwen2.5-Coder 7b is recommended for pipeline integration, 
+consistently achieving a Syntax Validity Rate of 100\% across all 
+experimental conditions.
+\end{abstract}
+
+\begin{IEEEkeywords}
+PHP migration, secure coding, ISO/IEC 27001:2022, large language 
+model, AST code transformation
+\end{IEEEkeywords}

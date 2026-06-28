@@ -1,0 +1,109 @@
+% ============================================================
+%  CHAPTER V — CONCLUSIONS AND RECOMMENDATIONS
+% ============================================================
+
+\chapter{Conclusions and Recommendations}
+
+\section{Conclusions}
+
+This research successfully built a Python-based pipeline that 
+integrates automated legacy PHP code conversion, security 
+scanning, and ISO/IEC 27001:2022 compliance mapping into a 
+single workflow that runs entirely in a local environment. Based 
+on testing across two real-world case studies, the following 
+conclusions address the research objectives.
+
+\textbf{First}, Rector-based automated PHP conversion was 
+successfully implemented, achieving a success rate of 97.6\% on 
+the FT UGM dataset and 91.7\% on the CBT DTI UGM dataset, with 
+post-conversion syntax validity reaching 100\% in both cases. 
+Failures in two files across both datasets were caused by an 
+internal Rector bug, not by the source code itself.
+
+\textbf{Second}, the security checking mechanism mapped to 
+ISO/IEC 27001:2022 Annex A controls was implemented in a 
+deterministic and fully auditable manner. The value $\Delta F = 0$ 
+in both case studies confirms that Rector's conversion introduced 
+no new vulnerabilities into the codebase --- an important 
+confirmation given that large-scale automated transformation has 
+the potential to alter code behavior in unexpected ways. The 
+resulting \texttt{NON\_COMPLIANT} status is not a reflection of 
+pipeline failure, but rather an accurate portrait of the legacy 
+code's actual condition, which already contained security issues 
+prior to remediation. All analysis results are consolidated into 
+a JSON report generated automatically on each pipeline execution, 
+making it directly usable as audit documentation without 
+additional manual work --- addressing the real need of 
+organizations undergoing certification that require written 
+evidence that code migration was carried out in accordance with 
+applicable security standards.
+
+\textbf{Third}, the PHPStan validation component delivers 
+concrete value by exposing thousands of potential type 
+compatibility issues that would otherwise go undetected until 
+the code is actually run in a production environment. The 
+majority of findings represent technical debt that existed long 
+before migration and became visible only because PHP 8.3's type 
+system is far stricter than its predecessors. This fact 
+underscores the pipeline's added value: it does not merely 
+convert syntax, but also provides a comprehensive picture of the 
+actual state of the codebase that was previously hidden behind 
+the leniency of the type system in older PHP versions.
+
+\textbf{Fourth}, the performance comparison of five open-source 
+LLM models in the context of PHP code security analysis yields 
+empirical findings relevant to anyone seeking to apply a similar 
+approach. Format Compliance Rate and Syntax Validity Rate proved 
+to be two independent, uncorrelated dimensions: a model that 
+faithfully follows format instructions does not necessarily 
+produce syntactically valid code, and vice versa. Qwen2.5-Coder 
+is recommended as the primary model because it consistently 
+achieved an SVR of 100\% across all experimental conditions, 
+even while completely ignoring format instructions, whereas other 
+models with higher format compliance more frequently produced 
+code that failed syntax validation. SVR proved to be the most 
+valid evaluation metric for locally running LLM-based systems 
+because its results can be independently verified using 
+\texttt{php -l}, unlike FCR --- which is susceptible to minor 
+response format variations --- or self-reported confidence 
+scores, which showed no correlation with the actual quality of 
+the generated code.
+
+\section{Recommendations}
+
+Based on the identified limitations, the following development 
+directions are recommended for future research.
+
+\begin{enumerate}
+    \item LLM evaluation needs to be strengthened from two 
+    directions: semantic validation using automated test suites 
+    to verify the logical correctness of remediation suggestions, 
+    and dataset expansion with a greater diversity of 
+    vulnerability types so that model comparison conclusions can 
+    be more broadly generalized. As a long-term continuation, 
+    fine-tuning exploration with LoRA or QLoRA can be pursued 
+    using this research as a baseline.
+
+    \item The accuracy of PHPStan reports on CodeIgniter 3.x 
+    codebases can be improved through custom stubs or PHPStan 
+    baseline configuration, so that only findings introduced by 
+    the conversion are reported.
+
+    \item Validation of the ISO/IEC 27001:2022 mapping by 
+    certified auditors or practitioners should be conducted to 
+    strengthen the credibility of the generated compliance 
+    reports.
+
+    \item Integration into CI/CD pipelines and extension to 
+    other programming languages are worth exploring. The 
+    pipeline's modular architecture facilitates the replacement 
+    of the Rector and Semgrep components with equivalent tools 
+    for Python, JavaScript, or other languages, while also 
+    opening the possibility of integration with GitHub Actions 
+    or GitLab CI.
+
+    \item Testing against PHP 8.4 and 8.5 targets and 
+    comparison with commercial tools such as SonarQube or Snyk 
+    on the same dataset should be conducted to validate the 
+    pipeline's coverage and accuracy more comprehensively.
+\end{enumerate}

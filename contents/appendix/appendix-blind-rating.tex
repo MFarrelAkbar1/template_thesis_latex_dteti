@@ -1,0 +1,509 @@
+\phantomsection
+\addcontentsline{toc}{section}{Lampiran D --- Instrumen Penilaian \textit{Blind Rating}}
+\label{app:blind-rating}
+
+Lampiran ini menyajikan instrumen evaluasi yang digunakan dalam
+eksperimen \textit{blind rating} untuk mengukur efektivitas komponen
+\textit{AI Engine} sebagaimana dirancang pada
+Subbab~\ref{sec:eksperimen-b0t1} dan dilaporkan hasilnya pada
+Subbab~\ref{sec:validasi-ai-engine}. Dua temuan representatif
+disertakan secara lengkap: \textbf{FT-01} (SQL Injection,
+satu-satunya temuan non-SSRF) dan \textbf{FT-02} (SSRF, representatif
+untuk FT-02 hingga FT-11). Temuan FT-03 hingga FT-11 mengikuti format
+yang identik dengan FT-02 dengan potongan kode dan nomor baris yang
+berbeda sesuai posisi masing-masing temuan di \texttt{Output.php}.
+
+Penugasan kondisi ke Paket A atau Paket B diacak menggunakan
+\texttt{random.seed(42)} sehingga rater tidak mengetahui kondisi mana
+yang sedang dinilai. Pada FT-01, Paket A berisi keluaran kondisi T1
+(\textit{dengan AI Engine}) dan Paket B berisi kondisi B0
+(\textit{tanpa AI Engine}). Pada FT-02 hingga FT-11, penugasan
+diacak sehingga posisi T1 dan B0 tidak selalu konsisten antar temuan.
+
+% ============================================================
+\section*{D.1 Instruksi Penilai dan Dimensi Penilaian}
+% ============================================================
+
+\textbf{Tujuan:} Menilai kualitas analisis temuan keamanan dari dua
+pendekatan berbeda (Paket A dan Paket B) untuk setiap temuan.
+Penilai tidak perlu mengetahui pendekatan mana yang menghasilkan
+paket tertentu.
+
+\textbf{Petunjuk umum:}
+\begin{itemize}
+  \item Penilai diminta menilai Paket A dan Paket B untuk setiap
+  temuan secara \emph{independen}.
+  \item Skor 1 menunjukkan kualitas sangat rendah dan skor 7
+  menunjukkan kualitas sangat tinggi.
+  \item Penilai tidak perlu melakukan verifikasi teknis terhadap
+  kode sumber asli. Penilaian difokuskan pada kualitas analisis
+  yang disajikan.
+  \item Beberapa paket memiliki bagian \textbf{Catatan Tambahan}
+  yang berisi analisis lebih lanjut. Pertimbangkan kualitas
+  keseluruhan paket saat memberikan penilaian.
+  \item Nilailah setiap paket secara independen, bukan relatif
+  terhadap paket lainnya.
+\end{itemize}
+
+\textbf{Terdapat 11 temuan keamanan (FT-01 s.d.\ FT-11)} dari
+\texttt{Output.php} pada aplikasi web PHP berbasis CodeIgniter~3.
+Setiap temuan memiliki dua paket (A dan B) yang perlu dinilai
+secara independen.
+
+\textbf{Dimensi Penilaian (Skala Likert 1--7):}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|l|p{11cm}|}
+\hline
+\textbf{Dimensi} & \textbf{Deskripsi dan Jangkar Skala} \\
+\hline
+Akurasi &
+  Seberapa akurat identifikasi dan deskripsi kerentanan?
+  \newline 1 = sepenuhnya salah;\quad 7 = sepenuhnya akurat. \\
+\hline
+Kejelasan &
+  Seberapa jelas dan mudah dipahami penjelasan yang diberikan?
+  \newline 1 = sangat membingungkan;\quad 7 = sangat jelas. \\
+\hline
+\textit{Actionability} &
+  Seberapa \textit{actionable} saran perbaikan yang diberikan?
+  \newline 1 = tidak ada saran yang berguna;\quad
+  7 = dapat langsung diterapkan. \\
+\hline
+Ketepatan Pemetaan ISO &
+  Seberapa tepat pemetaan ke kontrol ISO/IEC 27001:2022?
+  \newline 1 = sepenuhnya salah;\quad 7 = sepenuhnya tepat. \\
+\hline
+\end{tabular}
+\end{center}
+
+\bigskip
+\textbf{Interpretasi skala:}
+1 = Sangat Buruk \quad
+2 = Buruk \quad
+3 = Cukup Buruk \quad
+4 = Netral \quad
+5 = Cukup Baik \quad
+6 = Baik \quad
+7 = Sangat Baik
+
+% ============================================================
+\section*{D.2 Temuan FT-01 --- SQL Injection}
+% ============================================================
+
+% ------- PAKET A -------
+\subsection*{Paket A (Temuan FT-01)}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Rule ID} &
+  \texttt{php.lang.security.injection.tainted-sql-string} \\
+\hline
+\textbf{File} & \texttt{Output.php} \\
+\hline
+\textbf{Line} & 768 \\
+\hline
+\textbf{Severity} & ERROR \\
+\hline
+\textbf{Vuln Type} & SQL Injection \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Deskripsi Aturan Semgrep:}
+\begin{small}
+\begin{lstlisting}[style=promptstyle]
+User data flows into this manually-constructed SQL string. User
+data can be safely inserted into SQL strings using prepared
+statements or an ORM. Manually-constructed SQL strings is a
+possible indicator of SQL injection, which could let an attacker
+steal or manipulate data from the database.
+CWE: CWE-89 - Improper Neutralization of Special Elements used
+     in an SQL Command ('SQL Injection')
+OWASP: A03:2021 - Injection
+\end{lstlisting}
+\end{small}
+
+\textbf{Potongan Kode:}
+\begin{small}
+\begin{lstlisting}[style=promptstyle]
+763
+764  $cache_path .= md5($CI->config->item('base_url')
+765                   .$CI->config->item('index_page')
+766                   .ltrim($uri, '/'));
+767
+768  if ( ! @unlink($cache_path))
+769  {
+770 >> log_message('error', 'Unable to delete cache file for '.$uri);
+771     return FALSE;
+772  }
+773
+774  return TRUE;
+775 }
+\end{lstlisting}
+\end{small}
+
+\textbf{Kontrol ISO/IEC 27001:2022:} A.8.28, A.8.26
+
+\bigskip
+\textbf{Catatan Tambahan:}
+
+\textit{Penjelasan Kerentanan:}
+The provided PHP code constructs an SQL query manually using user
+input without proper sanitization or parameterized queries. Specifically,
+the \texttt{\$uri} variable is used in a file path construction that
+involves concatenation with other configuration values and user-provided
+data. If this user-provided data is not properly sanitized, it could
+lead to a SQL Injection vulnerability.
+
+\textit{Security Risk:}
+SQL Injection occurs when an attacker can manipulate SQL queries by
+injecting malicious SQL code through input fields. This can result in
+unauthorized access, data theft, or even complete database compromise.
+
+\textit{Corrected PHP 8.x Code:}
+\begin{small}
+\begin{lstlisting}[style=promptstyle]
+public function delete_cache($uri = '')
+{
+    $CI =& get_instance();
+    $cache_path = $CI->config->item('cache_path');
+    if ($cache_path === '') {
+        $cache_path = APPPATH . 'cache/';
+    }
+    if (!is_dir($cache_path)) {
+        log_message('error', 'Unable to find cache path: '.$cache_path);
+        return FALSE;
+    }
+    if (empty($uri)) {
+        $uri = $CI->uri->uri_string();
+        if (($cache_query_string = $CI->config->item('cache_query_string'))
+            && !empty($_SERVER['QUERY_STRING'])) {
+            if (is_array($cache_query_string)) {
+                $uri .= '?' . http_build_query(
+                    array_intersect_key($_GET,
+                    array_flip($cache_query_string)));
+            } else {
+                $uri .= '?' . $_SERVER['QUERY_STRING'];
+            }
+        }
+    }
+    // Sanitize the URI to prevent directory traversal attacks
+    $safe_uri = filter_var($uri, FILTER_SANITIZE_URL);
+    // ... (terpotong)
+\end{lstlisting}
+\end{small}
+
+\textbf{Penilaian Paket A:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{|l|p{7.5cm}|c|}
+\hline
+\textbf{Dimensi} & \textbf{Deskripsi} & \textbf{Skor (1--7)} \\
+\hline
+Akurasi & Seberapa akurat identifikasi kerentanan? & \\
+\hline
+Kejelasan & Seberapa jelas penjelasan yang diberikan? & \\
+\hline
+\textit{Actionability} & Seberapa \textit{actionable} rekomendasi perbaikan? & \\
+\hline
+Ketepatan ISO & Seberapa tepat pemetaan kontrol ISO 27001? & \\
+\hline
+\multicolumn{2}{|l|}{Komentar} & \\
+\hline
+\end{tabular}
+\end{center}
+
+% ------- PAKET B -------
+\subsection*{Paket B (Temuan FT-01)}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Rule ID} &
+  \texttt{php.lang.security.injection.tainted-sql-string} \\
+\hline
+\textbf{File} & \texttt{Output.php} \\
+\hline
+\textbf{Line} & 768 \\
+\hline
+\textbf{Severity} & ERROR \\
+\hline
+\textbf{Vuln Type} & SQL Injection \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Deskripsi Aturan Semgrep:}
+\begin{small}
+\begin{lstlisting}[style=promptstyle]
+User data flows into this manually-constructed SQL string. User
+data can be safely inserted into SQL strings using prepared
+statements or an ORM. Manually-constructed SQL strings is a
+possible indicator of SQL injection, which could let an attacker
+steal or manipulate data from the database.
+CWE: CWE-89 - Improper Neutralization of Special Elements used
+     in an SQL Command ('SQL Injection')
+OWASP: A03:2021 - Injection
+\end{lstlisting}
+\end{small}
+
+\textbf{Potongan Kode:}
+\begin{small}
+\begin{lstlisting}[style=promptstyle]
+763
+764  $cache_path .= md5($CI->config->item('base_url')
+765                   .$CI->config->item('index_page')
+766                   .ltrim($uri, '/'));
+767
+768  if ( ! @unlink($cache_path))
+769  {
+770 >> log_message('error', 'Unable to delete cache file for '.$uri);
+771     return FALSE;
+772  }
+773
+774  return TRUE;
+775 }
+\end{lstlisting}
+\end{small}
+
+\textbf{Kontrol ISO/IEC 27001:2022:} A.8.28, A.8.26
+
+\bigskip
+\textbf{Saran Remediasi:} \textit{Manual review required.}
+
+\textbf{Penilaian Paket B:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{|l|p{7.5cm}|c|}
+\hline
+\textbf{Dimensi} & \textbf{Deskripsi} & \textbf{Skor (1--7)} \\
+\hline
+Akurasi & Seberapa akurat identifikasi kerentanan? & \\
+\hline
+Kejelasan & Seberapa jelas penjelasan yang diberikan? & \\
+\hline
+\textit{Actionability} & Seberapa \textit{actionable} rekomendasi perbaikan? & \\
+\hline
+Ketepatan ISO & Seberapa tepat pemetaan kontrol ISO 27001? & \\
+\hline
+\multicolumn{2}{|l|}{Komentar} & \\
+\hline
+\end{tabular}
+\end{center}
+
+% ============================================================
+\section*{D.3 Temuan FT-02 --- SSRF (Representatif FT-02 s.d.\ FT-11)}
+% ============================================================
+
+% ------- PAKET A -------
+\subsection*{Paket A (Temuan FT-02)}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Rule ID} &
+  \texttt{php.lang.security.injection.tainted-filename} \\
+\hline
+\textbf{File} & \texttt{Output.php} \\
+\hline
+\textbf{Line} & 583 \\
+\hline
+\textbf{Severity} & WARNING \\
+\hline
+\textbf{Vuln Type} & SSRF \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Deskripsi Aturan Semgrep:}
+\begin{small}
+\begin{lstlisting}[style=promptstyle]
+File name based on user input risks server-side request forgery.
+CWE: CWE-918 - Server-Side Request Forgery (SSRF)
+OWASP: A10:2021 - Server-Side Request Forgery (SSRF)
+\end{lstlisting}
+\end{small}
+
+\textbf{Potongan Kode:}
+\begin{small}
+\begin{lstlisting}[style=promptstyle]
+578  }
+579  }
+580  $cache_path .= md5($uri);
+581
+582  if ( ! $fp = @fopen($cache_path, 'w+b'))
+583  {
+584 >> log_message('error', 'Unable to write cache file: '.$cache_path);
+585     return;
+586  }
+587
+588  }
+\end{lstlisting}
+\end{small}
+
+\textbf{Kontrol ISO/IEC 27001:2022:} A.8.28, A.8.29
+
+\textbf{Penilaian Paket A:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{|l|p{7.5cm}|c|}
+\hline
+\textbf{Dimensi} & \textbf{Deskripsi} & \textbf{Skor (1--7)} \\
+\hline
+Akurasi & Seberapa akurat identifikasi kerentanan? & \\
+\hline
+Kejelasan & Seberapa jelas penjelasan yang diberikan? & \\
+\hline
+\textit{Actionability} & Seberapa \textit{actionable} rekomendasi perbaikan? & \\
+\hline
+Ketepatan ISO & Seberapa tepat pemetaan kontrol ISO 27001? & \\
+\hline
+\multicolumn{2}{|l|}{Komentar} & \\
+\hline
+\end{tabular}
+\end{center}
+
+% ------- PAKET B -------
+\subsection*{Paket B (Temuan FT-02)}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Rule ID} &
+  \texttt{php.lang.security.injection.tainted-filename} \\
+\hline
+\textbf{File} & \texttt{Output.php} \\
+\hline
+\textbf{Line} & 583 \\
+\hline
+\textbf{Severity} & WARNING \\
+\hline
+\textbf{Vuln Type} & SSRF \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Deskripsi Aturan Semgrep:}
+\begin{small}
+\begin{lstlisting}[style=promptstyle]
+File name based on user input risks server-side request forgery.
+CWE: CWE-918 - Server-Side Request Forgery (SSRF)
+OWASP: A10:2021 - Server-Side Request Forgery (SSRF)
+\end{lstlisting}
+\end{small}
+
+\textbf{Potongan Kode:}
+\begin{small}
+\begin{lstlisting}[style=promptstyle]
+578  }
+579  }
+580  $cache_path .= md5($uri);
+581
+582  if ( ! $fp = @fopen($cache_path, 'w+b'))
+583  {
+584 >> log_message('error', 'Unable to write cache file: '.$cache_path);
+585     return;
+586  }
+587
+588  }
+\end{lstlisting}
+\end{small}
+
+\textbf{Kontrol ISO/IEC 27001:2022:} A.8.28, A.8.29
+
+\bigskip
+\textbf{Catatan Tambahan:}
+
+\textit{Penjelasan Kerentanan:}
+The vulnerable code is located in the \texttt{\_write\_cache} method
+within \texttt{Output.php}. The vulnerability lies in the way the
+cache path is constructed using user input from the URI and query
+string. The \texttt{\$cache\_path} is built by appending an MD5 hash
+of \texttt{\$uri}, where \texttt{\$uri} may contain unsanitized
+user-controlled data from \texttt{\$\_SERVER['QUERY\_STRING']}.
+This allows an attacker to influence the file path used in
+\texttt{fopen()}, potentially leading to unauthorized access to
+server-side resources.
+
+\textbf{Saran Remediasi:} \textit{Manual review required.}
+
+\textbf{Penilaian Paket B:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{|l|p{7.5cm}|c|}
+\hline
+\textbf{Dimensi} & \textbf{Deskripsi} & \textbf{Skor (1--7)} \\
+\hline
+Akurasi & Seberapa akurat identifikasi kerentanan? & \\
+\hline
+Kejelasan & Seberapa jelas penjelasan yang diberikan? & \\
+\hline
+\textit{Actionability} & Seberapa \textit{actionable} rekomendasi perbaikan? & \\
+\hline
+Ketepatan ISO & Seberapa tepat pemetaan kontrol ISO 27001? & \\
+\hline
+\multicolumn{2}{|l|}{Komentar} & \\
+\hline
+\end{tabular}
+\end{center}
+
+% ============================================================
+\section*{D.4 Catatan: Temuan FT-03 hingga FT-11}
+% ============================================================
+
+Temuan FT-03 hingga FT-11 seluruhnya merupakan kerentanan SSRF
+(\textit{Server-Side Request Forgery}) yang bersumber dari pola
+kode yang sama di \texttt{Output.php}, yaitu penggunaan
+\texttt{\$uri} atau \texttt{\$filepath} yang berasal dari
+data pengguna sebagai argumen operasi \textit{file system}.
+Struktur instrumen untuk setiap temuan identik dengan FT-02,
+dengan perbedaan hanya pada nomor baris (\textit{line number})
+dan potongan kode yang ditampilkan. Penugasan kondisi B0/T1 ke
+Paket A atau Paket B pada FT-03 hingga FT-11 diacak secara
+independen menggunakan \texttt{random.seed(42)}.
+
+Tabel berikut merangkum nomor baris dan penugasan paket
+untuk setiap temuan FT-03 hingga FT-11:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Temuan} & \textbf{Baris} & \textbf{Paket A} & \textbf{Paket B} \\
+\hline
+FT-03 & 632 & B0 & T1 \\
+\hline
+FT-04 & 637 & T1 & B0 \\
+\hline
+FT-05 & 677 & T1 & B0 \\
+\hline
+FT-06 & 677 & T1 & B0 \\
+\hline
+FT-07 & 684 & T1 & B0 \\
+\hline
+FT-08 & 684 & B0 & T1 \\
+\hline
+FT-09 & 698 & B0 & T1 \\
+\hline
+FT-10 & 704 & B0 & T1 \\
+\hline
+FT-11 & 766 & T1 & B0 \\
+\hline
+\end{tabular}
+\end{center}
+
+\noindent\textit{Keterangan: B0 = keluaran \textit{pipeline} tanpa
+\textit{AI Engine} (hanya data Semgrep mentah); T1 = keluaran
+\textit{pipeline} dengan \textit{AI Engine} aktif (Qwen2.5-Coder 7b),
+disertai penjelasan kerentanan dan saran remediasi.}

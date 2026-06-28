@@ -32,12 +32,9 @@ mengubah perilaku kode secara tidak terduga. Status
 \texttt{NON\_COMPLIANT} yang dihasilkan bukan cerminan kegagalan
 \textit{pipeline}, melainkan potret kondisi nyata kode warisan yang
 memang sudah mengandung permasalahan keamanan sebelum dilakukan
-remediasi. Seluruh hasil analisis ini disatukan dalam laporan JSON 
-yang dibuat secara otomatis pada setiap eksekusi \textit{pipeline}. 
-Laporan ini dapat langsung digunakan sebagai dokumentasi audit tanpa 
-pekerjaan manual tambahan. Hal ini secara langsung menjawab kebutuhan 
-organisasi yang sedang dalam proses sertifikasi, di mana bukti tertulis 
-mengenai migrasi kode yang mematuhi standar keamanan sangat diperlukan.
+remediasi. Seluruh hasil analisis ini disatukan dalam laporan 
+JSON yang dibuat secara otomatis pada setiap eksekusi \textit{pipeline}. 
+Laporan otomatis ini dapat dimanfaatkan langsung sebagai artefak teknis pendukung dalam proses audit sertifikasi standar keamanan tanpa memerlukan rekapitulasi manual tambahan.
 
 \textbf{Ketiga}, komponen validasi PHPStan memberikan manfaat konkret
 dengan mengekspos ribuan potensi masalah kompatibilitas tipe yang
@@ -45,29 +42,40 @@ tidak akan terdeteksi sebelum kode benar-benar dijalankan di
 lingkungan produksi. Mayoritas temuan merupakan \textit{technical
 debt} yang sudah ada jauh sebelum migrasi dilakukan dan baru terlihat
 karena sistem tipe PHP 8.3 jauh lebih ketat dibanding versi
-sebelumnya. Fakta ini justru memperjelas nilai tambah
-\textit{pipeline}: bukan sekadar mengonversi sintaksis, tetapi juga
-memberi gambaran menyeluruh tentang kondisi aktual basis kode yang 
-selama ini tersembunyi di balik sifat permisif sistem tipe 
-pada PHP versi lama
+sebelumnya. Hal ini menunjukkan bahwa \textit{pipeline} 
+tidak hanya menjalankan transformasi sintaksis, tetapi juga 
+memetakan kondisi aktual basis kode yang sebelumnya tidak 
+terdeteksi akibat sifat permisif sistem tipe pada PHP versi lama.
 
-\textbf{Keempat}, komparasi performa lima model LLM \textit{open
-source} dalam konteks analisis keamanan kode PHP menghasilkan temuan 
-empiris yang relevan sebagai landasan untuk implementasi maupun 
-penelitian lanjutan. \textit{Format Compliance Rate} dan \textit{Syntax Validity
-Rate} terbukti sebagai dua dimensi yang independen dan tidak
-berkorelasi satu sama lain: model yang disiplin mengikuti instruksi
-format belum tentu menghasilkan kode yang valid secara sintaksis, dan
-sebaliknya. Qwen2.5-Coder direkomendasikan sebagai model utama karena
-secara konsisten menghasilkan SVR 100\% di seluruh kondisi eksperimen,
-meskipun sepenuhnya mengabaikan instruksi format, sementara model lain
-yang lebih patuh format justru lebih sering menghasilkan kode yang
-gagal validasi sintaksis. SVR terbukti sebagai metrik evaluasi yang
-paling sahih untuk sistem berbasis LLM lokal karena hasilnya dapat
+\textbf{Keempat}, \textit{AI Engine} berbasis LLM \textit{open source}
+lokal terbukti menghasilkan keluaran yang secara terukur lebih
+informatif dibandingkan keluaran \textit{pipeline} tanpa komponen AI.
+Eksperimen \textit{blind rating} oleh dua rater independen dari DTETI
+FT UGM terhadap 11 temuan Semgrep menunjukkan bahwa kondisi T1
+(dengan \textit{AI Engine} aktif) unggul atas kondisi B0 (tanpa
+\textit{AI Engine}) pada dimensi Kejelasan (+0,591 poin) dan
+\textit{Actionability} (+0,500 poin) dari skala Likert 7. Perbedaan
+rata-rata keseluruhan sebesar 0,284 poin dikonfirmasi signifikan
+secara statistik melalui uji Wilcoxon \textit{signed-rank} satu arah
+($W = 44{,}0$, $p = 0{,}047$, $n = 10$ temuan SSRF). Sebaliknya,
+tidak ada perbedaan pada dimensi Akurasi maupun Ketepatan pemetaan
+ISO, yang menunjukkan bahwa pemetaan ISO berbasis aturan deterministik
+yang telah diimplementasikan sudah memadai dan tidak memerlukan
+penguatan dari model bahasa. Hasil ini perlu dibaca dengan
+kehati-hatian mengingat nilai Cohen's kappa antar-rater yang rendah
+($\kappa = {-0{,}097}$), yang mengindikasikan perbedaan gaya respons
+antara kedua rater.
+
+Sebagai bagian dari evaluasi ini, komparasi performa lima model LLM
+\textit{open source} menunjukkan bahwa \textit{Format Compliance Rate}
+dan \textit{Syntax Validity Rate} merupakan dua dimensi yang independen
+dan tidak berkorelasi. Qwen2.5-Coder direkomendasikan sebagai model
+utama karena secara konsisten menghasilkan SVR 100\% di seluruh
+kondisi eksperimen. SVR terbukti sebagai metrik evaluasi yang paling
+sahih untuk sistem berbasis LLM lokal karena hasilnya dapat
 diverifikasi secara independen menggunakan \texttt{php -l}, berbeda
-dari FCR yang rentan terhadap variasi kecil format respons maupun
-\textit{confidence score self-reported} yang tidak berkorelasi dengan
-kualitas kode yang sebenarnya dihasilkan.
+dari \textit{confidence score self-reported} yang tidak berkorelasi
+dengan kualitas kode yang sebenarnya dihasilkan.
 
 
 \section{Saran}
@@ -83,8 +91,7 @@ pengembangan yang disarankan untuk penelitian selanjutnya.
     lebih tinggi agar kesimpulan perbandingan model dapat 
     digeneralisasi lebih luas. Sebagai kelanjutan jangka 
     panjang, eksplorasi \textit{fine-tuning} dengan LoRA atau 
-    QLoRA dapat dilakukan menjadikan penelitian ini 
-    sebagai \textit{baseline}.
+    QLoRA dapat dilakukan dengan menjadikan penelitian ini sebagai \textit{baseline}.
 
     \item Akurasi laporan PHPStan pada basis kode
 CodeIgniter 3.x dapat ditingkatkan melalui dua pendekatan:
@@ -109,8 +116,19 @@ tidak berisiko menyaring temuan nyata secara tidak sengaja.
     bahasa lain, sekaligus membuka kemungkinan integrasi ke 
     GitHub Actions atau GitLab CI.
 
-    \item Pengujian terhadap PHP 8.4 dan 8.5 serta 
-    perbandingan dengan alat komersial seperti SonarQube atau 
-    Snyk pada dataset yang sama perlu dilakukan untuk memvalidasi 
+    \item Pengujian terhadap PHP 8.4 dan 8.5 serta
+    perbandingan dengan alat komersial seperti SonarQube atau
+    Snyk pada dataset yang sama perlu dilakukan untuk memvalidasi
     cakupan dan akurasi \textit{pipeline} secara lebih komprehensif.
+
+    \item Validasi efektivitas \textit{AI Engine} perlu direplikasi
+    dengan jumlah rater yang lebih banyak dan desain eksperimen yang
+    mengendalikan \textit{position bias}. Nilai Cohen's kappa yang
+    rendah ($\kappa = {-0{,}097}$) pada eksperimen \textit{blind
+    rating} mengindikasikan perbedaan gaya respons antar-rater yang
+    substansial, sehingga kesimpulan tentang keunggulan T1 atas B0
+    memerlukan konfirmasi lebih lanjut. Selain itu, keberagaman dataset
+    yang lebih tinggi -- mencakup lebih banyak jenis kerentanan selain
+    SSRF -- diperlukan agar hasil validasi dapat digeneralisasi ke
+    konteks yang lebih luas.
 \end{enumerate}

@@ -180,15 +180,13 @@ konversi oleh Rector menghasilkan jumlah temuan yang identik dengan tahap
 Distribusi jenis kerentanan juga tetap sama, yaitu 1 SQL Injection dan 
 10 SSRF, seluruhnya berada pada \textit{file} yang sama.
 
-Hasil ini sesuai dengan ekspektasi dan mengindikasikan dua hal. 
-Pertama, proses konversi oleh Rector tidak memperkenalkan kerentanan baru 
-pada kode FT UGM. Kedua, kerentanan yang telah ada sebelumnya tidak dapat 
-diatasi melalui transformasi sintaksis berbasis AST, karena memerlukan 
-perbaikan pada tingkat logika program (semantik), yang berada di luar 
-cakupan pendekatan tersebut.
+Hasil ini mengindikasikan dua hal: (1) proses konversi Rector 
+tidak memperkenalkan kerentanan baru, dan (2) kerentanan 
+yang ada tidak dapat diatasi melalui transformasi sintaksis 
+berbasis AST karena memerlukan perbaikan tingkat logika (semantik).
 
-Bukti konkret fenomena ini dapat diamati pada
-\texttt{system/core/\allowbreak Output.php} baris 677. Pada baris
+Kondisi ini terlihat pada 
+\texttt{system/core/\allowbreak Output.php} baris 677. Pada bagian
 tersebut, Rector mengubah operator logika \texttt{OR} menjadi
 \texttt{||} yang secara semantik identik, tetapi operasi
 \texttt{fopen(\$filepath)} di mana \texttt{\$filepath} berasal
@@ -260,7 +258,7 @@ Temuan-temuan ini merupakan manifestasi dari \textit{technical debt} (akumulasi 
     \label{fig:phpstan-iso}
 \end{figure}
 
-Angka PHPStan yang tinggi justru menunjukkan manfaat nyata dari komponen validasi dalam \textit{pipeline} ini. Tanpa PHPStan, 2.790 potensi masalah tipe dan kompatibilitas ini tidak akan terdeteksi sampai kode dijalankan di lingkungan produksi, sesuai dengan temuan Strobl et al. \cite{strobl2020automated} tentang pentingnya jaminan kualitas otomatis dalam transformasi kode skala besar.
+Tingginya jumlah temuan PHPStan mengonfirmasi fungsi komponen validasi dalam \textit{pipeline} ini. Sejumlah 2.790 potensi masalah tipe dan kompatibilitas ini sebelumnya tidak terdeteksi pada lingkungan PHP 7.x, sesuai dengan temuan Strobl et al. \cite{strobl2020automated} tentang pentingnya jaminan kualitas otomatis dalam transformasi kode skala besar.
 
 % ============================================================
 \subsection{Status Kepatuhan ISO/IEC 27001:2022}
@@ -680,7 +678,7 @@ Llama 3.1 8b
 }
 \end{table}
 
-Dari perbandingan ini, ada tiga pola utama yang dapat diidentifikasi.
+Terdapat tiga pola utama dari perbandingan tersebut:
 
 \textbf{Pertama}, optimasi \textit{prompt} hanya bekerja signifikan pada model yang memiliki kapabilitas \textit{instruction-following} dasar yang memadai. DeepSeek Coder adalah satu-satunya model yang menunjukkan peningkatan substansial pada \textit{format compliance} (dari 15\% menjadi 61\%), mengkonfirmasi bahwa model ini peka terhadap kompleksitas instruksi: bukan tidak mampu mengikuti format, tapi terbebani oleh instruksi yang terlalu berlapis pada Kondisi A.
 
@@ -814,10 +812,9 @@ sebelum deployment ke lingkungan PHP 8.3.
 
 Validasi keakuratan dilakukan melalui dua pendekatan untuk 
 mengukur kualitas hasil konversi Rector pada dataset FT UGM 
-secara objektif. Mengingat kedua dataset menggunakan \textit{framework} 
-CodeIgniter 3 dengan karakteristik kode yang serupa, 
-hasil validasi ini berlaku sebagai representasi 
-keakuratan konversi Rector untuk kedua studi kasus.
+secara objektif. Karena kedua dataset menggunakan CodeIgniter 3 
+dengan karakteristik serupa, hasil validasi ini merepresentasikan 
+keakuratan konversi pada kedua studi kasus.
 
 \subsubsection{Metrik Pipeline-Level}
 
@@ -1019,9 +1016,8 @@ merupakan prosedur evaluasi peneliti yang dilakukan sekali dan
 tidak melibatkan pengiriman kode sumber secara utuh, sehingga 
 berbeda dari komponen \textit{pipeline} produksi yang sepenuhnya 
 lokal. Penggunaan penilai berbasis model eksternal dipilih untuk 
-menjaga independensi evaluator, karena model yang sama dengan yang ada 
-di \textit{pipeline} tidak digunakan sebagai penilai untuk 
-menghindari \textit{bias} penilaian mandiri. Meskipun demikian, 
+menjaga independensi evaluator dan menghindari \textit{bias} 
+penilaian mandiri. Meskipun demikian, 
 pendekatan ini idealnya digantikan dengan penilai lokal agar 
 sepenuhnya konsisten dengan prinsip kerahasiaan data yang 
 diterapkan pada komponen lain dalam \textit{pipeline}.
@@ -1464,3 +1460,211 @@ Qwen2.5-Coder 7b sebagai \textit{AI Engine} dengan satu kali inferensi
 per temuan; eksperimen komparasi multi-model (Kondisi A--C) pada
 studi kasus FT UGM merupakan prosedur evaluasi terpisah dan tidak
 termasuk dalam pengukuran durasi \textit{pipeline}.
+
+% ============================================================
+\subsection{Hasil Validasi Efektivitas \textit{AI Engine}}
+\label{sec:validasi-ai-engine}
+% ============================================================
+
+Validasi efektivitas komponen \textit{AI Engine} dilakukan melalui
+eksperimen \textit{blind rating} oleh dua orang rater independen.
+Tujuan eksperimen adalah mengukur secara empiris apakah keluaran
+\textit{pipeline} dengan \textit{AI Engine} aktif (kondisi T1)
+memberikan nilai tambah yang terukur dibandingkan keluaran tanpa
+\textit{AI Engine} (kondisi B0). Dataset yang digunakan adalah 11
+temuan Semgrep dari studi kasus FT UGM (FT-01 hingga FT-11), yang
+terdiri dari 1 SQL Injection dan 10 SSRF.
+
+\subsubsection{Desain Eksperimen}
+
+Dua kondisi keluaran yang dibandingkan adalah sebagai berikut:
+\begin{itemize}
+    \item Kondisi B0: keluaran \textit{pipeline} tanpa
+    \textit{AI Engine}, hanya memuat \textit{rule\_id}, nama
+    \textit{file}, nomor baris, tingkat keparahan, potongan kode,
+    dan pemetaan kontrol ISO/IEC 27001:2022 berbasis aturan
+    deterministik.
+    \item Kondisi T1: keluaran \textit{pipeline} dengan
+    \textit{AI Engine} aktif menggunakan model Qwen2.5-Coder 7b,
+    yang menambahkan penjelasan kerentanan dan saran remediasi
+    secara otomatis di atas informasi yang tersedia pada B0.
+\end{itemize}
+
+Setiap temuan dikemas menjadi dua paket anonim (Paket A dan Paket
+B). Penetapan B0/T1 ke masing-masing paket diacak menggunakan
+Python \texttt{random} dengan \texttt{seed=42} sehingga rater tidak
+mengetahui kondisi mana yang sedang dinilai. Dua rater independen
+dari DTETI FT UGM yang tidak terlibat dalam penelitian ini
+memberikan penilaian, yaitu Muhammad Aidiel Rachman Putra, S.Kom.,
+M.Kom. (Rater 1) dan Dr. Warsun Najib, S.T., M.Sc. (Rater 2).
+Setiap paket dinilai pada empat dimensi menggunakan skala Likert 7
+poin: Akurasi, Kejelasan, \textit{Actionability} (kelayakan saran
+perbaikan), dan Ketepatan pemetaan ISO. Skor rata-rata per paket
+dihitung sebagai rata-rata keempat dimensi.
+
+\subsubsection{Skor Rata-rata per Temuan}
+
+Tabel~\ref{tab:validasi-skor-per-temuan} menunjukkan skor rata-rata
+(rata-rata keempat dimensi) untuk kondisi B0 dan T1 per temuan,
+dirinci per rater dan gabungan keduanya.
+
+\begin{table}[h]
+\caption{Skor rata-rata B0 dan T1 per temuan per rater (skala Likert 7, rata-rata 4 dimensi)}
+\vspace{0.5em}
+\centering
+\label{tab:validasi-skor-per-temuan}
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\multirow{2}{*}{\textbf{Temuan}} &
+  \multicolumn{2}{c|}{\textbf{Rater 1 (Aidiel)}} &
+  \multicolumn{2}{c|}{\textbf{Rater 2 (Warsun)}} &
+  \multicolumn{2}{c|}{\textbf{Gabungan}} \\
+\cline{2-7}
+ & \textbf{B0} & \textbf{T1} & \textbf{B0} & \textbf{T1} &
+   \textbf{B0} & \textbf{T1} \\
+\hline \hline
+FT-01 & 6{,}75 & 6{,}75 & 6{,}00 & 6{,}75 & 6{,}38 & 6{,}75 \\
+\hline
+FT-02 & 5{,}75 & 5{,}75 & 5{,}25 & 5{,}50 & 5{,}50 & 5{,}63 \\
+\hline
+FT-03 & 6{,}50 & 6{,}50 & 5{,}25 & 6{,}25 & 5{,}88 & 6{,}38 \\
+\hline
+FT-04 & 7{,}00 & 7{,}00 & 6{,}25 & 5{,}25 & 6{,}63 & 6{,}13 \\
+\hline
+FT-05 & 7{,}00 & 7{,}00 & 5{,}25 & 6{,}25 & 6{,}13 & 6{,}63 \\
+\hline
+FT-06 & 6{,}50 & 6{,}50 & 5{,}25 & 6{,}25 & 5{,}88 & 6{,}38 \\
+\hline
+FT-07 & 7{,}00 & 7{,}00 & 5{,}25 & 6{,}25 & 6{,}13 & 6{,}63 \\
+\hline
+FT-08 & 7{,}00 & 7{,}00 & 5{,}25 & 6{,}25 & 6{,}13 & 6{,}63 \\
+\hline
+FT-09 & 6{,}50 & 6{,}50 & 5{,}25 & 6{,}25 & 5{,}88 & 6{,}38 \\
+\hline
+FT-10 & 7{,}00 & 7{,}00 & 5{,}25 & 6{,}50 & 6{,}13 & 6{,}75 \\
+\hline
+FT-11 & 6{,}50 & 6{,}50 & 6{,}25 & 5{,}25 & 6{,}38 & 5{,}88 \\
+\hline
+\textbf{Rata-rata} &
+  \textbf{6{,}68} & \textbf{6{,}68} &
+  \textbf{5{,}50} & \textbf{6{,}07} &
+  \textbf{6{,}09} & \textbf{6{,}38} \\
+\hline
+\end{tabular}
+\end{table}
+
+Rater 1 memberikan skor yang identik antara B0 dan T1 pada semua
+temuan, sehingga perbedaan antarkondisi pada skor gabungan
+sepenuhnya berasal dari penilaian Rater 2. Rater 2 memberikan skor
+T1 lebih tinggi pada delapan dari sepuluh temuan uji (FT-02 hingga
+FT-11), dengan dua pengecualian pada FT-04 dan FT-11 di mana skor
+B0 lebih tinggi.
+
+\subsubsection{Perbandingan per Dimensi}
+
+Tabel~\ref{tab:validasi-dimensi} merangkum rata-rata skor gabungan
+kedua rater untuk masing-masing dimensi penilaian.
+
+\begin{table}[h]
+\caption{Rata-rata skor B0 dan T1 per dimensi penilaian
+(gabungan 2 rater, $n=11$ temuan)}
+\vspace{0.5em}
+\centering
+\label{tab:validasi-dimensi}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Dimensi} & \textbf{B0} & \textbf{T1} &
+  \textbf{Selisih (T1 $-$ B0)} \\
+\hline \hline
+Akurasi & 6{,}000 & 6{,}045 & $+$0{,}045 \\
+\hline
+Kejelasan & 5{,}909 & 6{,}500 & $+$0{,}591 \\
+\hline
+\textit{Actionability} & 5{,}955 & 6{,}455 & $+$0{,}500 \\
+\hline
+Ketepatan pemetaan ISO & 6{,}500 & 6{,}500 & \phantom{$+$}0{,}000 \\
+\hline
+\textbf{Keseluruhan} & \textbf{6{,}091} & \textbf{6{,}375} &
+  $\mathbf{+}$\textbf{0{,}284} \\
+\hline
+\end{tabular}
+\end{table}
+
+Perbedaan paling besar terlihat pada dimensi Kejelasan (+0,591) dan
+\textit{Actionability} (+0,500). Dimensi Akurasi hanya berbeda tipis
+(+0,045), dan Ketepatan pemetaan ISO tidak menunjukkan perbedaan
+sama sekali antara B0 dan T1.
+
+\subsubsection{Analisis Statistik}
+
+\textbf{Reliabilitas antar-rater.}
+Reliabilitas antar-rater diukur menggunakan Cohen's kappa berdasarkan
+keputusan biner per dimensi per temuan (T1 menang atau tidak). Nilai
+yang diperoleh adalah $\kappa = {-0{,}097}$, yang termasuk dalam
+kategori \textit{Poor} berdasarkan interpretasi Landis dan Koch.
+Nilai negatif menunjukkan bahwa tingkat kesepakatan antara kedua
+rater lebih rendah daripada yang diharapkan secara kebetulan.
+
+\textbf{Uji Wilcoxon.}
+FT-01 merupakan satu-satunya temuan SQL Injection dalam dataset dan
+disajikan secara deskriptif terpisah dari 10 temuan SSRF. Skor
+gabungan FT-01 adalah B0 = 6,38 dan T1 = 6,75, menunjukkan selisih
++0,38 poin.
+
+Untuk FT-02 hingga FT-11 ($n = 10$ temuan SSRF), uji Wilcoxon
+\textit{signed-rank} satu arah diterapkan dengan hipotesis T1 $>$
+B0 menggunakan skor gabungan kedua rater. Hasil uji menghasilkan
+statistik $W = 44{,}0$ dan nilai $p = 0{,}0469$ (satu arah), atau
+$p = 0{,}0938$ (dua arah). Dengan ambang signifikansi $\alpha =
+0{,}05$, uji satu arah menunjukkan bahwa skor T1 secara statistik
+lebih tinggi daripada skor B0 ($p < 0{,}05$).
+
+\subsubsection{Diskusi}
+
+Hasil validasi menunjukkan bahwa kontribusi \textit{AI Engine}
+paling terasa pada dimensi Kejelasan dan \textit{Actionability}.
+Keluaran T1, yang menyertakan penjelasan kerentanan dan saran
+remediasi dari Qwen2.5-Coder, membantu rater memahami implikasi
+temuan dan langkah perbaikan yang perlu diambil dengan lebih mudah
+dibandingkan keluaran B0 yang hanya memuat informasi teknis mentah
+dari Semgrep. Perbedaan rata-rata sebesar 0,284 poin pada skala 7
+dikonfirmasi signifikan secara statistik oleh uji Wilcoxon satu
+arah ($p = 0{,}0469$).
+
+Tidak adanya perbedaan pada dimensi Ketepatan pemetaan ISO antara
+B0 dan T1 dapat dijelaskan secara konseptual: pemetaan kontrol ISO
+berbasis aturan deterministik yang diimplementasikan dalam
+\texttt{iso\_mapper.py} sudah menghasilkan pemetaan yang lengkap
+dan konsisten tanpa memerlukan penguatan dari model bahasa. Hal
+yang serupa terjadi pada dimensi Akurasi: Semgrep sudah
+mengidentifikasi kerentanan secara tepat sehingga kehadiran
+penjelasan AI tidak mengubah persepsi rater terhadap keakuratan
+identifikasi temuan. Dengan kata lain, nilai tambah \textit{AI
+Engine} bersifat komplementer terhadap komponen lain
+\textit{pipeline}, bukan pengganti.
+
+\subsubsection{Limitasi}
+
+Nilai Cohen's kappa yang sangat rendah ($\kappa = {-0{,}097}$)
+merupakan keterbatasan utama yang perlu diperhatikan dalam
+interpretasi hasil ini. Analisis data mentah menunjukkan bahwa
+Rater 1 secara konsisten memberikan skor yang sama antara Paket A
+dan Paket B untuk hampir semua temuan, sedangkan pola penilaian
+Rater 2 pada dimensi Kejelasan dan \textit{Actionability}
+menunjukkan indikasi \textit{position bias}: paket yang disajikan
+pada posisi tertentu cenderung menerima skor lebih tinggi pada
+beberapa temuan, terlepas dari kondisi B0 atau T1 yang dikandungnya.
+Perbedaan gaya respons ini menyebabkan kappa negatif dan
+mengindikasikan bahwa kedua rater menggunakan standar penilaian
+yang berbeda secara struktural. Oleh karena itu, kesimpulan bahwa
+T1 lebih baik dari B0 pada dimensi Kejelasan dan
+\textit{Actionability} harus dibaca dengan kehati-hatian yang sesuai.
+
+Keterbatasan lain yang perlu dicatat adalah jumlah sampel yang kecil
+($n = 10$ untuk uji statistik) dan homogenitas dataset (10 dari 11
+temuan merupakan SSRF dari satu pola kode yang berulang dalam
+\texttt{Output.php}). Keberagaman konteks kerentanan yang terbatas
+ini mengurangi kemampuan generalisasi hasil ke jenis kerentanan lain,
+sehingga studi lanjutan dengan dataset yang lebih beragam dan
+melibatkan lebih banyak rater diperlukan untuk mengkonfirmasi temuan
+ini secara lebih kuat.

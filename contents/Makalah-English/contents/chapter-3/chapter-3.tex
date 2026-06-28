@@ -1,0 +1,502 @@
+% ============================================================
+%  CHAPTER III — RESEARCH METHODOLOGY
+% ============================================================
+
+\chapter{Research Methodology}
+
+This chapter describes the steps taken in this research to achieve the objectives set out in Section~\ref{sec:tujuan-penelitian}. It covers the tools and materials used, the research method, the system architecture, the pipeline data flow, the LLM prompt design, the ISO/IEC 27001:2022 control mapping, the LLM model comparison experiment design, and the evaluation methods.
+
+\section{Research Tools and Materials}
+
+\subsection{Hardware}
+
+All development and testing in this research was conducted on a single HP Victus 16-r0xxx laptop with the following specifications:
+
+\begin{itemize}
+
+    \item Operating system: Windows 11 Home Single Language 64-bit (Build 26200)
+
+    \item Processor: Intel Core i7-13700HX, 24 logical cores, 2.1 GHz base clock
+
+    \item Memory: 16,384 MB RAM
+
+    \item Discrete GPU: NVIDIA GeForce RTX 4060 with 8 GB VRAM
+
+    \item Integrated GPU: Intel UHD Graphics
+
+    \item Storage: 1 TB NVMe SSD
+
+\end{itemize}
+
+The PHP source code from FT UGM and DTI UGM is confidential and must not be transmitted to external AI services, so all AI components in this pipeline are run locally via Ollama. The RTX 4060 with 8 GB VRAM allows all five evaluated models (each with 6 to 8 billion parameters) to be loaded entirely onto the GPU at Q4\_0 quantization, enabling the models to run without sending any data outside the local environment.
+
+\subsection{Software}
+
+\begin{itemize}
+
+    \item \textbf{Python 3.11+}: The primary programming language for building the pipeline that connects all modules. Selected for its ease of invoking external commands via \textit{subprocess} and the availability of the \texttt{requests} library for communicating with the Ollama API.
+
+    \item \textbf{Rector}: An AST-based PHP code transformation tool, configured dynamically according to the selected target version.
+
+    \item \textbf{Semgrep}: A static analysis tool for vulnerability scanning. Run with the \texttt{p/php} and \texttt{p/owasp-top-ten} rulesets.
+
+    \item \textbf{PHPStan}: A static analysis tool for validating PHP code type correctness and compatibility, run at level 5.
+
+    \item \textbf{Ollama}: A platform for running LLMs locally, accessed via REST API at \texttt{localhost:11434}. The justification for selecting Ollama over the alternatives LM Studio and llama.cpp is discussed in Section~\ref{subsec:justifikasi-ollama}. Technically, Ollama loads model weights in GGUF format into GPU VRAM using the llama.cpp backend. On the RTX 4060 with 8 GB VRAM, the five tested models produce an average of 20--40 tokens per second at Q4\_0 quantization. Ollama keeps models loaded in VRAM for the duration of an active session, so cold-start latency occurs only once per session.
+
+    \item \textbf{PHP 8.4.1}: The PHP interpreter for syntax validation using \texttt{php -l}.
+
+    \item \textbf{Composer}: A PHP dependency manager for installing Rector and PHPStan.
+
+    \item \textbf{Visual Studio Code}: Used as the primary IDE during development.
+
+\end{itemize}
+
+\subsection{LLM Models Evaluated}
+
+Five open-source LLMs are evaluated in this research: DeepSeek Coder 6.7b, Qwen2.5-Coder 7b, CodeLlama 7b, Mistral 7b, and Llama 3.1 8b. All five models are run at Q4\_0 quantization to fit within 8 GB of VRAM. Detailed specifications and supporting literature for each model are provided in Section~\ref{subsec:model-llm}.
+
+\subsection{Research Materials}
+
+\begin{itemize}
+
+    \item \textbf{ISO/IEC 27001:2022 document}: The primary reference for security control mapping.
+
+    \item \textbf{PHP source code from FT UGM}: A collection of PHP files from the TCK Dashboard application built on CodeIgniter 3.x with PHP 7.4.9. Confidential; used for static analysis only, with no access to the production database.
+
+    \item \textbf{PHP source code from DTI UGM}: A collection of PHP files from the Computer-Based Test (CBT) application built on CodeIgniter 3.x with a PHP $\geq$ 7.0 requirement. Confidential; subject to the same data privacy treatment as the FT UGM dataset.
+
+    \item \textbf{Official PHP documentation}: Used as a reference for verifying the correctness of Rector conversions.
+
+    \item \textbf{Semgrep rule registry}: The public \texttt{p/php} and \texttt{p/owasp-top-ten} rules for security scanning.
+
+\end{itemize}
+
+\section{Research Method}
+
+This research employs the R\&D methodology with the prototype model as described in Section~\ref{subsec:model-prototipe}.
+
+The automation pipeline designed in this research is a concrete realization of software management at the scale of a real codebase: Rector handles PHP version updates systematically, while the LLM-based AI Engine component recommends fixes for identified vulnerabilities. Both functions operate within a single integrated workflow that can be reapplied to other codebases.
+
+Figure \ref{fig:alur-penelitian} shows the research workflow, which consists of seven stages.
+
+\begin{figure}[htbp]
+
+    \centering
+
+    \includegraphics[width=0.8\textwidth]{contents/chapter-3/alur-penelitian2.png}
+
+    \caption{Research workflow following the prototype model}
+
+    \label{fig:alur-penelitian}
+
+\end{figure}
+
+\begin{enumerate}
+
+    \item \begin{sloppypar}\textbf{Literature review}: Studying legacy PHP migration challenges, ISO/IEC 27001:2022 requirements, the capabilities of open-source LLM models, and relevant static analysis tools. Initial coordination with FT UGM and DTI UGM was carried out at this stage.\end{sloppypar}
+
+    \item \textbf{Requirements analysis}: Defining functional and non-functional requirements based on the literature review and coordination with FT UGM and DTI UGM, including determining the ISO controls in scope and data privacy requirements.
+
+    \item \textbf{System design}: Determining the structure of the six pipeline modules, the data flow between modules, and how each module communicates with the others, including designing the LLM comparison experiment.
+
+    \item \textbf{Implementation}: Building the six functional Python modules one by one, coordinated by \texttt{main.py} as the orchestrator. Each module was tested independently before integration.
+
+    \item \textbf{Testing}: Testing the prototype using self-authored PHP files and representative code snippets to verify each module before running it on the case study datasets. If problems were found, the process returned to the implementation stage (iteration).
+
+    \item \textbf{Case study validation}: Final testing using the FT UGM and DTI UGM source code once the prototype was stable.
+
+    \item \textbf{Evaluation and documentation}: Analyzing the results and writing the research report.
+
+\end{enumerate}
+
+\section{System Architecture}
+
+The system consists of six functional Python modules coordinated by \texttt{main.py} as the orchestrator, each handling one step in the conversion and security analysis process. The modular architecture allows each component to be tested, improved, or replaced independently.
+
+Figure \ref{fig:arsitektur-sistem} shows the relationships between modules.
+
+\newpage
+\begin{figure}[htbp]
+
+    \centering
+
+    \includegraphics[width=0.9\textwidth]{contents/chapter-3/arsitektur-sistem.png}
+
+    \caption{Pipeline system architecture with six functional modules and one orchestrator}
+
+    \label{fig:arsitektur-sistem}
+
+\end{figure}
+
+\subsection{Scanner (scanner.py)}
+
+The first module to run. The Scanner executes Semgrep on the \texttt{input/} directory before conversion begins in order to establish a security baseline for the original code. Scan results are grouped by vulnerability type (SQL injection, XSS, path traversal, command injection, deprecated functions, weak cryptography) and assigned a severity level. This data serves as the reference point for measuring security changes after conversion.
+
+\subsection{Converter (converter.py)}
+
+\begin{sloppypar}
+
+This module uses Rector for AST-based PHP code transformation. The CLI argument \texttt{--target-php} specifies the target version; accepted values are \texttt{"7.4"}, \texttt{"8.0"}, \texttt{"8.1"}, \texttt{"8.2"}, or \texttt{"8.3"}. Before Rector runs, all PHP files from \texttt{input/} are first copied to \texttt{output/}. Rector then modifies the files in \texttt{output/} in place without creating new copies. Files that fail conversion remain in \texttt{output/} as copies of the original code and their status is recorded as \texttt{FAILED} in the report; the \texttt{input/} directory is not modified at all. The Rector configuration is created as a temporary file at runtime and deleted automatically afterwards.
+
+\end{sloppypar}
+
+\begin{table}[htbp]
+\caption{Mapping of \texttt{--target-php} argument values to Rector configuration}
+\vspace{0.5em}
+\centering
+\label{tab:rector-levelset}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabularx}{\textwidth}{|l|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{\texttt{--target-php} value} & \textbf{Applied \textit{LevelSetList} chain} & \textbf{Cumulative rule coverage} \\
+\hline \hline
+
+\texttt{7.4} & \texttt{UP\_TO\_PHP\_53} through \texttt{UP\_TO\_PHP\_74} & PHP 5.3, 5.4, 5.5, 5.6, 7.0, 7.1, 7.2, 7.3, 7.4 \\
+\hline
+
+\texttt{8.0} & \texttt{UP\_TO\_PHP\_53} through \texttt{UP\_TO\_PHP\_80} & All 7.4 rules + PHP 8.0 \\
+\hline
+
+\texttt{8.1} & \texttt{UP\_TO\_PHP\_53} through \texttt{UP\_TO\_PHP\_81} & All 8.0 rules + PHP 8.1 \\
+\hline
+
+\texttt{8.2} & \texttt{UP\_TO\_PHP\_53} through \texttt{UP\_TO\_PHP\_82} & All 8.1 rules + PHP 8.2 \\
+\hline
+
+\texttt{8.3} & \texttt{UP\_TO\_PHP\_53} through \texttt{UP\_TO\_PHP\_83} & All 8.2 rules + PHP 8.3 \\
+\hline
+
+\end{tabularx}
+\end{table}
+
+PHP 8.3 is used as the target in this research. In addition to the level sets above, the pipeline also applies \texttt{SetList::CODE\_QUALITY}, \texttt{DEAD\_CODE}, \texttt{EARLY\_RETURN}, and \texttt{TYPE\_DECLARATION} for all target values. Because the rulesets used are cumulative, PHP 5.x code can be processed directly to PHP 8.3 in a single pass. The types of transformations handled by Rector and Rector's limitations with respect to semantic patterns such as \texttt{mysql\_*()} are described in Section~\ref{subsec:rector}.
+
+\subsection{Analyzer (analyzer.py)}
+
+After conversion, the Analyzer runs PHPStan on the \texttt{output/} directory to verify code compatibility with the target PHP version. Level 5 was chosen as a balance between strictness and an acceptable number of false positives for legacy code. Each PHPStan finding is categorized as either ERROR or WARNING, then linked to the relevant ISO/IEC 27001:2022 control.
+
+\subsection{AI Engine (ai\_engine.py)}
+
+This module receives findings from the Semgrep pre-scan as its input — not from PHPStan and not from the post-scan. Findings with priority levels 1 through 5 are sent to the AI Engine: SQL Injection (priority 1), XSS (priority 2), deprecated functions (priority 3), hardcoded credentials (priority 4), and path traversal and SSRF (priority 5). Unclassified findings (priority 99) are not processed. Priorities are determined based on their potential direct impact on system confidentiality and integrity, and their frequency of occurrence in legacy PHP applications according to the OWASP Top 10.
+
+\begin{sloppypar}
+
+For each finding that passes the filter, the module sends the context and code snippet to the LLM via Ollama's \texttt{/api/chat} endpoint at \texttt{localhost:11434}. If the model produces no PHP code block at all, the response is still recorded with the placeholder \texttt{// Manual review required} and is not skipped. If Ollama is unavailable, the pipeline continues running without the AI component. The prompt design used is discussed in Section~\ref{sec:prompt-design}.
+
+\end{sloppypar}
+
+\subsection{ISO Mapper (iso\_mapper.py)}
+
+This module receives all results from the Scanner, Analyzer, and AI Engine as in-memory Python objects directly from \texttt{main.py}, then maps them to ISO/IEC 27001:2022 controls using a rule-based approach. No JSON file reading occurs. Rule-based mapping was chosen to ensure deterministic and auditable results. The mapping details are discussed in Section~\ref{sec:iso-mapping-design}.
+
+\subsection{Main (main.py)}
+
+The main file is the orchestrator that controls the entire pipeline. It receives the input directory and target PHP version as CLI arguments, runs all six modules sequentially, and produces a JSON report in the \texttt{reports/} directory. A summary of results is displayed in the console using the Rich library.
+
+A representative skeleton of the generated JSON report is shown below:
+
+\begin{lstlisting}[style=promptstyle]
+{
+  "overall_status": "NON_COMPLIANT",
+  "duration_seconds": 228.4,
+  "conversion": {
+    "total_files": 245,
+    "converted": 239,
+    "conversion_rate": 97.6
+  },
+  "iso_controls": {
+    "A.5.17": {"status": "COMPLIANT", "findings": 0},
+    "A.8.28": {"status": "NON_COMPLIANT", "findings": 2790}
+  },
+  "semgrep": {
+    "pre_scan_findings": 11,
+    "post_scan_findings": 11,
+    "delta_f": 0
+  }
+}
+\end{lstlisting}
+
+\subsection{Composer Analyzer (composer\_analyzer.py)}
+
+This module reads the \texttt{composer.json} file at the repository root and checks the PHP 8.x compatibility of each dependency using data from Packagist. If no \texttt{composer.json} file is found, the module is automatically skipped without halting the pipeline. Each dependency is classified as either \texttt{SAFE} (the configured version declaratively supports PHP 8.x) or \texttt{MANUAL REVIEW} (compatibility cannot be verified automatically).
+
+\section{Pipeline Data Flow}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{contents/chapter-3/alur-pipeline-input.png}
+    \caption{Pipeline data flow — input stage: Scanner, Converter, and Composer Analyzer}
+    \label{fig:alur-pipeline-input}
+\end{figure}
+
+PHP files are placed in \texttt{input/}. The Scanner runs Semgrep on \texttt{input/} to establish a security baseline for the original code (pre-scan). The Converter copies all files to \texttt{output/} and then runs Rector with the specified target version; the \texttt{input/} directory is not modified at all. After conversion, the Scanner runs Semgrep again on \texttt{output/} (post-scan) to measure the change in security posture through the $\Delta F$ value. The Composer Analyzer checks the PHP 8.x compatibility of \texttt{composer.json} dependencies, or is automatically skipped if the file is not found.
+
+\newpage
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{contents/chapter-3/alur-pipeline-output.png}
+    \caption{Pipeline data flow — output stage: Analyzer, AI Engine, ISO Mapper, and final report}
+    \label{fig:alur-pipeline-output}
+\end{figure}
+
+The Analyzer runs PHPStan level 5 on \texttt{output/} to verify code compatibility with the target PHP version. The AI Engine takes Semgrep findings with priority levels 1 through 5 and sends them to the LLM model for analysis and remediation suggestions; the module is automatically skipped if there are no findings. The ISO Mapper collects all findings from the Scanner, Analyzer, and AI Engine and maps them to the six ISO/IEC 27001:2022 controls. \texttt{main.py} combines everything into a JSON report and displays a summary in the console.
+
+\section{LLM Prompt Design}
+\label{sec:prompt-design}
+
+Prompt design is one of the methodological decisions with the greatest influence on response quality. The prompt was designed to satisfy three objectives: producing syntactically valid remediation code, producing a confidence score that the pipeline can parse automatically, and operating in a zero-shot manner without examples, given the absence of a labeled dataset.
+
+The prompt described in this section is the standard Condition A prompt used identically across all models.
+
+\subsection{Prompt Structure}
+
+The prompt consists of two parts sent via the \texttt{/api/chat} endpoint: a system message and a user message.
+
+System message:
+
+\begin{lstlisting}[style=promptstyle]
+You are a PHP security expert and migration specialist. 
+You analyze PHP code for security vulnerabilities and provide 
+secure PHP 8.x replacements. 
+Always follow output format instructions exactly as given.
+\end{lstlisting}
+
+User message for each finding:
+
+\begin{lstlisting}[style=promptstyle]
+
+TASK: Analyze the following PHP code for a [vulnerability_type]
+vulnerability and provide a secure PHP 8.x replacement.
+ISO/IEC 27001:2022 Controls: [relevant_controls]
+Context: File: [filename], line [line_number],
+         Semgrep rule: [rule_id], Finding: [description]
+VULNERABLE CODE:
+```php
+[code_snippet]
+```
+Respond in English:
+1. Explain the vulnerability and its security risk.
+2. Provide the corrected PHP 8.x code in a ```php code block.
+After your explanation and code fix, write exactly this on the
+last line:
+CONFIDENCE: [number between 0 and 100]
+Example last line: CONFIDENCE: 85
+\end{lstlisting}
+
+The code snippet inserted into the \texttt{[code\_snippet]} placeholder is limited to the first 2,000 characters of the source file. This limit is applied to keep the prompt size within Ollama's default context window and to avoid response truncation caused by tokens exceeding the model's capacity. As a consequence, for longer PHP files the model receives only the opening portion of the code and does not always have the full context needed to analyze a vulnerability comprehensively. This limitation is discussed further in Section~\ref{sec:keterbatasan}.
+
+As an illustration, the following shows how the placeholders above are filled for a SQL Injection finding in \texttt{Output.php} at line 768 (rule: \texttt{tainted-sql-string}, controls A.8.26 and A.8.28):
+
+\newpage
+\begin{lstlisting}[style=promptstyle]
+TASK: Analyze the following PHP code for a SQL Injection
+vulnerability and provide a secure PHP 8.x replacement.
+ISO/IEC 27001:2022 Controls: A.8.26, A.8.28
+Context: File: Output.php, line 768,
+         Semgrep rule: tainted-sql-string,
+         Finding: $_SERVER['QUERY_STRING'] used directly in
+                  cache path construction without sanitization
+VULNERABLE CODE:
+```php
+$uri .= '?'.$_SERVER['QUERY_STRING'];
+$cache_path .= md5(
+    $CI->config->item('base_url')
+    .$CI->config->item('index_page')
+    .ltrim($uri, '/'));
+
+if ( ! @unlink($cache_path)) {
+    log_message('error',
+        'Unable to delete cache file for '.$uri);
+    return FALSE;
+}
+```
+Respond in English:
+1. Explain the vulnerability and its security risk.
+2. Provide the corrected PHP 8.x code in a ```php code block.
+After your explanation and code fix, write exactly this on the
+last line:
+CONFIDENCE: [number between 0 and 100]
+Example last line: CONFIDENCE: 85
+\end{lstlisting}
+
+PHP code blocks are extracted from the model's response using markdown pattern matching \texttt{```php ... ```}. If this pattern is not found, the pipeline falls back to extracting a generic code block \texttt{``` ... ```}. The extracted code is then validated using \texttt{php -l} to verify its syntactic correctness before being included in the report. If no code block can be extracted at all, the response is still recorded with the placeholder \texttt{// Manual review required}.
+
+\newpage
+An example of the expected model output for the finding above:
+
+\begin{lstlisting}[style=promptstyle]
+### Explanation of Vulnerability
+The code uses $_SERVER['QUERY_STRING'] directly in cache
+path construction without sanitization, allowing path
+traversal or cache poisoning attacks.
+
+Here's the corrected PHP 8.x code:
+```php
+$uri .= '?' . urlencode($_SERVER['QUERY_STRING']);
+$cache_path .= md5(
+    $CI->config->item('base_url')
+    . $CI->config->item('index_page')
+    . ltrim($uri, '/'));
+
+if (!@unlink($cache_path)) {
+    log_message('error',
+        'Unable to delete cache file for '
+        . urlencode($uri));
+    return FALSE;
+}
+```
+CONFIDENCE: 78
+\end{lstlisting}
+
+Three elements must all be present simultaneously for a response to be counted as format-compliant: a vulnerability explanation, a valid PHP code block, and a \texttt{CONFIDENCE:} line at the end.
+
+The full text of the Condition B prompt for each model is provided in Appendix~\ref{app:prompt-kondisi-b}.
+
+\subsection{Prompt Design Decisions}
+
+\textbf{Inclusion of ISO/IEC 27001:2022 controls:} The relevant ISO controls are included in every prompt. This information is intended to encourage the model to generate remediation suggestions that take standards compliance into account, rather than merely fixing syntax.
+
+\textbf{Format instructions at the end of the message:} The \texttt{CONFIDENCE: [0-100]} format is placed at the end of the message with explicit instructions including a concrete example. Smaller models tend to be more compliant with instructions that appear near the end of the message.
+
+\textbf{Layered score parsing:} Because not all models follow the requested format, \texttt{ai\_engine.py} uses six sequential regex patterns to extract the score: (0) XML tag \texttt{<confidence>}, (1) an integer near the word ``confidence'', (2) a decimal of the form 0.x near ``confidence'', (3) a percentage near ``confidence'', (4) a bare decimal anywhere in the response, and (5) natural language phrases such as ``not sure'' mapped to fixed values. If all patterns fail, the system returns a default value of 0.0.
+
+\textbf{Temperature 0.1:} Selected to minimize random variation across runs. Each model is run three times per finding with an identical prompt, so differences in results across runs reflect genuine model variability. Ollama does not provide consistent inference seed control across all tested models, so minor variation between runs remains possible even at the low temperature of 0.1.
+
+\textbf{Zero-shot without examples:} No code fix examples are included because the research aims to evaluate the innate capability of each model under conditions that reflect real-world use. This also ensures that all models are compared on an equal footing.
+
+\textbf{Confidence score as a secondary metric:} This score is a self-assessment by the model and cannot be independently verified. In the Chapter IV analysis, the confidence score is a secondary metric; the primary metric is the syntactic validity of the generated code, measured with \texttt{php -l}.
+
+\section{ISO/IEC 27001:2022 Mapping Design}
+\label{sec:iso-mapping-design}
+
+\begin{sloppypar}
+
+Finding-to-control mapping for ISO/IEC 27001:2022 is performed using a rule-based approach within \texttt{iso\_mapper.py}. Data is received directly as in-memory Python objects from \texttt{main.py}, not read from a JSON file. This rule-based approach was chosen to ensure deterministic and auditable results, in contrast to an AI-based approach whose output can vary between inference runs. Six controls are mapped, as shown in Table~\ref{tab:iso-mapping}.
+
+\end{sloppypar}
+
+\begin{table}[htbp]
+\caption{Mapping of finding sources to ISO/IEC 27001:2022 Annex A controls}
+\vspace{0.5em}
+\centering
+\label{tab:iso-mapping}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabularx}{\textwidth}{|l|l|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{ISO Control} & \textbf{Title} & \textbf{Mapped finding sources} \\
+\hline \hline
+A.5.17 & Authentication Information & Semgrep: hardcoded credentials \\
+\hline
+A.8.24 & Use of Cryptography & Semgrep: \texttt{md5()}/\texttt{sha1()} for passwords \\
+\hline
+A.8.25 & Secure Development Lifecycle & Semgrep (all) + PHPStan ERROR/WARNING \\
+\hline
+A.8.26 & Application Security Requirements & Semgrep: SQL Injection, XSS \\
+\hline
+A.8.28 & Secure Coding & Semgrep (all) + PHPStan ERROR \\
+\hline
+A.8.29 & Security Testing in Development & Semgrep: Path Traversal/SSRF + PHPStan ERROR/WARNING \\
+\hline
+\end{tabularx}
+\end{table}
+
+The final status of each control is determined based on whether open findings remain after the pipeline completes. \texttt{COMPLIANT} means no findings are mapped to that control. \texttt{NON\_COMPLIANT} means active Semgrep findings are present. \texttt{PARTIAL} means PHPStan-only findings exist with no Semgrep findings. A COMPLIANT status for A.5.17 and A.8.24 does not guarantee that the code is entirely free of vulnerabilities; it simply indicates that the ruleset used produced no findings mapped to those two controls on this dataset.
+
+\newpage
+\subsection{Finding Classification Mechanism}
+
+The mapping from Semgrep findings to ISO controls is performed by the \texttt{\_classify()} function in \texttt{scanner.py}. This function inspects the \texttt{rule\_id} and \texttt{message} fields of each Semgrep finding using substring matching (not regular expressions) against a predefined list of keywords. The result is an assignment of \texttt{vuln\_type}, a list of \texttt{iso\_controls}, and a priority value. Table~\ref{tab:keyword-mapping} shows the mapping from keywords to vulnerability types and the assigned ISO controls.
+
+\begin{table}[htbp]
+\caption{Mapping of Semgrep \texttt{rule\_id} keywords to vulnerability types and ISO/IEC 27001:2022 controls}
+\vspace{0.5em}
+\centering
+\label{tab:keyword-mapping}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|l|l|c|}
+\hline
+\textbf{Keywords (\texttt{rule\_id}/\texttt{message})} &
+\textbf{Vulnerability Type} &
+\textbf{ISO Controls} &
+\textbf{Priority} \\
+\hline \hline
+\texttt{sql}, \texttt{sqli}, \texttt{injection} &
+SQL Injection & A.8.26, A.8.28 & 1 \\
+\hline
+\texttt{xss}, \texttt{cross-site} &
+XSS & A.8.26, A.8.28 & 2 \\
+\hline
+\texttt{deprecated}, \texttt{mysql\_} &
+Deprecated Functions & A.8.25, A.8.28 & 3 \\
+\hline
+\texttt{hardcoded}, \texttt{secret}, \texttt{password} &
+Hardcoded Credentials & A.5.17, A.8.28 & 4 \\
+\hline
+\texttt{path}, \texttt{traversal} &
+Path Traversal & A.8.28, A.8.29 & 5 \\
+\hline
+\texttt{ssrf}, \texttt{server-side- request-forgery} &
+SSRF & A.8.28, A.8.29 & 5 \\
+\hline
+\texttt{md5}, \texttt{sha1}, \texttt{weak-crypto}, \texttt{weak-hash} &
+Weak Cryptography & A.8.24, A.8.28 & 6 \\
+\hline
+\end{tabularx}
+\end{table}
+
+This keyword matching approach was chosen over an AI-based approach for three reasons. First, results are deterministic: the same finding always produces the same mapping with no variation between inference runs. Second, the approach is directly auditable because all mapping logic is stored as Python code that can be inspected and verified. Third, it requires no external connection or additional model, which is consistent with the data privacy requirements established in Section~\ref{sec:data-privacy}.
+
+\newpage
+\section{LLM Model Comparison Experiment Design}
+
+The comparison experiment was designed under fully controlled conditions and conducted separately from the main pipeline testing using dedicated evaluation scripts.
+
+The experiment encompasses three conditions designed in a progressive sequence. \textbf{Condition A} serves as the baseline: all models receive an identical zero-shot prompt with no optimization whatsoever. \textbf{Condition B} optimizes the prompt per model based on failure patterns observed in Condition A, to determine how much performance can be improved through prompt adjustment. \textbf{Condition C} explores variations in the temperature and context window parameters on the best-performing models from Conditions A and B.
+
+\subsection{Experimental Conditions}
+
+\begin{itemize}
+
+    \item \textbf{Input}: 11 Semgrep findings from the FT UGM dataset pre-scan
+
+    \item \textbf{Number of trials}: 3 runs per finding per model (33 trials per model, 165 total)
+
+    \item \textbf{Temperature}: 0.1 for all models
+
+    \item \textbf{Prompt}: Identical for all models in Condition A (zero-shot); optimized per model in Condition B
+
+    \item \textbf{Models}: Run locally via Ollama without modification
+
+\end{itemize}
+
+\subsection{Evaluation Metrics}
+\label{sec:metrik-evaluasi}
+
+The formal definitions of all metrics used in this research, together with their grounding in the literature, are provided in Section~\ref{subsec:metrik-llm}. Briefly, the five metrics applied are: Conversion Rate (CR) to measure Rector conversion success, Format Compliance Rate (FCR) to measure model response format compliance, Syntax Validity Rate (SVR) as the primary metric of generated code quality, Security Finding Delta ($\Delta F$) to measure post-conversion security posture change, and Mean Confidence Score ($\bar{C}_m$) as a secondary metric of model consistency.
+
+In this experiment, each model is run for 33 trials (3 runs per finding, 11 findings), so $r_{total} = 33$ per model for FCR calculation. SVR is designated as the primary metric because its results can be independently verified using \texttt{php -l}, whereas $\bar{C}_m$ is secondary because it is a self-assessment by the model that cannot be externally verified.
+
+\subsection{Interpreting Trade-offs Between Metrics}
+
+FCR and SVR are two independent dimensions that must be interpreted together, as explained in Section~\ref{subsec:metrik-llm}. A model with high FCR but low SVR demonstrates the ability to follow format instructions but produces poor-quality code. Conversely, a model with low FCR but high SVR ignores format instructions but generates high-quality code. Both conditions have different practical implications and are discussed empirically in Chapter IV.
+
+\section{Testing and Evaluation Methods}
+
+Testing is conducted using an output-oriented evaluation approach, focusing on the output of each module rather than its internal implementation details. Five primary metrics are used:
+
+\begin{enumerate}
+
+    \item \textbf{Rector conversion rate}: The percentage of PHP files successfully converted without fatal Rector errors, calculated per file and overall.
+
+    \item \textbf{Post-conversion syntax validity}: The percentage of converted files that pass \texttt{php -l}. Measured objectively. Syntax validity does not guarantee the logical correctness of the transformed program or the security of the transformation output, but it is selected as the primary metric because it can be verified objectively and automatically.
+
+    \item \textbf{Security finding difference}: The difference in the number of Semgrep findings between the pre-scan and post-scan. New findings after conversion are not automatically interpreted as a security regression, but they may reflect latent vulnerabilities that were previously hidden.
+
+    \item \textbf{LLM model performance}: Measured using the format compliance rate (secondary) and the syntax validity rate (primary) as described in Section~\ref{sec:metrik-evaluasi}.
+
+    \item \begin{sloppypar}\textbf{ISO/IEC 27001:2022 compliance status}: Per-control status (\texttt{COMPLIANT}, \texttt{PARTIAL}, or \texttt{NON\_COMPLIANT}) based on the mapping logic in Section~\ref{sec:iso-mapping-design}.\end{sloppypar}
+
+\end{enumerate}
+
+For PHPStan results, a high error count is not directly interpreted as a pipeline failure. PHPStan errors in freshly migrated legacy code largely reflect technical debt that existed prior to migration, not a consequence of the conversion process. This distinction is discussed in more detail in Chapter IV.

@@ -1,4 +1,5 @@
-\chapter*{Lampiran}
+\phantomsection
+\addcontentsline{toc}{section}{Lampiran C --- Teks Prompt Kondisi B}
 \label{app:prompt-kondisi-b}
 
 Berikut teks lengkap \textit{prompt} Kondisi B untuk masing-masing 
@@ -9,7 +10,7 @@ di \texttt{ai\_engine.py}. Variabel \texttt{\{vuln\_type\}},
 berdasarkan temuan Semgrep yang sedang diproses.
 
 % --------------------------------------------------------
-\section*{A.1 Qwen2.5-Coder 7b}
+\section*{C.1 Qwen2.5-Coder 7b}
 % --------------------------------------------------------
 
 Strategi: format diperlunak — \texttt{CONFIDENCE} tidak diwajibkan, 
@@ -46,7 +47,7 @@ CONFIDENCE: [number]
 \end{small}
 
 % --------------------------------------------------------
-\section*{A.2 DeepSeek Coder 6.7b}
+\section*{C.2 DeepSeek Coder 6.7b}
 % --------------------------------------------------------
 
 Strategi: instruksi pendek dan langsung, satu format \textit{requirement}.
@@ -76,7 +77,7 @@ Write:
 \end{small}
 
 % --------------------------------------------------------
-\section*{A.3 Mistral 7b}
+\section*{C.3 Mistral 7b}
 % --------------------------------------------------------
 
 Strategi: satu contoh \textit{few-shot} konkret untuk mengajarkan 
@@ -125,7 +126,7 @@ then CONFIDENCE: [0-100].
 \end{small}
 
 % --------------------------------------------------------
-\section*{A.4 Llama 3.1 8b}
+\section*{C.4 Llama 3.1 8b}
 % --------------------------------------------------------
 
 Strategi: \textit{role-play} persona kuat dengan empat langkah 
@@ -167,7 +168,7 @@ Your response must follow this exact order:
 \end{small}
 
 % --------------------------------------------------------
-\section*{A.5 CodeLlama 7b}
+\section*{C.5 CodeLlama 7b}
 % --------------------------------------------------------
 
 Strategi: format identik dengan Kondisi A dengan tambahan 

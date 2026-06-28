@@ -1,0 +1,119 @@
+% ============================================================
+%  INTISARI / ABSTRACT (English)
+% ============================================================
+
+Most websites still run PHP applications on version 7.x or older that no longer receive official security updates, leaving systems exposed to an ever-growing accumulation of vulnerabilities with no possibility of remediation. Manual migration across hundreds of code files is impractical, and current transformation tools do not include security checks as an integrated part of the migration workflow. Organizations operating under the ISO/IEC 27001:2022 standard must also perform security audits as a separate step after migration is complete, adding to the operational burden.
+
+\hspace{1cm} This research builds a Python-based platform that integrates automatic conversion of legacy PHP web applications to a configurable target PHP version with ISO/IEC 27001:2022 secure coding compliance checks in a single, locally executable open-source workflow. The platform uses Rector for AST-based code transformation, Semgrep for security scanning, PHPStan for post-conversion validation, and five open-source LLMs running locally via Ollama---DeepSeek Coder 6.7b, Qwen2.5-Coder 7b, CodeLlama 7b, Mistral 7b, and Llama 3.1 8b---for semantic analysis and vulnerability remediation suggestions. Case studies were conducted on PHP codebases from FT UGM (Dashboard TCK, 245 files) and CBT DTI UGM (326 files).
+
+\hspace{1cm} Rector achieved a conversion rate of 97.6\% on the FT UGM dataset and 91.7\% on the CBT DTI UGM dataset, with a post-conversion syntax validity rate of 100\% in both case studies. A value of $\Delta F = 0$ confirms that the conversion process introduced no new vulnerabilities. The automatically generated JSON reports include per-finding mappings to the relevant ISO/IEC 27001:2022 Annex A controls and can be used directly as audit documentation. From a comparative experiment across five LLM models, Qwen2.5-Coder 7b is recommended for integration into automated systems, as it consistently achieved a Syntax Validity Rate (SVR) of 100\% across all experimental conditions. This platform demonstrates that the integration of automated code conversion and ISO/IEC 27001:2022 compliance checking can be executed entirely locally without transmitting source code to any external service.
+
+\noindent{Keywords}: PHP migration, secure coding, ISO/IEC 27001:2022, large language model, AST code transformation
+
+
+% ============================================================
+%  CHAPTER I — INTRODUCTION
+% ============================================================
+
+\chapter{Introduction}
+
+\section{Background}
+
+PHP was not designed to become a large-scale programming language. Rasmus Lerdorf introduced it in 1995 as a collection of simple scripts for managing his personal web pages \cite{phpgroup_history}. Within a few years, however, PHP grew far beyond its original purpose, and by the late 1990s it had become the dominant choice for server-side web development \cite{phpgroup_history}. Its ease of use, widespread hosting support, and continuously expanding library ecosystem made it a natural choice for web developers ranging from individuals to technology teams at large institutions \cite{phpgroup_history}.
+
+Recent data confirms this dominance. According to W3Techs as of 8 April 2026, 71.7\% of all websites with a known server-side programming language use PHP \cite{w3techs2024php}. That figure places PHP far ahead of any other language. Behind this impressive number, however, lies an uncomfortable reality: only 58.1\% of PHP-based websites have migrated to version 8. Approximately 33.1\% are still running PHP 7.x, and 8.7\% are still running PHP 5.x \cite{w3techs2024php}. In other words, almost half of all PHP users worldwide are still running versions that no longer receive official security updates.
+
+This is not a minor problem. Official support for PHP 7.4, the last release in the 7.x series, ended on 28 November 2022 \cite{phpgroup2022supported}. After that date, no further security updates were released, including for newly discovered vulnerabilities. The National Vulnerability Database (NVD) maintained by NIST notes that systems running on end-of-life versions effectively leave publicly known security gaps open with no possibility of remediation \cite{nist_nvd}. The longer a system continues to run on an outdated version, the greater the accumulated risk it carries.
+
+The most common vulnerability types found in legacy PHP applications are well documented. The OWASP Top 10:2021 \cite{owasp2021} lists injection as one of the most serious threats to web applications. In legacy PHP code, SQL injection almost always arises from the use of the \texttt{mysql\_query()} function, where user input is directly concatenated into SQL statements without parameterization. XSS (cross-site scripting) vulnerabilities are also prevalent because many legacy PHP applications do not apply output encoding consistently. Additional problems include weak cryptography such as the use of \texttt{md5()} for password storage, insecure session handling, and various functions that have been removed from PHP 8.x for security reasons \cite{owasp2021}. The fact that these issues have existed for a long time does not mean they have been resolved; Merlo, Letarte, and Antoniol \cite{merlo2007automated} raised the problem of automatic protection of PHP applications against SQL injection as far back as 2007, and a comprehensive solution remains unavailable to this day.
+
+This situation is not confined to organizations abroad. FT UGM manages a number of PHP-based web applications, some of which still run on older versions, making modernization an urgent need. This reflects the challenges commonly faced by educational and government institutions that built PHP-based information systems in an era before modern development standards were widely adopted. Migration is frequently delayed due to technical complexity and concerns that the process will disrupt running services \cite{phpgroup2022supported}.
+
+From a technical standpoint, migrating from PHP 7.x to PHP 8.x is far from straightforward. PHP 8.x introduces a number of breaking changes that prevent PHP 7.x code from running without modification \cite{phpgroup2022supported}. Commonly used functions such as \texttt{create\_function()}, \texttt{each()}, and the entire \texttt{ext/mysql} extension have been removed. The type system has become considerably stricter with union types and mixed types, which can trigger runtime errors in code that previously ran without issues. PHP 8.x also introduces new features such as named arguments, \textit{match} expressions, the nullsafe operator (\texttt{?->}), and JIT compilation \cite{phpgroup2022supported}. Error handling has also changed: a number of functions that previously returned \texttt{false} on failure now throw exceptions instead.
+
+Applying all these changes manually across hundreds or thousands of code files is an impractical approach. Some organizations opt for a phased strategy, first migrating to PHP 7.4 before moving on to PHP 8.x \cite{phpgroup2022supported}, which makes configurable target version support a genuine requirement rather than a supplementary feature.
+
+Existing automated tools are helpful, but each has its limits. Rector \cite{rector2024} is an AST-based transformation tool proven to be reliable for industry-scale syntactic changes, as demonstrated by Chen et al. \cite{chen2022ast} in a TypeScript codebase migration study at Microsoft. However, Rector cannot handle cases that require semantic understanding. Replacing \texttt{mysql\_*()}\ with PDO or MySQLi, for instance, is not merely a matter of renaming a function; it is a full rewrite of the database access logic that can only be carried out if the usage context is understood.
+
+On the security side, Semgrep \cite{semgrep2024} can automatically identify vulnerability patterns, and PHPStan \cite{phpstan2024} can check type compatibility between code and the target PHP version. Yet none of these tools inherently combines vulnerability detection, code transformation, and security standard compliance within a single integrated workflow. As a result, development teams handling migration and security teams conducting audits work in separate processes. Strobl et al. \cite{strobl2020automated} found, from three large-scale code transformation cases in the government sector, that the absence of validation mechanisms embedded within the transformation process creates risks that only become apparent long after systems go into production.
+
+The pressure intensifies for organizations operating under information security standards. ISO/IEC 27001:2022 \cite{iso27001_2022} requires documented and auditable secure coding practices through three Annex A.8 controls: A.8.25 (secure development lifecycle), A.8.28 (secure coding), and A.8.29 (security testing in development and acceptance). For organizations pursuing ISO/IEC 27001:2022 certification, evidence that code migration was conducted with due regard for these controls must be available as part of audit documentation. Producing such evidence currently requires manual work that is entirely separate from the migration process.
+
+Advances in Large Language Models (LLMs) open new possibilities. LLMs have already been shown to be applicable to software vulnerability detection \cite{akuthota2023vulnerability}\cite{li2025software}. Li, Dutta, and Naik \cite{li2025iris} demonstrated that combining LLMs with static analysis tools yields better vulnerability detection than either approach running independently. Stümpfle et al. \cite{stumpfle2025llm} investigated the use of LLMs for code transformations that require semantic understanding in the context of software variant migration. With their ability to understand code context, LLMs have the potential to fill the gaps that rule-based tools such as Rector cannot address.
+
+The primary obstacle is data privacy. High-performance LLMs such as GPT-4 are accessed via cloud API, which means source code must be sent to third-party servers. For an institution such as FT UGM, which manages the source code of confidential internal applications, this is not an acceptable option. The recent development of small-to-medium open-source LLMs has changed this situation. Models such as DeepSeek Coder 6.7b \cite{deepseek2024coder}, Qwen2.5-Coder 7b \cite{hui2024qwen}, CodeLlama 7b \cite{roziere2024codellama}, Mistral 7b \cite{jiang2023mistral}, and Llama 3.1 8b \cite{dubey2024llama3} can now run locally on consumer hardware with 8 GB VRAM via Ollama \cite{ollama2024}. The entire inference process occurs on the local machine with no data leaving the organization's environment.
+
+This situation leaves two fundamental problems unsolved. First, legacy PHP code migration still requires significant manual intervention for cases that demand semantic understanding, and available tools do not include security checks as part of the migration workflow. Second, organizations that must comply with ISO/IEC 27001:2022 still have to perform security audits as a separate step after migration is complete. No platform currently combines both within a single locally executable open-source workflow, as demonstrated by the literature review in Chapter II.
+
+This research builds an AI-based platform using open-source tools that can automatically convert legacy PHP web applications to a configurable target PHP version, with technical support from PHP 5.2 through PHP 8.x, while incorporating ISO/IEC 27001:2022-based secure coding checks. The platform uses Rector \cite{rector2024} for AST-based code transformation, Semgrep \cite{semgrep2024} for security scanning, PHPStan \cite{phpstan2024} for post-conversion validation, and five open-source LLMs running locally via Ollama \cite{ollama2024}. Case studies are conducted on PHP codebases from FT UGM and CBT DTI UGM.
+
+\section{Problem Formulation}
+
+Based on the background described above, this research formulates four research questions as follows:
+
+\begin{enumerate}
+    \item How can an AI-based pipeline be designed to automatically convert PHP 7.x web applications to PHP 8.3 using open-source tools?
+    \item How can it be validated that the conversion output preserves the functionality of the converted source code?
+    \item How can secure coding checks aligned with ISO/IEC 27001:2022 Annex A.8 controls be integrated into an automated conversion pipeline?
+    \item Which locally running open-source LLM provides the best security analysis and PHP code remediation suggestions in the context of migrating from PHP 7.x to PHP 8.3?
+\end{enumerate}
+
+
+\section{Research Objectives}
+\label{sec:tujuan-penelitian}
+
+This research has four objectives that correspond to the research questions above:
+
+\begin{enumerate}
+    \item To build an AI-based pipeline using open-source tools that automatically converts PHP 7.x web applications to PHP 8.3.
+    \item To validate that the conversion output preserves source code functionality through post-conversion syntax validity and type compatibility checks.
+    \item To implement a secure coding check mechanism mapped to ISO/IEC 27001:2022 Annex A.8 controls as an integral part of the conversion workflow.
+    \item To compare the performance of five locally running open-source LLMs in order to determine the most effective model for providing security analysis and PHP code remediation suggestions in the context of version migration.
+\end{enumerate}
+
+\section{Research Scope and Limitations}
+
+This research is subject to the following limitations:
+
+\begin{enumerate}
+    \item \textbf{Conversion scope:} Technically, the pipeline supports conversion from PHP 5.2 onward, as Rector uses a cumulative ruleset chain covering all changes from PHP 5.2 through the selected target version \cite{rector2024}. However, the case studies in this research use PHP 7.x source code from FT UGM and CBT DTI UGM as representative examples of the most prevalent condition currently encountered \cite{w3techs2024php}. The configurable target version spans PHP 7.4 through PHP 8.3, which represents the most relevant range for institutional modernization needs at present \cite{phpgroup2022supported}.
+    \item \textbf{Case studies:} This research employs two case studies: (1) the Target Work Achievement (TCK) Dashboard application of the Faculty of Engineering (FT), Universitas Gadjah Mada, built on the CodeIgniter 3 framework with PHP version 7.4.9; and (2) the Computer-Based Test (CBT) application of the Directorate of Information Technology (DTI), Universitas Gadjah Mada, built on the CodeIgniter 3 framework with a PHP $\geq$ 7.0 requirement. The pipeline operates at the level of individual PHP files and is not dependent on the framework used; it can therefore technically be applied to applications built on other frameworks such as Laravel or Symfony, or to framework-free PHP applications. Testing against frameworks other than CodeIgniter 3 is outside the scope of this research.
+    \item \textbf{Security controls:} Security checks are restricted to the ISO/IEC 27001:2022 Annex A controls relevant to secure coding: A.8.25, A.8.28, and A.8.29, as well as A.5.17, A.8.24, and A.8.26, which are also mapped by the pipeline \cite{iso27001_2022}.
+    \item \textbf{AI models:} This research evaluates and compares five open-source LLMs running locally via Ollama \cite{ollama2024} in a zero-shot comparative experiment: DeepSeek Coder 6.7b \cite{deepseek2024coder}, Qwen2.5-Coder 7b \cite{hui2024qwen}, CodeLlama 7b \cite{roziere2024codellama}, Mistral 7b \cite{jiang2023mistral}, and Llama 3.1 8b \cite{dubey2024llama3}. All models are used without fine-tuning.
+    \item \textbf{Validation environment:} Testing is conducted in a local environment using source code from institutional settings. Testing in a large-scale production environment is outside the scope of this research.
+    \item \textbf{Programming language:} This research is limited to PHP applications. Other languages are not covered.
+    \item \textbf{Application complexity:} The test applications are of intermediate complexity, comprising hundreds of PHP files with a mix of business logic, database access, and presentation within a single framework codebase.
+\end{enumerate}
+
+\section{Data Security and Privacy}
+\label{sec:data-privacy}
+
+The PHP source code from FT UGM and DTI UGM is an institutional asset that must not be transmitted to external services. This data privacy constraint is a foundational design principle for the AI architecture of this research. Rather than using cloud-based LLM APIs, the research uses Ollama as a local runtime so that all inference takes place on the development machine.
+
+No snippet of application source code is transmitted to any external inference service or cloud-based LLM API. All analysis proceeds statically: there is no connection to the FT UGM production database, and no PHP code is executed. The only external connection that occurs is a call to the Packagist API by the \texttt{composer\_analyzer.py} module to check dependency version metadata — not application source code. This decision is consistent with ISO/IEC 27001:2022, which requires the separation of development environments and the control of access to sensitive information assets.
+
+\section{Research Benefits}
+
+\subsection{Academic Benefits}
+
+This research provides a concrete example of how to integrate ISO/IEC 27001:2022 secure coding controls into an automated code transformation workflow \cite{iso27001_2022} — something that has not been done by previous research in this area \cite{merlo2007automated}\cite{akuthota2023vulnerability}\cite{stumpfle2025llm}. In addition, the research produces empirical data on the performance of small-to-medium locally running open-source LLMs in code security analysis tasks, which is relevant for institutions with limited computational resources.
+
+The modular design of the platform allows further development by other researchers, for example by replacing the transformation tool to support other programming languages, using newer AI models, or extending the mapping to security standards beyond ISO/IEC 27001:2022.
+
+\subsection{Practical Benefits}
+
+The platform simplifies the migration of legacy PHP applications, particularly for organizations without large development resources. Security compliance checks are included directly within the migration process \cite{iso27001_2022}, so vulnerabilities can be identified concurrently with conversion and compliance reports are generated automatically. Support for target versions ranging from PHP 5.2 through PHP 8.x accommodates various migration strategies, whether phased or direct. The entire platform is open-source and available free of charge.
+
+\section{Thesis Structure}
+
+This thesis consists of five chapters.
+
+\noindent \textbf{Chapter I: Introduction} presents the problem background, research questions, research objectives, scope and limitations, data security and privacy, research benefits, and thesis structure.
+
+\noindent \textbf{Chapter II: Literature Review and Theoretical Framework} discusses previous relevant research and the theoretical foundations, covering PHP version changes, the ISO/IEC 27001:2022 standard, secure coding methodologies, LLM-based code analysis, and the tools used: Rector, Semgrep, PHPStan, and Ollama.
+
+\noindent \textbf{Chapter III: Research Methodology} explains the system architecture, research stages, LLM prompt design, ISO/IEC 27001:2022 control mapping, LLM model comparison experiment design, and testing and evaluation methods.
+
+\noindent \textbf{Chapter IV: Results and Discussion} presents the results of pipeline implementation across two case studies (FT UGM and CBT DTI UGM), covering conversion success rates, comparison of security findings before and after conversion, results of the five-LLM comparison, and a discussion of the system's strengths and limitations.
+
+\noindent \textbf{Chapter V: Conclusions and Recommendations} summarizes the findings against the stated objectives and provides recommendations for future research.

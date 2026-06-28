@@ -109,7 +109,7 @@ prototipe sebagaimana diuraikan pada
 Subbab~\ref{subsec:model-prototipe}.
 
 \textit{Pipeline} otomasi yang dirancang dalam penelitian ini 
-merupakan wujud konkret dari manajemen perangkat lunak dalam 
+merupakan implementasi dari manajemen perangkat lunak dalam 
 skala basis kode nyata: Rector menangani pembaruan versi PHP 
 secara sistematis, sementara komponen AI Engine berbasis LLM 
 merekomendasikan perbaikan kerentanan yang teridentifikasi. 
@@ -156,8 +156,6 @@ masalah, proses kembali ke tahap implementasi (iterasi).
 
 \section{Arsitektur Sistem}
 
-Sistem terdiri dari enam modul fungsional Python, di mana masing-masing modul 
-menangani satu langkah spesifik dalam proses konversi dan analisis keamanan. 
 Sistem terdiri dari enam modul fungsional Python, di mana masing-masing modul 
 menangani satu langkah spesifik dalam proses konversi dan analisis keamanan. 
 Seluruh modul ini dikoordinasikan oleh \texttt{main.py} sebagai orkestrator. 
@@ -599,11 +597,12 @@ dalam Subbab \ref{sec:data-privacy}.
 \newpage
 \section{Rancangan Eksperimen Komparasi Model LLM}
 
-Eksperimen komparasi dirancang dengan kondisi yang dikontrol ketat dan dilakukan terpisah dari pengujian \textit{pipeline} utama menggunakan skrip evaluasi khusus. Pemisahan ini bukan sekadar pilihan implementasi, melainkan kebutuhan validitas: performa Rector dan Semgrep bersifat deterministik, sedangkan performa model LLM bersifat stokastik. Jika perbandingan model dijalankan sebagai bagian dari eksekusi \textit{pipeline} penuh, variasi pada tahap-tahap sebelumnya (misalnya jumlah dan urutan temuan yang berbeda antar dataset atau antar versi target) akan menjadi perancu (\textit{confounding variable}) yang mengaburkan perbandingan antar model. Dengan menetapkan 11 temuan Semgrep \textit{pre-scan} dataset FT UGM yang identik sebagai \textit{input} tetap untuk seluruh model dan kondisi eksperimen, perbedaan hasil yang terukur dapat diatribusikan pada perbedaan kemampuan model, bukan pada variasi rangkaian \textit{pipeline} di tahap lain.
+Eksperimen komparasi dirancang dengan kondisi yang dikontrol ketat dan dilakukan terpisah dari pengujian \textit{pipeline} utama menggunakan skrip evaluasi khusus. Pemisahan ini dilakukan untuk menjaga validitas pengujian; performa Rector dan Semgrep bersifat deterministik, sedangkan performa LLM bersifat stokastik. Jika perbandingan model dijalankan sebagai bagian dari eksekusi \textit{pipeline} penuh, variasi pada tahap-tahap sebelumnya (misalnya jumlah dan urutan temuan yang berbeda antar dataset atau antar versi target) akan menjadi perancu (\textit{confounding variable}) yang mengaburkan perbandingan antar model. Dengan menetapkan 11 temuan Semgrep \textit{pre-scan} dataset FT UGM yang identik sebagai \textit{input} tetap untuk seluruh model dan kondisi eksperimen, perbedaan hasil yang terukur dapat diatribusikan pada perbedaan kemampuan model, bukan pada variasi rangkaian \textit{pipeline} di tahap lain.
 
 \subsection{Baseline Pembanding}
 
-Penelitian ini tidak memiliki \textit{baseline} eksternal dalam arti tidak ada alat atau penelitian terdahulu yang menjalankan tugas yang identik -- menerjemahkan temuan Semgrep pada kode PHP menjadi penjelasan dan saran remediasi menggunakan LLM lokal -- sehingga tidak tersedia titik pembanding dari luar untuk mengklaim bahwa pendekatan ini ``lebih baik'' dari pendekatan lain secara mutlak. Sebagai gantinya, validitas perbandingan dibangun melalui dua mekanisme pembanding internal. Pertama, \textbf{Kondisi A} berfungsi sebagai \textit{baseline zero-shot} yang sama untuk kelima model, sehingga Kondisi B dan Kondisi C dapat diukur sebagai peningkatan relatif terhadap kondisi awal yang setara, bukan terhadap titik nol yang sewenang-wenang. Kedua, perbandingan lintas-model itu sendiri berfungsi sebagai \textit{baseline} relatif: pertanyaan yang dijawab bukan ``apakah pendekatan ini efektif secara absolut'', melainkan ``model mana, di antara kandidat yang memenuhi batasan privasi data dan perangkat keras pada Subbab~\ref{sec:data-privacy}, yang paling sesuai untuk peran ini''. Ketiadaan \textit{baseline} eksternal ini diakui sebagai keterbatasan penelitian dan dibahas lebih lanjut pada Bab V.
+Penelitian ini tidak memiliki \textit{baseline} eksternal dalam arti tidak ada alat atau penelitian terdahulu yang menjalankan tugas yang identik -- menerjemahkan temuan Semgrep pada kode PHP menjadi penjelasan dan saran remediasi menggunakan LLM lokal -- 
+sehingga evaluasi dilakukan menggunakan mekanisme pembanding internal melalui dua kondisi. Pertama, \textbf{Kondisi A} berfungsi sebagai \textit{baseline zero-shot} yang sama untuk kelima model, sehingga Kondisi B dan Kondisi C dapat diukur sebagai peningkatan relatif terhadap kondisi awal yang setara, bukan terhadap titik nol yang sewenang-wenang. Kedua, perbandingan lintas-model itu sendiri berfungsi sebagai \textit{baseline} relatif: pertanyaan yang dijawab bukan ``apakah pendekatan ini efektif secara absolut'', melainkan ``model mana, di antara kandidat yang memenuhi batasan privasi data dan perangkat keras pada Subbab~\ref{sec:data-privacy}, yang paling sesuai untuk peran ini''. Ketiadaan \textit{baseline} eksternal ini diakui sebagai keterbatasan penelitian dan dibahas lebih lanjut pada Bab V.
 
 Eksperimen ini mencakup tiga kondisi yang dirancang secara bertahap. \textbf{Kondisi A} adalah \textit{baseline}: semua model menerima \textit{prompt} yang identik secara \textit{zero-shot} tanpa optimasi apa pun. \textbf{Kondisi B} mengoptimasi \textit{prompt} per model berdasarkan pola kegagalan yang terobservasi pada Kondisi A, untuk mengetahui sejauh mana performa model bisa ditingkatkan melalui penyesuaian \textit{prompt}. \textbf{Kondisi C} mengeksplorasi variasi parameter \textit{temperature} dan \textit{context window} pada model terbaik hasil Kondisi A dan B.
 
@@ -656,12 +655,7 @@ berbeda dan dibahas secara empiris di Bab IV.
 \label{sec:eksperimen-b0t1}
 
 Eksperimen komparasi model pada Subbab sebelumnya menentukan model LLM 
-terbaik untuk menjalankan peran \textit{AI Engine}. Namun pertanyaan 
-yang berbeda dan sama pentingnya adalah: apakah kehadiran \textit{AI 
-Engine} itu sendiri memberikan nilai tambah yang terukur dibandingkan 
-tanpa komponen AI sama sekali? Pertanyaan ini merupakan inti dari 
-Rumusan Masalah ke-4 dan dijawab melalui eksperimen validasi 
-\textit{baseline} berikut.
+terbaik untuk menjalankan peran \textit{AI Engine}. Eksperimen ini dirancang untuk menjawab Rumusan Masalah ke-4, yaitu memvalidasi nilai tambah yang diberikan oleh AI Engine dibandingkan dengan sistem tanpa komponen AI.
 
 \subsection{Definisi Kondisi B0 dan T1}
 

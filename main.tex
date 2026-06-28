@@ -84,6 +84,18 @@
   keepspaces=true,
   showstringspaces=false,
 }
+\lstdefinestyle{pseudocodestyle}{
+  basicstyle=\footnotesize\ttfamily,
+  breaklines=true,
+  breakatwhitespace=true,
+  breakautoindent=false,
+  breakindent=0pt,
+  frame=single,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  postbreak=\mbox{\textcolor{gray}{$\hookrightarrow$}\space},
+}
 \begin{document}
 %======================================
 % Create cover etc
@@ -109,7 +121,7 @@
 \cleardoublepage \phantomsection
 %\chapterstatement{contents/statement/statement}
 %\chapterstatementjpg{sample/scanned-statement.jpg}
-\chapterstatementpdf{pernyataa-bebas-plagiasi.pdf}
+\chapterstatementpdf{pernyataan-bebas-plagiasi.pdf}
 
 \cleardoublepage \phantomsection
 \chapterdedication{contents/dedication/dedication}
@@ -208,11 +220,12 @@
 
 \cleardoublepage \phantomsection
 \chapterappendix{contents/appendix/appendix-isi-lampiran}
-\chapterappendixadd{contents/appendix/appendix-latex}
-\chapterappendixadd{contents/appendix/appendix-penulisan-referensi}
-\chapterappendixadd{contents/appendix/appendix-code}
-\chapterappendixadd{contents/appendix/appendix-pseudocode}
+%\chapterappendixadd{contents/appendix/appendix-latex}            % kosong
+%\chapterappendixadd{contents/appendix/appendix-penulisan-referensi} % kosong
 \chapterappendixadd{contents/appendix/appendix-github}
+\chapterappendixadd{contents/appendix/appendix-pseudocode}
+\chapterappendixadd{contents/appendix/appendix-code}
+\chapterappendixadd{contents/appendix/appendix-blind-rating}
 
 
 
